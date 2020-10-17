@@ -2,6 +2,7 @@ image: python:3.9
 
 before_script:
   - python -V  # Print out python version for debugging
+  - apt-get install gcc gfortran python-dev libopenblas-dev liblapack-dev cython
   - python -m pip install -r requirements.txt
 
 stages:
