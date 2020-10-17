@@ -8,6 +8,11 @@ stages:
   - Test
   - Static Analysis
 
+unittest:
+  stage: Test
+  script:
+    - python -m unittest discover -s tests -p test_*.py -v
+
 flake8:
   stage: Static Analysis
   # image: pipelinecomponents/flake8:latest
@@ -15,12 +20,8 @@ flake8:
     - python -m pip install flake8
     - flake8 --max-line-length=100
 
-# pylint:
-#   stage: Static Analysis
-#   script:
-#     - pylint *.py
-
-unittest:
-  stage: Test
+pylint:
+  stage: Static Analysis
   script:
-    - python -m unittest discover -s tests -p test_*.py -v
+    - python -m pip install pylint_gitlab
+    - pylint
