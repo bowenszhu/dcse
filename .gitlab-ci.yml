@@ -20,7 +20,7 @@ flake8:
 #   script:
 #     - pylint *.py
 
-test:
+unittest:
   stage: Test
   script:
-    - python -m unittest src/*_test.py
+    - python -m unittest discover -s tests -p 'test_*.py
