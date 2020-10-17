@@ -24,4 +24,4 @@ pylint:
   stage: Static Analysis
   script:
     - python -m pip install pylint_gitlab
-    - pylint
+    - pylint src
