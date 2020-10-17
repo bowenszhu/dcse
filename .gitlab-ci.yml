@@ -2,25 +2,29 @@ image: python:3.8
 
 before_script:
   - python -V  # Print out python version for debugging
+  - python -m pip install -r requirements.txt
 
 stages:
   - Test
+  - Coverage
   - Static Analysis
 
 unittest:
   stage: Test
   script:
-    - python -m pip install -r requirements.txt
     - python -m unittest discover -s tests -p test_*.py -v
 
 flake8:
   stage: Static Analysis
   script:
-    - python -m pip install flake8
     - flake8 --max-line-length=100
+
+coverage:
+  stage: Coverage
+  script:
+    - coverage run -m unittest discover -s tests -p test_*.py -v
 
 pylint:
   stage: Static Analysis
   script:
-    - python -m pip install -r requirements.txt
     - pylint src
