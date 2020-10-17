@@ -1,0 +1,28 @@
+image: python:3.8
+
+before_script:
+  - python -V  # Print out python version for debugging
+  - python -m pip install -r requirements.txt
+
+stages:
+  - Test
+  - Static Analysis
+
+coverage:
+  stage: Test
+  script:
+    - >
+      coverage run --branch --source=src
+      --omit=src/main.py,src/scipy_linear_interpolator.py
+      -m unittest discover -s tests -p test_*.py -v
+    - coverage report -m
+
+flake8:
+  stage: Static Analysis
+  script:
+    - flake8
+
+pylint:
+  stage: Static Analysis
+  script:
+    - pylint src

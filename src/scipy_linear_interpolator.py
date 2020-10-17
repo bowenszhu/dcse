@@ -1,5 +1,7 @@
+# pylint: skip-file
 import numpy as np
 from scipy.interpolate import interpn
+
 
 class ScipyLinearInterpolator:
     def __init__(self, func, axes_points, axes_min, axes_max):
@@ -20,9 +22,9 @@ class ScipyLinearInterpolator:
         assert (grid.shape[0] == self.n_dim)
         result_shape = grid.shape[1:]
         # move the first axis to the last place
-        xi = np.rollaxis(grid, 0, self.n_dim+1)
+        xi = np.rollaxis(grid, 0, self.n_dim + 1)
         # flatten all axis except the last
         xi = xi.reshape((-1, 2))
 
-        #interpolate and shape the result
+        # interpolate and shape the result
         return interpn(self.points, self.values, xi).reshape(result_shape)
