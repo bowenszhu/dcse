@@ -6,7 +6,6 @@ before_script:
 
 stages:
   - Test
-  - Coverage
   - Static Analysis
 
 # unittest:
@@ -14,16 +13,16 @@ stages:
 #   script:
 #     - python -m unittest discover -s tests -p test_*.py -v
 
+coverage:
+  stage: Test
+  script:
+    - coverage run --branch --source=src -m unittest discover -s tests -p test_*.py -v
+    - coverage report -m
+
 flake8:
   stage: Static Analysis
   script:
     - flake8 --max-line-length=100
-
-coverage:
-  stage: Coverage
-  script:
-    - coverage run --branch --source=src -m unittest discover -s tests -p test_*.py -v
-    - coverage report -m
 
 pylint:
   stage: Static Analysis
