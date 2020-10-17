@@ -9,10 +9,10 @@ stages:
   - Coverage
   - Static Analysis
 
-unittest:
-  stage: Test
-  script:
-    - python -m unittest discover -s tests -p test_*.py -v
+# unittest:
+#   stage: Test
+#   script:
+#     - python -m unittest discover -s tests -p test_*.py -v
 
 flake8:
   stage: Static Analysis

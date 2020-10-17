@@ -6,7 +6,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_addition(self):
         # A simple example of test
-        self.assertEqual(1 + 1, 2)
+        self.assertEqual(1 + 1, 3)
 
     def test_foo(self):
         self.assertEqual(2, foo(1))
