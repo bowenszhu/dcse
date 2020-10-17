@@ -2,7 +2,7 @@ image: python:3.9
 
 before_script:
   - python -V  # Print out python version for debugging
-  - pip install -r requirements.txt
+  # - pip install -r requirements.txt
 
 stages:
   - Static Analysis
