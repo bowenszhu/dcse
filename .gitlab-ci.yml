@@ -3,7 +3,7 @@ image: python:3.9
 before_script:
   - python -V  # Print out python version for debugging
   # - pip install -r requirements.txt
-  - python -m pip install flake8 numpy scipy
+  - python -m pip install flake8 numpy
 
 stages:
   - Static Analysis
