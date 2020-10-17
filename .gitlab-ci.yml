@@ -23,4 +23,4 @@ flake8:
 test:
   stage: Test
   script:
-    - python -m unittest *_test.py
+    - python -m unittest src/*_test.py
