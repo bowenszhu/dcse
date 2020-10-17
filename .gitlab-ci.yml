@@ -23,5 +23,5 @@ flake8:
 pylint:
   stage: Static Analysis
   script:
-    - python -m pip install pylint_gitlab
+    - python -m pip install pylint
     - pylint src
