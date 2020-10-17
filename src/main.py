@@ -1,5 +1,5 @@
 import numpy as np
-from scipy_linear_interpolator import ScipyLinearInterpolator
+from src.scipy_linear_interpolator import ScipyLinearInterpolator
 
 if __name__ == '__main__':
     def func_2d(x, y):
