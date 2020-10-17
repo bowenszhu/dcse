@@ -13,7 +13,7 @@ flake8:
   # image: pipelinecomponents/flake8:latest
   script:
     - python -m pip install flake8
-    - flake8 --max-line-length=100 *.py
+    - flake8 --max-line-length=100
 
 # pylint:
 #   stage: Static Analysis
