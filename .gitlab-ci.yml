@@ -2,7 +2,7 @@ image: python:3.9
 
 before_script:
   - python -V  # Print out python version for debugging
-  # - pip install -r requirements.txt
+  - pip install -r requirements.txt
 
 stages:
   - Test
@@ -17,11 +17,11 @@ flake8:
   stage: Static Analysis
   # image: pipelinecomponents/flake8:latest
   script:
-    - python -m pip install flake8
+    # - python -m pip install flake8
     - flake8 --max-line-length=100
 
 pylint:
   stage: Static Analysis
   script:
-    - python -m pip install pylint
+    # - python -m pip install pylint
     - pylint src
