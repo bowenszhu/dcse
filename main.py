@@ -2,7 +2,7 @@ import numpy as np
 from scipy_linear_interpolator import ScipyLinearInterpolator
 
 if __name__ == '__main__':
-    def func_2d (x, y):
+    def func_2d(x, y):
         return np.sin(np.pi * x) * np.sin(np.pi * y) + x + y
 
     # create test grid 200*200
@@ -24,15 +24,13 @@ if __name__ == '__main__':
     itor1 = ScipyLinearInterpolator(func_2d, [4, 4], [-1, -1], [1, 1])
 
     # check interpolation for a single point
-    print (itor1.interpolate_point([0.1,0.5]))
+    print(itor1.interpolate_point([0.1, 0.5]))
 
     # evaluate interpolation on the test grid
     z_itor1 = itor1.interpolate_array(test_grid)
 
-
     # draw it
     plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor1)], filename='func_2d_itor1.html')
-
 
     # import matplotlib.pyplot as plt
     # fig = plt.figure()
@@ -40,9 +38,7 @@ if __name__ == '__main__':
     # ax.plot_surface(test_grid[0], test_grid[1], z_it2, cmap="autumn_r", lw=0.5, rstride=1, cstride=1)
     # plt.show()
 
-
     # 3D
-
     def value_func_3d(x, y, z):
         return 2 * x * x + 3 * y - z
 
