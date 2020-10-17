@@ -16,7 +16,8 @@ stages:
 coverage:
   stage: Test
   script:
-    - coverage run --branch --source=src -m unittest discover -s tests -p test_*.py -v
+    - coverage run --branch --source=src --omit=src/main.py,src/scipy_linear_interpolator.py -m unittest discover -s tests -p
+    - test_*.py -v
     - coverage report -m
 
 flake8:
