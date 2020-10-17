@@ -2,13 +2,13 @@ image: python:3.9
 
 before_script:
   - python -V  # Print out python version for debugging
-  # - pip install -r requirements.txt
+  - pip install -r requirements.txt
 
 stages:
   - Static Analysis
 
 flake8:
   stage: Static Analysis
-  image: pipelinecomponents/flake8:latest
+  # image: pipelinecomponents/flake8:latest
   script:
     - flake8 --max-line-length=120 *.py
