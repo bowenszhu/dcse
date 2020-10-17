@@ -27,4 +27,3 @@ class ScipyLinearInterpolator:
 
         # interpolate and shape the result
         return interpn(self.points, self.values, xi).reshape(result_shape)
-        
