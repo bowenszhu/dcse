@@ -22,7 +22,7 @@ flake8:
 coverage:
   stage: Coverage
   script:
-    - coverage run --branch -m unittest discover -s tests -p test_*.py -v
+    - coverage run --branch --source=src -m unittest discover -s tests -p test_*.py -v
     - coverage report -m --include=src/*.py
 
 pylint:
