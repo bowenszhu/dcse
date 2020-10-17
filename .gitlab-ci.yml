@@ -8,11 +8,6 @@ stages:
   - Test
   - Static Analysis
 
-# unittest:
-#   stage: Test
-#   script:
-#     - python -m unittest discover -s tests -p test_*.py -v
-
 coverage:
   stage: Test
   script:
