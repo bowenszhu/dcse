@@ -11,4 +11,4 @@ flake8:
   stage: Static Analysis
   image: pipelinecomponents/flake8:latest
   script:
-    - flake8 --max-line-length=120 bild/*.py
+    - flake8 --max-line-length=120 *.py
