@@ -1,8 +1,7 @@
-image: python:3.9
+image: python:latest
 
 before_script:
   - python -V  # Print out python version for debugging
-  - apt-get install libopenblas0
   - python -m pip install -r requirements.txt
 
 stages:
