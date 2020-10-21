@@ -18,10 +18,10 @@ coverage:
       -m unittest discover -s tests -p test_*.py -v
     - coverage report -m
 
-#flake8:
-#  stage: Static Analysis
-#  script:
-#    - flake8
+flake8:
+  stage: Static Analysis
+  script:
+    - flake8  --max-line-length 120
 
 pylint:
   stage: Static Analysis

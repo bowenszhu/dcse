@@ -1,14 +1,13 @@
 # pylint: skip-file
 import numpy as np
+import importlib
 
 # try to import C++ python extension
 # (engines.so in Linux and engines.pyd in Windows)
 try:
     from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
-    # its more concise to import all classes than explicitly list all options of templetized interpolators
-    from src.engines.engines import *
-    engines_available = 1
 
+    engines_available = 1
 except ImportError:
     engines_available = 0
 
@@ -34,8 +33,12 @@ class DartsMultilinearStaticInterpolator:
             self.timer = timer_node()
             self.timer.node['init'] = timer_node()
 
-            # for every dimensionality a separate class exists in darts - evaluate its name now:
-            itor_name = eval("operator_set_interpolator_static_i_d_%d_1" % (self.n_dim))
+            # Use importlib mechanism to import interpolator class:
+            m = importlib.import_module('src.engines.engines')
+
+            # for every dimensionality a separate class exists in darts - here we evaluate its name
+            # and get the class from engines, will raise AttributeError if class cannot be found
+            itor_name = getattr(m, 'operator_set_interpolator_static_i_d_%d_1' % (self.n_dim))
 
             # create the instance of interpolator
             # point calculation happens here, so measure it
