@@ -2,6 +2,7 @@
 # flake8: noqa
 import numpy as np
 from src.scipy_linear_interpolator import ScipyLinearInterpolator
+from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 
 if __name__ == '__main__':
     def func_2d(x, y):
@@ -25,17 +26,24 @@ if __name__ == '__main__':
                         filename='func_2d_exact.html')
 
     # create interpolator object for (-1, -1) to (1, 1) space using 4 data points along each axis
-    itor1 = ScipyLinearInterpolator(func_2d, [4, 4], [-1, -1], [1, 1])
+    itor1 = ScipyLinearInterpolator(func_2d, [4, 4], [-1.1, -1.1], [1.1, 1.1])
+    itor2 = DartsMultilinearStaticInterpolator(func_2d, [4, 4], [-1.1, -1.1], [1.1, 1.1])
 
     # check interpolation for a single point
     print(itor1.interpolate_point([0.1, 0.5]))
+    print(itor2.interpolate_point([0.1, 0.5]))
 
     # evaluate interpolation on the test grid
     z_itor1 = itor1.interpolate_array(test_grid)
+    z_itor2 = itor2.interpolate_array(test_grid)
+
+    print ('Itor2 init: %f s, interpolate: %f s' %(itor2.get_init_time(),  itor2.get_interpolation_time()))
 
     # draw it
     plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor1)],
                         filename='func_2d_itor1.html')
+    plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor2)],
+                        filename='func_2d_itor2.html')
 
 
     # import matplotlib.pyplot as plt
