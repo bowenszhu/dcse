@@ -30,6 +30,8 @@ pylint:
 
 build_linux:
   stage: Build
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
   script:
     - cd src/engines
     - make
