@@ -1,12 +1,15 @@
 # pylint: skip-file
 import numpy as np
 
-# try to import C++ python extension (engines.so in Linux and engines.pyd in Windows)
+# try to import C++ python extension
+# (engines.so in Linux and engines.pyd in Windows)
 try:
+    from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
+    # its more concise to import all classes than explicitly list all options of templetized interpolators
     from src.engines.engines import *
     engines_available = 1
-except:
-    #
+
+except ImportError:
     engines_available = 0
 
 
@@ -22,6 +25,7 @@ class DartsMultilinearStaticInterpolator:
                 def evaluate(self, state, values):
                     values[0] = self.func(*state)
                     return 0
+
             # create the instance of the wrapper
             self.evaluator = custom_evaluator(func)
             self.n_dim = len(axes_points)
@@ -36,14 +40,15 @@ class DartsMultilinearStaticInterpolator:
             # create the instance of interpolator
             # point calculation happens here, so measure it
             self.timer.node['init'].start()
-            self.interpolator = itor_name(self.evaluator, index_vector(axes_points), value_vector(axes_min), value_vector(axes_max))
+            self.interpolator = itor_name(self.evaluator, index_vector(axes_points), value_vector(axes_min),
+                                          value_vector(axes_max))
             self.timer.node['init'].stop()
             # create a value for a interpolate_point output
             self.value = value_vector([0])
 
             self.interpolator.init_timer_node(self.timer)
         else:
-            print ("Engines are not available")
+            print("Engines are not available")
             pass
 
     def interpolate_point(self, point):
@@ -52,7 +57,7 @@ class DartsMultilinearStaticInterpolator:
             self.interpolator.evaluate(value_vector(point), self.value)
             return self.value[0]
         else:
-            print ("Engines are not available")
+            print("Engines are not available")
             pass
 
     def interpolate_array(self, grid):
@@ -69,23 +74,29 @@ class DartsMultilinearStaticInterpolator:
             self.block_idx = index_vector(np.arange(int(len(states) / self.n_dim), dtype=np.int32))
 
             # values should fit single value per point
-            self.values = value_vector([0]*int((len(states) / self.n_dim)))
+            self.values = value_vector([0] * int((len(states) / self.n_dim)))
 
             # derivs should fit self.n_dim values per point
-            self.derivs = value_vector([0]*len(states))
+            self.derivs = value_vector([0] * len(states))
 
             # interpolate and shape the result
-            a = self.interpolator.evaluate_with_derivatives(self.states, self.block_idx, self.values, self.derivs)
+            self.interpolator.evaluate_with_derivatives(self.states, self.block_idx, self.values, self.derivs)
             result = np.array(self.values, copy=False)
-            #timer_output = self.timer.print('', str())
-            #print(timer_output)
+            # timer_output = self.timer.print('', str())
+            # print(timer_output)
             return result.reshape(result_shape)
         else:
-            print ("Engines are not available")
+            print("Engines are not available")
             pass
 
     def get_init_time(self):
-        return self.timer.node['init'].get_timer()
+        if engines_available:
+            return self.timer.node['init'].get_timer()
+        else:
+            pass
 
     def get_interpolation_time(self):
-        return self.timer.get_timer()
+        if engines_available:
+            return self.timer.get_timer()
+        else:
+            pass
