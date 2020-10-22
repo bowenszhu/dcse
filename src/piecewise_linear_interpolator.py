@@ -52,6 +52,8 @@ class PiecewiseLinearInterpolator:
         -------
         simplex : 2-D array with shape (n + 1, n)
             Coordinates of vertices of the simplex.
+        axes_order : A list of axis indices and y-values
+            Order of scaled y coordinates. See Weiser and Zarantonello (1988) for detailed description.
 
         Reference
         ---------
@@ -85,7 +87,7 @@ class PiecewiseLinearInterpolator:
         Returns
         -------
         value : float
-            Funtion value.
+            Function value.
 
         Notes
         -----
