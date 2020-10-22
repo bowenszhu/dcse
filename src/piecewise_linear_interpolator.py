@@ -16,6 +16,11 @@ class PiecewiseLinearInterpolator:
     axes_max : a list of integers
         The maximum value for each axis.
 
+    Raises
+    ------
+    ValueError
+        Raised if inconsistent lists with different dimensions is given as input.
+
     Notes
     -----
     Piecewise linear interpolation is a combination of standard triangulation and barycentric interpolation.
@@ -54,6 +59,11 @@ class PiecewiseLinearInterpolator:
             Coordinates of vertices of the simplex.
         axes_order : A list of axis indices and y-values
             Order of scaled y coordinates. See Weiser and Zarantonello (1988) for detailed description.
+
+        Raises
+        ------
+        ValueError
+            Raised if input point is outside the interpolation domain.
 
         Reference
         ---------
@@ -109,7 +119,8 @@ class PiecewiseLinearInterpolator:
 
     def interpolate_point(self, point: np.ndarray) -> Tuple[float, np.ndarray]:
         """
-        Compute the interpolant value and gradient at given point.
+        Compute the interpolant value and gradient at given point
+        based on the method of piecewise lienar interpolation.
 
         Parameter
         ---------
@@ -122,6 +133,11 @@ class PiecewiseLinearInterpolator:
             Piecewise linear interpolation value.
         gradient : 1-D array
             Approximation for partial derivative based on piecewise linear interpolation.
+
+        Raises
+        ------
+        ValueError
+            Raised if input point does match the dimension of the interpolator.
         """
         if len(point) != self.n_dim:
             raise ValueError('The point ' + str(point) + ' does not match the dimension of the interpolator.')
