@@ -1,12 +1,17 @@
+from abc import abstractmethod
 from typing import Callable, List
 
 import numpy as np
 
 
-# pylint: disable=R0903
 class AdaptiveInterpolator:
     """
     A parent class for interpolators with adaptive parametrization/storage.
+
+    Raises
+    ------
+    ValueError
+        Raised if inconsistent lists with different dimensions is given as input.
 
     Notes
     -----
@@ -57,3 +62,37 @@ class AdaptiveInterpolator:
             value = self.func(*(vertex * self.axes_len_interval + self.axes_min))
             self.adaptive_values[vertex_tuple] = value
         return value
+
+    @abstractmethod
+    def find_simplex(self, point):
+        """
+        Find simplex for a given point.
+
+        Parameters
+        ----------
+        point : 1-D array
+            Coordinates of the point.
+
+        Returns
+        -------
+        simplex : 2-D array with shape (n + 1, n)
+            Coordinates of vertices of the simplex.
+        """
+
+    @abstractmethod
+    def interpolate_point(self, point):
+        """
+        Compute the interpolant value and gradient at given point.
+
+        Parameter
+        ---------
+        point : 1-D array
+            Coordinates of a point.
+
+        Returns
+        -------
+        interpolant : float
+            Piecewise linear interpolation value.
+        gradient : 1-D array
+            Approximation for partial derivative based on piecewise linear interpolation.
+        """
