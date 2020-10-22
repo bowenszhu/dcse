@@ -1,12 +1,21 @@
-from abc import abstractmethod
-from typing import Callable, List
-
+from typing import Callable, List, Tuple
 import numpy as np
 
 
 class AdaptiveInterpolator:
     """
     A parent class for interpolators with adaptive parametrization/storage.
+
+    Parameters
+    ----------
+    func : a function with n input arguments and float as output
+        Function to approximate.
+    axes_points : a list of integers
+        The number of supporting points along each axis.
+    axes_min : a list of integers
+        The minimum value for each axis.
+    axes_max : a list of integers
+        The maximum value for each axis.
 
     Raises
     ------
@@ -63,36 +72,31 @@ class AdaptiveInterpolator:
             self.adaptive_values[vertex_tuple] = value
         return value
 
-    @abstractmethod
-    def find_simplex(self, point):
+    def find_hypercube(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Find simplex for a given point.
+        Find the hypercube where the point is located in the numerical grid.
 
         Parameters
         ----------
         point : 1-D array
-            Coordinates of the point.
+            Point to locate.
 
         Returns
         -------
-        simplex : 2-D array with shape (n + 1, n)
-            Coordinates of vertices of the simplex.
-        """
+        scaled_point : array of shape (ndim, ndim)
+            The scaled coordinates within the hypercube,
+            which is the same as the variables y's in Weiser and Zarantonello (1988)
+        hypercube : array of shape (ndim, ndim)
+            The lower left vertex of the hypercube.
 
-    @abstractmethod
-    def interpolate_point(self, point):
+        Raises
+        ------
+         ValueError
+            Raised if input point is outside the interpolation domain.
         """
-        Compute the interpolant value and gradient at given point.
-
-        Parameter
-        ---------
-        point : 1-D array
-            Coordinates of a point.
-
-        Returns
-        -------
-        interpolant : float
-            Piecewise linear interpolation value.
-        gradient : 1-D array
-            Approximation for partial derivative based on piecewise linear interpolation.
-        """
+        if not np.all(self.axes_min < point) or not np.all(point < self.axes_max):
+            raise ValueError('The point ' + str(point) + ' is outside the interpolation domain.')
+        scaled_point = (point - self.axes_min) / self.axes_len_interval
+        hypercube = scaled_point.astype(np.int)
+        scaled_point -= hypercube
+        return scaled_point, hypercube

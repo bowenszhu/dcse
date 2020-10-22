@@ -11,6 +11,7 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
     Parameters
     ----------
     func : a function with n input arguments and float as output
+        Function to approximate.
     axes_points : a list of integers
         The number of supporting points along each axis.
     axes_min : a list of integers
@@ -24,7 +25,9 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
 
     Examples
     --------
-    >>> interpolator = PiecewiseLinearInterpolator(test_function3, [11, 22, 33], [1, 4, 7], [4, 7, 9])
+    >>> def f(x, y, z):
+    ...     return 2 * x**3 + 3 * y**2 - z
+    >>> interpolator = PiecewiseLinearInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
     >>> interpolant, gradient = interpolator.interpolate_point(point)
     """
@@ -32,6 +35,7 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
     def find_simplex(self, point: np.ndarray) -> Tuple[np.ndarray, List[Tuple[int, float]]]:
         """
         Find simplex for a given point.
+        Standard triangulation.
 
         Parameters
         ----------
@@ -45,22 +49,13 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
         axes_order : A list of axis indices and y-values
             Order of scaled y coordinates. See Weiser and Zarantonello (1988) for detailed description.
 
-        Raises
-        ------
-        ValueError
-            Raised if input point is outside the interpolation domain.
-
         Reference
         ---------
         A. Weiser, and S.E. Zarantonello. "A note on piecewise linear and multilinear table
             interpolation in many dimensions." MATH. COMPUT. 50.181 (1988): 189-196.
             https://www.ams.org/journals/mcom/1988-50-181/S0025-5718-1988-0917826-0/S0025-5718-1988-0917826-0.pdf
         """
-        if not np.all(self.axes_min < point) or not np.all(point < self.axes_max):
-            raise ValueError('The point ' + str(point) + ' is outside the interpolation domain.')
-        scaled_point = (point - self.axes_min) / self.axes_len_interval
-        hypercube = scaled_point.astype(np.int)
-        scaled_point -= hypercube
+        scaled_point, hypercube = self.find_hypercube(point)
         axes_order = sorted([(d, scaled_point[d]) for d in range(self.n_dim)], key=lambda axis: axis[1])
         simplex = np.ones((self.n_dim + 1, self.n_dim), dtype=np.int)
         for dim in range(self.n_dim):
@@ -76,7 +71,7 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
         Parameter
         ---------
         point : 1-D array
-            Coordinates of a point.
+            Point to interpolate.
 
         Returns
         -------
