@@ -26,6 +26,11 @@ build_linux:
   script:
     - cd src/engines
     - make
+  artifacts:
+      paths:
+        - src/engines/*.so
+        - src/engines/*.pyd
+
 
 coverage:
   stage: Test
