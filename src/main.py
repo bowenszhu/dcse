@@ -3,15 +3,16 @@
 import numpy as np
 from src.scipy_linear_interpolator import ScipyLinearInterpolator
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
+from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
 
 if __name__ == '__main__':
     def func_2d(x, y):
-        return np.sin(np.pi * x) * np.sin(np.pi * y) + x + y
+        return np.sin(np.pi * x) * np.sin(np.pi * y) + 2*x + y
 
 
     # create test grid 200*200
-    x = np.linspace(-1, 1, 200)
-    y = np.linspace(-1, 1, 200)
+    x = np.linspace(-1, 0, 100)
+    y = np.linspace(0, 1, 300)
     points = (x, y)
     test_grid = np.array(np.meshgrid(*points))
 
@@ -26,24 +27,30 @@ if __name__ == '__main__':
                         filename='func_2d_exact.html')
 
     # create interpolator object for (-1, -1) to (1, 1) space using 4 data points along each axis
-    itor1 = ScipyLinearInterpolator(func_2d, [4, 4], [-1.1, -1.1], [1.1, 1.1])
-    itor2 = DartsMultilinearStaticInterpolator(func_2d, [4, 4], [-1.1, -1.1], [1.1, 1.1])
+    itor1 = ScipyLinearInterpolator(func_2d, [400, 400], [-1.1, -1.1], [1.1, 1.1])
+    itor2 = DartsMultilinearStaticInterpolator(func_2d, [400, 400], [-1.1, -1.1], [1.1, 1.1])
+    itor3 = DartsMultilinearAdaptiveInterpolator(func_2d, [400, 400], [-1.1, -1.1], [1.1, 1.1])
 
     # check interpolation for a single point
     print(itor1.interpolate_point([0.1, 0.5]))
     print(itor2.interpolate_point([0.1, 0.5]))
+    print(itor3.interpolate_point([0.1, 0.5]))
 
     # evaluate interpolation on the test grid
     z_itor1 = itor1.interpolate_array(test_grid)
     z_itor2 = itor2.interpolate_array(test_grid)
+    z_itor3 = itor3.interpolate_array(test_grid)
 
     print ('Itor2 init: %f s, interpolate: %f s' %(itor2.get_init_time(),  itor2.get_interpolation_time()))
+    print ('Itor3 init: %f s, interpolate: %f s' %(itor3.get_init_time(),  itor3.get_interpolation_time()))
 
     # draw it
     plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor1)],
                         filename='func_2d_itor1.html')
     plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor2)],
                         filename='func_2d_itor2.html')
+    plotly.offline.plot([go.Surface(x=x, y=y, z=z_itor3)],
+                        filename='func_2d_itor3.html')
 
 
     # import matplotlib.pyplot as plt
