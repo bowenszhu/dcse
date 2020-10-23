@@ -5,18 +5,9 @@ before_script:
   - python -m pip install -r requirements.txt
 
 stages:
-  - Test
   - Static Analysis
   - Build
-
-coverage:
-  stage: Test
-  script:
-    - >
-      coverage run --branch --source=src
-      --omit=src/main.py,src/scipy_linear_interpolator.py
-      -m unittest discover -s tests -p test_*.py -v
-    - coverage report -m
+  - Test
 
 flake8:
   stage: Static Analysis
@@ -35,3 +26,18 @@ build_linux:
   script:
     - cd src/engines
     - make
+
+coverage:
+  stage: Test
+  script:
+    - >
+      coverage run --branch --source=src
+      --omit=src/main.py,src/scipy_linear_interpolator.py
+      -m unittest discover -s tests -p test_*.py -v
+    - coverage report -m
+  
+test_linux:
+  stage: Test
+  script:
+      -  PYTHONPATH=`pwd` python3 src/main.py
+
