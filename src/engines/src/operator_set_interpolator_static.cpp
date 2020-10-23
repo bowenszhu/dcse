@@ -294,14 +294,13 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate(st
   std::array<interp_value_t, N_VERTS *(N_DIMS + 1) * N_OPS> workspace;
 
   interp_index_t body_idx = 0;
-  interp_index_t body_idx_mult = 1;
+  //interp_index_t body_idx_mult = 1;
 
   for (int i = 0; i < N_DIMS; ++i)
   {
     int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
 
-    body_idx += axis_idx * body_idx_mult;
-    body_idx_mult *= (axis_points[i] - 1);
+    body_idx += axis_idx * axis_body_mult[i];
   }
 
   // copy operator values for all vertices
