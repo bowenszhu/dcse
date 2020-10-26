@@ -26,7 +26,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
     ...     return 2 * x**3 + 3 * y**2 - z
     >>> interpolator = DelaunayBarycentricInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
-    >>> interpolant, gradient = interpolator.interpolate_point(point)
+    >>> interpolant = interpolator.interpolate_point(point)
     """
 
     def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
@@ -35,7 +35,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
         self.unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * self.n_dim)).T.reshape(-1, self.n_dim)
         self.tri = Delaunay(self.unit_hypercube)
 
-    def interpolate_point(self, point: np.ndarray) -> Tuple[float, np.ndarray]:
+    def interpolate_point(self, point: np.ndarray) -> float:
         """
         Compute the barycentric interpolant and gradient at given point based on Delaunay triangulation.
 
@@ -82,6 +82,6 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
         simplex = self.unit_hypercube[self.tri.simplices[simplex_i]] + hypercube
         values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
         interpolant = np.dot(barycentric, values)
-        t_inv = np.vstack((t_inv, -t_inv.sum(axis=0)))
-        gradient = np.dot(values, t_inv) / self.axes_len_interval
-        return interpolant, gradient
+        # t_inv = np.vstack((t_inv, -t_inv.sum(axis=0)))
+        # gradient = np.dot(values, t_inv) / self.axes_len_interval
+        return interpolant

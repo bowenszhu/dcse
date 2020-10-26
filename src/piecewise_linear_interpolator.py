@@ -29,7 +29,7 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
     ...     return 2 * x**3 + 3 * y**2 - z
     >>> interpolator = PiecewiseLinearInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
-    >>> interpolant, gradient = interpolator.interpolate_point(point)
+    >>> interpolant = interpolator.interpolate_point(point)
     """
 
     def find_simplex(self, point: np.ndarray) -> Tuple[np.ndarray, List[Tuple[int, float]]]:
@@ -63,7 +63,7 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
         simplex += hypercube
         return simplex, axes_order
 
-    def interpolate_point(self, point: np.ndarray) -> Tuple[float, np.ndarray]:
+    def interpolate_point(self, point: np.ndarray) -> float:
         """
         Compute the interpolant value and gradient at given point
         based on the method of piecewise lienar interpolation.
@@ -85,15 +85,14 @@ class PiecewiseLinearInterpolator(AdaptiveInterpolator):
         ValueError
             Raised if input point does match the dimension of the interpolator.
         """
-        if len(point) != self.n_dim:
-            raise ValueError('The point ' + str(point) + ' does not match the dimension of the interpolator.')
         simplex, axes_order = self.find_simplex(point)
         value = self.get_vertex_value(simplex[0])
         interpolant = value
-        gradient = np.zeros(self.n_dim)
+        # gradient = np.zeros(self.n_dim)
         for dim in range(self.n_dim):
             value_pre = value
             value = self.get_vertex_value(simplex[dim+1])
             interpolant += (1 - axes_order[dim][1]) * (value - value_pre)
-            gradient[axes_order[dim][0]] = (value_pre - value) / self.axes_len_interval[axes_order[dim][0]]
-        return interpolant, gradient
+            # gradient[axes_order[dim][0]] = (value_pre - value) / self.axes_len_interval[axes_order[dim][0]]
+        return interpolant
+
