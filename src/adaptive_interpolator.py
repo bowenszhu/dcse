@@ -94,7 +94,7 @@ class AdaptiveInterpolator:
          ValueError
             Raised if input point is outside the interpolation domain.
         """
-        if not np.all(self.axes_min < point) or not np.all(point < self.axes_max):
+        if not np.all(self.axes_min <= point) or not np.all(point <= self.axes_max):
             raise ValueError('The point ' + str(point) + ' is outside the interpolation domain.')
         scaled_point = (point - self.axes_min) / self.axes_len_interval
         hypercube = scaled_point.astype(np.int)
