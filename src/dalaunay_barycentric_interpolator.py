@@ -1,3 +1,4 @@
+import time
 from typing import Callable, List
 from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
 import numpy as np
@@ -30,6 +31,12 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     >>> interpolator = DelaunayBarycentricInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
     >>> interpolant = interpolator.interpolate_point(point)
+    >>>
+    >>> x = np.linspace(-1, 1, 200)
+    >>> y = np.linspace(-1, 1, 200)
+    >>> points = (x, y)
+    >>> grid = np.array(np.meshgrid(*points))
+    >>> res = interpolator.interpolate_array(grid)
     """
     # pylint: disable=R0913
     def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
@@ -107,6 +114,9 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         """
         res_shape = grid.shape[1:]
         points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
+
+        interpolation_start_time = time.process_time()
+
         scaled_points, hypercubes = self.find_hypercube_points(points)
         simplices_i = self.tri.find_simplex(scaled_points)
         ts_inv = self.tri.transform[simplices_i, :self.n_dim, :self.n_dim]
@@ -116,4 +126,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         simplices = (self.unit_hypercube[self.tri.simplices[simplices_i]].swapaxes(0, 1) + hypercubes).swapaxes(0, 1)
         values = self.get_simplices_values(simplices)
         interpolants = np.einsum('ij,ij->i', barycentric, values)
+
+        self.interpolation_time += time.process_time() - interpolation_start_time
+
         return interpolants.reshape(res_shape)

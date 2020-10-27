@@ -1,10 +1,11 @@
+import time
 from typing import Callable, List, Tuple
 import numpy as np
 
 
 class InterpolatorBase:  # pylint: disable=R0902
     """
-    Interpolators base.
+    Interpolator base.
 
     Parameters
     ----------
@@ -36,6 +37,7 @@ class InterpolatorBase:  # pylint: disable=R0902
         self.axes_max = np.array(axes_max)
         self.axes_len_interval = (self.axes_max - self.axes_min) / (np.array(axes_n_points) - 1)
         self.adaptive = adaptive
+        initialization_start_time = time.process_time()
         if adaptive:
             self.adaptive_values = dict()
         else:
@@ -44,8 +46,8 @@ class InterpolatorBase:  # pylint: disable=R0902
                 sample_points, step = np.linspace(axes_min[i], axes_max[i], axes_n_points[i], retstep=True)
                 mesh.append(np.append(sample_points, sample_points[-1] + step))
             self.adaptive_values = func(*np.meshgrid(*mesh, indexing='ij'))
-            # self.adaptive_values = func(*np.meshgrid(
-            #     *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)], indexing='ij'))
+        self.initialization_time = time.process_time() - initialization_start_time
+        self.interpolation_time = 0
 
     def get_vertex_value(self, vertex: np.ndarray) -> float:
         """
@@ -74,9 +76,9 @@ class InterpolatorBase:  # pylint: disable=R0902
             https://doi.org/10.2118/182685-PA
         """
         vertex_tuple = tuple(vertex)
-        if vertex_tuple in self.adaptive_values:
+        try:
             value = self.adaptive_values[vertex_tuple]
-        else:
+        except KeyError:
             value = self.func(*(vertex * self.axes_len_interval + self.axes_min))
             self.adaptive_values[vertex_tuple] = value
         return value
@@ -172,3 +174,25 @@ class InterpolatorBase:  # pylint: disable=R0902
         hypercube = scaled_point.astype(np.int)
         scaled_point -= hypercube
         return scaled_point, hypercube
+
+    def get_init_time(self):
+        """
+        Time spent for initialization.
+
+        Returns
+        -------
+        initialization_time : float
+            Initialization time.
+        """
+        return self.initialization_time
+
+    def get_interpolation_time(self):
+        """
+        Time spent for computing interpolation.
+
+        Returns
+        -------
+        interpolation_time : float
+            Interpolation time.
+        """
+        return self.interpolation_time
