@@ -1,10 +1,10 @@
 from typing import Callable, List, Tuple
 from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
 import numpy as np
-from src.adaptive_interpolator import AdaptiveInterpolator
+from src.adaptive_interpolator import AdaptiveInterpolatorBase
 
 
-class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
+class DelaunayBarycentricInterpolatorBase(AdaptiveInterpolatorBase):
     """
     Delaunay triangulation and barycentric interpolation with adaptive parametrization
     on a uniform grid in arbitrary dimensions.
@@ -24,7 +24,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
     --------
     >>> def f(x, y, z):
     ...     return 2 * x**3 + 3 * y**2 - z
-    >>> interpolator = DelaunayBarycentricInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
+    >>> interpolator = DelaunayBarycentricInterpolatorBase(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
     >>> interpolant = interpolator.interpolate_point(point)
     """
@@ -70,7 +70,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolator):
         """
         if len(point) != self.n_dim:
             raise ValueError('The point ' + str(point) + ' does not match the dimension of the interpolator.')
-        scaled_point, hypercube = self.find_hypercube(point)
+        scaled_point, hypercube = self.find_hypercube_point(point)
         simplex_i = self.tri.find_simplex(np.array([scaled_point]))[0]
 
         # compute barycentric coordinates

@@ -2,7 +2,7 @@ from typing import Callable, List, Tuple
 import numpy as np
 
 
-class AdaptiveInterpolator:
+class AdaptiveInterpolatorBase:
     """
     A parent class for interpolators with adaptive parametrization/storage.
 
@@ -72,7 +72,7 @@ class AdaptiveInterpolator:
             self.adaptive_values[vertex_tuple] = value
         return value
 
-    def find_hypercube(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def find_hypercube_point(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find the hypercube where the point is located in the numerical grid.
 
@@ -98,3 +98,10 @@ class AdaptiveInterpolator:
         hypercube = scaled_point.astype(np.int)
         scaled_point -= hypercube
         return scaled_point, hypercube
+
+    def find_hypercube_array(self, points: np.ndarray):
+        scaled_points = (points - self.axes_min) / self.axes_len_interval
+        hypercubes = scaled_points.astype(np.int)
+        scaled_points -= hypercubes
+        return scaled_points, hypercubes
+
