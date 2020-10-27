@@ -40,7 +40,7 @@ class InterpolatorBase:  # pylint: disable=R0902
             self.adaptive_values = dict()
         else:
             self.adaptive_values = func(*np.meshgrid(
-                *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)]))
+                *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)], indexing='ij'))
 
     def get_vertex_value(self, vertex: np.ndarray) -> float:
         """

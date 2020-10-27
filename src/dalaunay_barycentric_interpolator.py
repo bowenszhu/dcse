@@ -19,6 +19,9 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         The minimum value for each axis.
     axes_max : a list of integers
         The maximum value for each axis.
+    adaptive : boolean
+        If true. the class will apply adaptive parametrization.
+        Otherwise function values will be evaluated at the initialization stage.
 
     Examples
     --------
@@ -28,10 +31,10 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     >>> point = np.array([2.1, 6.2, 8.3])
     >>> interpolant = interpolator.interpolate_point(point)
     """
-
+    # pylint: disable=R0913
     def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
-                 axes_max: List[float]):
-        super().__init__(func, axes_n_points, axes_min, axes_max)
+                 axes_max: List[float], adaptive: bool = True):
+        super().__init__(func, axes_n_points, axes_min, axes_max, adaptive)
         self.unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * self.n_dim)).T.reshape(-1, self.n_dim)
         self.tri = Delaunay(self.unit_hypercube)
 
@@ -60,16 +63,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         -------
         interpolant : float
             Piecewise linear interpolation value.
-        gradient : 1-D array
-            Approximation for partial derivative based on piecewise linear interpolation.
-
-        Raises
-        ------
-        ValueError
-            Raised if input point does match the dimension of the interpolator.
         """
-        if len(point) != self.n_dim:
-            raise ValueError('The point ' + str(point) + ' does not match the dimension of the interpolator.')
         scaled_point, hypercube = self.find_hypercube_points(point)
         simplex_i = self.tri.find_simplex(np.array([scaled_point]))[0]
 
@@ -80,8 +74,9 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         barycentric = np.append(barycentric, 1 - barycentric.sum())
 
         simplex = self.unit_hypercube[self.tri.simplices[simplex_i]] + hypercube
-        values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
+        if self.adaptive:
+            values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
+        else:
+            values = self.get_simplices_values(simplex)
         interpolant = np.dot(barycentric, values)
-        # t_inv = np.vstack((t_inv, -t_inv.sum(axis=0)))
-        # gradient = np.dot(values, t_inv) / self.axes_len_interval
         return interpolant

@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
 
@@ -75,3 +76,22 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
         interpolant2 = interpolator.interpolate_point(point2)
         np.testing.assert_almost_equal(interpolant2, 0.3 * 24 + 0.6 * 16 + 0.1 * 14)
         # np.testing.assert_array_almost_equal(gradient2, np.array([2, 8]))
+
+    def test_interpolate_point_with_scipy(self):
+        x = np.linspace(1, 4, 11)
+        y = np.linspace(4, 7, 22)
+        z = np.linspace(7, 9, 33)
+        data = test_function3(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
+        scipy_interpolator = RegularGridInterpolator((x, y, z), data)
+
+        interpolator = PiecewiseLinearInterpolator(test_function3, [11, 22, 33], [1, 4, 7], [4, 7, 9])
+
+        point = np.array([2.1, 6.2, 8.3])
+        scipy_value = scipy_interpolator(point)
+        value = interpolator.interpolate_point(point)
+        np.testing.assert_almost_equal(scipy_value, value)
+
+        point = np.array([3.3, 5.2, 7.1])
+        scipy_value = scipy_interpolator(point)
+        value = interpolator.interpolate_point(point)
+        np.testing.assert_almost_equal(scipy_value, value, decimal=1)

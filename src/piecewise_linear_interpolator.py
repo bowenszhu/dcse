@@ -120,9 +120,7 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         """
         simplex, ordered_scaled_point = self.find_simplex_point(point)
         if self.adaptive:
-            values = np.empty(self.n_dim + 1)
-            for simplex_i in range(self.n_dim + 1):
-                values[simplex_i] = self.get_vertex_value(simplex[simplex_i])
+            values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
         else:
             values = self.get_simplices_values(simplex)
         ordered_scaled_point = np.append(ordered_scaled_point, 1)
