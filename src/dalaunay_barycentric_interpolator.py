@@ -40,7 +40,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
 
     def interpolate_point(self, point: np.ndarray) -> float:
         """
-        Compute the barycentric interpolant and gradient at given point based on Delaunay triangulation.
+        Compute the barycentric interpolant at given point based on Delaunay triangulation.
 
         The class scipy.spatial.qhull.Delaunay is used for applying Delaunay triangulation, finding simplex and
         computing barycentric coordinates.
@@ -62,7 +62,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         Returns
         -------
         interpolant : float
-            Piecewise linear interpolation value.
+            Value of barycentric interpolant with Delaunay triangulation.
         """
         scaled_point, hypercube = self.find_hypercube_points(point)
         simplex_i = self.tri.find_simplex(np.array([scaled_point]))[0]
@@ -74,9 +74,46 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         barycentric = np.append(barycentric, 1 - barycentric.sum())
 
         simplex = self.unit_hypercube[self.tri.simplices[simplex_i]] + hypercube
-        if self.adaptive:
-            values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
-        else:
-            values = self.get_simplices_values(simplex)
+        values = self.get_simplex_values(simplex)
         interpolant = np.dot(barycentric, values)
         return interpolant
+
+    def interpolate_array(self, grid: np.ndarray) -> np.ndarray:
+        """
+        Compute the barycentric interpolants at given grid based on Delaunay triangulation.
+
+        The class scipy.spatial.qhull.Delaunay is used for applying Delaunay triangulation, finding simplex and
+        computing barycentric coordinates.
+        The field, Delaunay.transform, supports affine transform from ``x`` to the barycentric coordinates ``c``.
+        This is defined by:
+
+            T c = x - r
+
+        At vertex ``j``, ``c_j = 1`` and the other coordinates zero.
+
+        For simplex ``i``, ``transform[i,:ndim,:ndim]`` contains inverse of the matrix ``T``,
+        and ``transform[i,ndim,:]`` contains the vector ``r``.
+
+        Parameters
+        ---------
+        grid : (nDim+1)-D array with shape (nDim, nP_1, nP_2, ..., nP_nDim)
+                where nP_i is the number of points in the i-th axis
+            Grid to interpolate.
+
+        Returns
+        -------
+        interpolants : (nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
+            Interpolation values at the input grid.
+        """
+        res_shape = grid.shape[1:]
+        points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
+        scaled_points, hypercubes = self.find_hypercube_points(points)
+        simplices_i = self.tri.find_simplex(scaled_points)
+        ts_inv = self.tri.transform[simplices_i, :self.n_dim, :self.n_dim]
+        rs = self.tri.transform[simplices_i, self.n_dim]  # pylint: disable=C0103
+        barycentric = np.einsum('ijk,ik->ij', ts_inv, scaled_points - rs)
+        barycentric = np.column_stack((barycentric, 1 - barycentric.sum(axis=-1)))
+        simplices = (self.unit_hypercube[self.tri.simplices[simplices_i]].swapaxes(0, 1) + hypercubes).swapaxes(0, 1)
+        values = self.get_simplices_values(simplices)
+        interpolants = np.einsum('ij,ij->i', barycentric, values)
+        return interpolants.reshape(res_shape)

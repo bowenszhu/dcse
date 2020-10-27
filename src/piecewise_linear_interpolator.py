@@ -119,10 +119,7 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
             Piecewise linear interpolation value.
         """
         simplex, ordered_scaled_point = self.find_simplex_point(point)
-        if self.adaptive:
-            values = np.array([self.get_vertex_value(simplex[i]) for i in range(self.n_dim + 1)])
-        else:
-            values = self.get_simplices_values(simplex)
+        values = self.get_simplex_values(simplex)
         ordered_scaled_point = np.append(ordered_scaled_point, 1)
         ordered_scaled_point[1:] -= ordered_scaled_point[:-1]
         return np.dot(ordered_scaled_point, values)
@@ -135,23 +132,17 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         ----------
         grid : (nDim+1)-D array with shape (nDim, nP_1, nP_2, ..., nP_nDim)
                 where nP_i is the number of points in the i-th axis
-            Grid to interpolate
+            Grid to interpolate.
 
         Returns
         -------
-        interpolants : (nDim, nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
+        interpolants : (nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
             Interpolation values at the input grid.
         """
         res_shape = grid.shape[1:]
-        points = np.moveaxis(grid, 0, -1).reshape((-1, grid.shape[0]))
+        points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
         simplices, ordered_scaled_points = self.find_simplices_array(points)
-        if self.adaptive:
-            values = np.empty((len(points), self.n_dim + 1))
-            for point_i in range(len(points)):
-                for simplex_i in range(self.n_dim + 1):
-                    values[point_i, simplex_i] = self.get_vertex_value(simplices[point_i, simplex_i])
-        else:
-            values = self.get_simplices_values(simplices)
+        values = self.get_simplices_values(simplices)
         ordered_scaled_points = np.hstack((ordered_scaled_points, np.ones((len(points), 1))))
         ordered_scaled_points[:, 1:] -= ordered_scaled_points[:, :-1]
         interpolants = np.einsum('ij,ij->i', ordered_scaled_points, values)

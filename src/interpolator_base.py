@@ -39,8 +39,13 @@ class InterpolatorBase:  # pylint: disable=R0902
         if adaptive:
             self.adaptive_values = dict()
         else:
-            self.adaptive_values = func(*np.meshgrid(
-                *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)], indexing='ij'))
+            mesh = list()
+            for i in range(self.n_dim):
+                sample_points, step = np.linspace(axes_min[i], axes_max[i], axes_n_points[i], retstep=True)
+                mesh.append(np.append(sample_points, sample_points[-1] + step))
+            self.adaptive_values = func(*np.meshgrid(*mesh, indexing='ij'))
+            # self.adaptive_values = func(*np.meshgrid(
+            #     *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)], indexing='ij'))
 
     def get_vertex_value(self, vertex: np.ndarray) -> float:
         """
@@ -76,9 +81,10 @@ class InterpolatorBase:  # pylint: disable=R0902
             self.adaptive_values[vertex_tuple] = value
         return value
 
-    def get_simplices_values(self, simplices: np.ndarray):
+    def get_simplices_values_static(self, simplices: np.ndarray) -> np.ndarray:
         """
         Get the values of vertices in simplices.
+        This method should be invoked only when adaptive parametrization is not used,
 
         Parameters
         ----------
@@ -95,6 +101,55 @@ class InterpolatorBase:  # pylint: disable=R0902
         indices = tuple(reshaped[:, d] for d in range(self.n_dim))
         values = self.adaptive_values[indices]
         return values.reshape(res_shape)
+
+    def get_simplex_values(self, simplex: np.ndarray) -> np.ndarray:
+        """
+        Get the function values at the vertices of the given simplex.
+        If the approach of adaptive parametrization is used, values are evaluated one by one in a for loop.
+        Otherwise values are extracted from existing storage.
+
+        Parameters
+        ----------
+        simplex : 2-D array of shape (nDim+1, nDim)
+            Simplex to evaluate.
+
+        Returns
+        -------
+        values : 1-D array of shape (nDim+1)
+            Function values at the vertices of the given simplex.
+        """
+        if self.adaptive:
+            values = np.empty(self.n_dim + 1)
+            for simplex_i in range(self.n_dim + 1):
+                values[simplex_i] = self.get_vertex_value(simplex[simplex_i])
+        else:
+            values = self.get_simplices_values_static(simplex)
+        return values
+
+    def get_simplices_values(self, simplices: np.ndarray) -> np.ndarray:
+        """
+        Get the function values at the vertices of the given simplices.
+        If the approach of adaptive parametrization is used, values are evaluated one by one in a for loop.
+        Otherwise values are extracted from existing storage.
+
+        Parameters
+        ----------
+        simplices : 3-D array of shape (nP, nDim+1, nDim) where nP is the number of points
+            Simplices to evaluate.
+
+        Returns
+        -------
+        values : 2-D array of shape (nP, nDim+1) where nP is the number of points
+            Function values at the vertices of the given simplices.
+        """
+        if self.adaptive:
+            values = np.empty((len(simplices), self.n_dim + 1))
+            for point_i in range(len(simplices)):
+                for simplex_i in range(self.n_dim + 1):
+                    values[point_i, simplex_i] = self.get_vertex_value(simplices[point_i, simplex_i])
+        else:
+            values = self.get_simplices_values_static(simplices)
+        return values
 
     def find_hypercube_points(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
