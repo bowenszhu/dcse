@@ -1,10 +1,10 @@
-from typing import Callable, List, Tuple
+from typing import Callable, List
 from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
 import numpy as np
-from src.adaptive_interpolator import AdaptiveInterpolatorBase
+from src.interpolator_base import InterpolatorBase
 
 
-class DelaunayBarycentricInterpolator(AdaptiveInterpolatorBase):
+class DelaunayBarycentricInterpolator(InterpolatorBase):
     """
     Delaunay triangulation and barycentric interpolation with adaptive parametrization
     on a uniform grid in arbitrary dimensions.
@@ -13,7 +13,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolatorBase):
     ----------
     func : a function with n input arguments and float as output
         Function to approximate.
-    axes_points : a list of integers
+    axes_n_points : a list of integers
         The number of supporting points along each axis.
     axes_min : a list of integers
         The minimum value for each axis.
@@ -29,9 +29,9 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolatorBase):
     >>> interpolant = interpolator.interpolate_point(point)
     """
 
-    def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
+    def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
                  axes_max: List[float]):
-        super().__init__(func, axes_points, axes_min, axes_max)
+        super().__init__(func, axes_n_points, axes_min, axes_max)
         self.unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * self.n_dim)).T.reshape(-1, self.n_dim)
         self.tri = Delaunay(self.unit_hypercube)
 
@@ -70,7 +70,7 @@ class DelaunayBarycentricInterpolator(AdaptiveInterpolatorBase):
         """
         if len(point) != self.n_dim:
             raise ValueError('The point ' + str(point) + ' does not match the dimension of the interpolator.')
-        scaled_point, hypercube = self.find_hypercube_point(point)
+        scaled_point, hypercube = self.find_hypercube_points(point)
         simplex_i = self.tri.find_simplex(np.array([scaled_point]))[0]
 
         # compute barycentric coordinates

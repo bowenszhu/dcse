@@ -2,41 +2,45 @@ from typing import Callable, List, Tuple
 import numpy as np
 
 
-class AdaptiveInterpolatorBase:
+class InterpolatorBase:  # pylint: disable=R0902
     """
-    A parent class for interpolators with adaptive parametrization/storage.
+    Interpolators base.
 
     Parameters
     ----------
     func : a function with n input arguments and float as output
         Function to approximate.
-    axes_points : a list of integers
+    axes_n_points : a list of integers
         The number of supporting points along each axis.
     axes_min : a list of integers
         The minimum value for each axis.
     axes_max : a list of integers
         The maximum value for each axis.
-
-    Raises
-    ------
-    ValueError
-        Raised if inconsistent lists with different dimensions is given as input.
+    adaptive : boolean
+        If true. the class will apply adaptive parametrization.
+        Otherwise function values will be evaluated at the initialization stage.
 
     Notes
     -----
     The approach of adaptive parametrization is simulated with python dictionary.
     """
 
-    def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
-                 axes_max: List[float]):
-        if len(axes_points) != len(axes_min) or len(axes_min) != len(axes_max):
+    def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
+                 axes_max: List[float], adaptive: bool = True):  # pylint: disable=R0913
+        if len(axes_n_points) != len(axes_min) or len(axes_min) != len(axes_max):
             raise ValueError('The sizes of axes_points, axes_min and axes_max are not consistent.')
         self.func = func
-        self.n_dim = len(axes_points)
+        self.n_dim = len(axes_n_points)
+        self.axes_n_points = tuple(axes_n_points)
         self.axes_min = np.array(axes_min)
         self.axes_max = np.array(axes_max)
-        self.axes_len_interval = (self.axes_max - self.axes_min) / (np.array(axes_points) - 1)
-        self.adaptive_values = dict()
+        self.axes_len_interval = (self.axes_max - self.axes_min) / (np.array(axes_n_points) - 1)
+        self.adaptive = adaptive
+        if adaptive:
+            self.adaptive_values = dict()
+        else:
+            self.adaptive_values = func(*np.meshgrid(
+                *[np.linspace(axes_min[i], axes_max[i], axes_n_points[i]) for i in range(self.n_dim)]))
 
     def get_vertex_value(self, vertex: np.ndarray) -> float:
         """
@@ -56,7 +60,7 @@ class AdaptiveInterpolatorBase:
 
         Notes
         -----
-        Tuple[int] is used as the key for the dictionary since tuple is hashable and float has rounding errors.
+        Tuple[int] is used as the key for the dictionary since tuple is hashable.
 
         Reference
         ---------
@@ -72,7 +76,27 @@ class AdaptiveInterpolatorBase:
             self.adaptive_values[vertex_tuple] = value
         return value
 
-    def find_hypercube_point(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def get_simplices_values(self, simplices: np.ndarray):
+        """
+        Get the values of vertices in simplices.
+
+        Parameters
+        ----------
+        simplices : array of shape (nDim+1, nDim) or (nP, nDim+1, nDim) where nP is the number of points
+            Simplices whose vertices to compute.
+
+        Returns
+        -------
+        values : array of shape (nDim+1) or (nP, nDim+1) depending on the shape of input simplices
+            Values at vertices of input simplices.
+        """
+        res_shape = simplices.shape[:-1]
+        reshaped = simplices.reshape((-1, self.n_dim))
+        indices = tuple(reshaped[:, d] for d in range(self.n_dim))
+        values = self.adaptive_values[indices]
+        return values.reshape(res_shape)
+
+    def find_hypercube_points(self, point: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find the hypercube where the point is located in the numerical grid.
 
@@ -83,25 +107,13 @@ class AdaptiveInterpolatorBase:
 
         Returns
         -------
-        scaled_point : array of shape (ndim, ndim)
+        scaled_point : array of shape (nDim, nDim)
             The scaled coordinates within the hypercube,
-            which is the same as the variables y's in Weiser and Zarantonello (1988)
-        hypercube : array of shape (ndim, ndim)
+            which is the same as the variables, y's, in Weiser and Zarantonello (1988).
+        hypercube : array of shape (nDim, nDim)
             The lower left vertex of the hypercube.
-
-        Raises
-        ------
-         ValueError
-            Raised if input point is outside the interpolation domain.
         """
         scaled_point = (point - self.axes_min) / self.axes_len_interval
         hypercube = scaled_point.astype(np.int)
         scaled_point -= hypercube
         return scaled_point, hypercube
-
-    def find_hypercube_array(self, points: np.ndarray):
-        scaled_points = (points - self.axes_min) / self.axes_len_interval
-        hypercubes = scaled_points.astype(np.int)
-        scaled_points -= hypercubes
-        return scaled_points, hypercubes
-

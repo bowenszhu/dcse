@@ -31,4 +31,4 @@ class TestDelaunayBarycentricInterpolator(unittest.TestCase):
 
         point = np.array([6.2, 7.8, 12.8, 5, 2])
         # interpolant, gradient = interpolator.interpolate_point(point)
-        interpolant = interpolator.interpolate_point(point)
+        interpolator.interpolate_point(point)

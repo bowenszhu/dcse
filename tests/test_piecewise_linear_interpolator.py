@@ -1,6 +1,5 @@
 import unittest
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
 
@@ -34,14 +33,14 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
         self.assertEqual(len(interpolator.adaptive_values), 0)
 
         point1 = np.array([6.2, 1.8])
-        simplex1 = interpolator.find_simplex(point1)[0]
+        simplex1 = interpolator.find_simplex_point(point1)[0]
         for vertex in simplex1:
             interpolator.get_vertex_value(vertex)
         # after evaluating one point, there are three data points in the dictionary.
         self.assertEqual(len(interpolator.adaptive_values), 3)
 
         point2 = np.array([6.7, 1.2])
-        simplex2 = interpolator.find_simplex(point2)[0]
+        simplex2 = interpolator.find_simplex_point(point2)[0]
         for vertex in simplex2:
             interpolator.get_vertex_value(vertex)
         # the simplex where the point 2 is located in a neighbor to point1, so data points which were computed
@@ -51,7 +50,7 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
     def test_find_simplex(self):
         interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
         point = np.array([6.2, 1.8])
-        simplex, axes_order = interpolator.find_simplex(point)
+        simplex, axes_order = interpolator.find_simplex_point(point)
         np.testing.assert_array_almost_equal(simplex, np.array([[2, 1],
                                                                 [1, 1],
                                                                 [1, 0]], dtype=np.int))
@@ -76,22 +75,3 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
         interpolant2 = interpolator.interpolate_point(point2)
         np.testing.assert_almost_equal(interpolant2, 0.3 * 24 + 0.6 * 16 + 0.1 * 14)
         # np.testing.assert_array_almost_equal(gradient2, np.array([2, 8]))
-
-    def test_interpolate_point_with_scipy(self):
-        x = np.linspace(1, 4, 11)
-        y = np.linspace(4, 7, 22)
-        z = np.linspace(7, 9, 33)
-        data = test_function3(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
-        scipy_interpolator = RegularGridInterpolator((x, y, z), data)
-
-        interpolator = PiecewiseLinearInterpolator(test_function3, [11, 22, 33], [1, 4, 7], [4, 7, 9])
-
-        point = np.array([2.1, 6.2, 8.3])
-        scipy_value = scipy_interpolator(point)
-        value = interpolator.interpolate_point(point)
-        np.testing.assert_almost_equal(scipy_value, value)
-
-        point = np.array([3.3, 5.2, 7.1])
-        scipy_value = scipy_interpolator(point)
-        value = interpolator.interpolate_point(point)
-        np.testing.assert_almost_equal(scipy_value, value)
