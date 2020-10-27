@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
-from src.piecewise_linear_interpolator import PiecewiseLinearInterpolatorBase
+from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
 
 
 def test_function2(var1, var2):
@@ -16,7 +16,7 @@ def test_function3(x, y, z):
 class TestPiecewiseLinearInterpolator(unittest.TestCase):
 
     def test_constructor(self):
-        interpolator = PiecewiseLinearInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
         self.assertEqual(interpolator.func, test_function2)
         self.assertEqual(interpolator.n_dim, 2)
         np.testing.assert_array_almost_equal(interpolator.axes_min, np.array([5, 1]))
@@ -25,10 +25,10 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
 
     def test_constructor_wrond_input(self):
         with self.assertRaises(ValueError):
-            PiecewiseLinearInterpolatorBase(test_function3, [4, 3], [5, 1, 6], [8, 3])
+            PiecewiseLinearInterpolator(test_function3, [4, 3], [5, 1, 6], [8, 3])
 
     def test_get_vertex_value(self):
-        interpolator = PiecewiseLinearInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
 
         # initially there is no data in the dictionary.
         self.assertEqual(len(interpolator.adaptive_values), 0)
@@ -49,7 +49,7 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
         self.assertEqual(len(interpolator.adaptive_values), 4)
 
     def test_find_simplex(self):
-        interpolator = PiecewiseLinearInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
         point = np.array([6.2, 1.8])
         simplex, axes_order = interpolator.find_simplex(point)
         np.testing.assert_array_almost_equal(simplex, np.array([[2, 1],
@@ -57,13 +57,13 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
                                                                 [1, 0]], dtype=np.int))
 
     def test_interpolate_point_wrong_input(self):
-        interpolator = PiecewiseLinearInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
         point = np.array([3, 4, 5])
         with self.assertRaises(ValueError):
             interpolator.interpolate_point(point)
 
     def test_interpolate_point(self):
-        interpolator = PiecewiseLinearInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = PiecewiseLinearInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
 
         point1 = np.array([6.2, 1.8])
         # interpolant1, gradient1 = interpolator.interpolate_point(point1)
@@ -84,7 +84,7 @@ class TestPiecewiseLinearInterpolator(unittest.TestCase):
         data = test_function3(*np.meshgrid(x, y, z, indexing='ij', sparse=True))
         scipy_interpolator = RegularGridInterpolator((x, y, z), data)
 
-        interpolator = PiecewiseLinearInterpolatorBase(test_function3, [11, 22, 33], [1, 4, 7], [4, 7, 9])
+        interpolator = PiecewiseLinearInterpolator(test_function3, [11, 22, 33], [1, 4, 7], [4, 7, 9])
 
         point = np.array([2.1, 6.2, 8.3])
         scipy_value = scipy_interpolator(point)

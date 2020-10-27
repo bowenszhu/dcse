@@ -1,13 +1,13 @@
 import unittest
 import numpy as np
-from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolatorBase
+from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 
 
 class TestDelaunayBarycentricInterpolator(unittest.TestCase):
     def test_interpolate_point(self):
         def test_function2(var1, var2):
             return var1 * var2
-        interpolator = DelaunayBarycentricInterpolatorBase(test_function2, [4, 3], [5, 1], [8, 3])
+        interpolator = DelaunayBarycentricInterpolator(test_function2, [4, 3], [5, 1], [8, 3])
 
         point1 = np.array([6.2, 1.8])
         # interpolant1, gradient1 = interpolator.interpolate_point(point1)
@@ -27,7 +27,7 @@ class TestDelaunayBarycentricInterpolator(unittest.TestCase):
         axes_points = [4, 3, 5, 9, 6]
         axes_min = [2, 7, 9, 4, 1]
         axes_max = [8, 10, 13, 15, 6]
-        interpolator = DelaunayBarycentricInterpolatorBase(test_function5, axes_points, axes_min, axes_max)
+        interpolator = DelaunayBarycentricInterpolator(test_function5, axes_points, axes_min, axes_max)
 
         point = np.array([6.2, 7.8, 12.8, 5, 2])
         # interpolant, gradient = interpolator.interpolate_point(point)

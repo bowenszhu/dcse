@@ -4,7 +4,7 @@ import numpy as np
 from src.adaptive_interpolator import AdaptiveInterpolatorBase
 
 
-class PiecewiseLinearInterpolatorBase(AdaptiveInterpolatorBase):
+class PiecewiseLinearInterpolator(AdaptiveInterpolatorBase):
     """
     Piecewise linear interpolation coupled with adaptive storage on a uniform grid in arbitrary dimensions
 
@@ -27,7 +27,7 @@ class PiecewiseLinearInterpolatorBase(AdaptiveInterpolatorBase):
     --------
     >>> def f(x, y, z):
     ...     return 2 * x**3 + 3 * y**2 - z
-    >>> interpolator = PiecewiseLinearInterpolatorBase(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
+    >>> interpolator = PiecewiseLinearInterpolator(f, [11, 22, 33], [1, 4, 7], [4, 7, 9])
     >>> point = np.array([2.1, 6.2, 8.3])
     >>> interpolant = interpolator.interpolate_point(point)
     """
