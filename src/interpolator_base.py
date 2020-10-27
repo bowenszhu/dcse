@@ -24,9 +24,9 @@ class InterpolatorBase:  # pylint: disable=R0902
     -----
     The approach of adaptive parametrization is simulated with python dictionary.
     """
-
+    # pylint: disable=R0913
     def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
-                 axes_max: List[float], adaptive: bool = True):  # pylint: disable=R0913
+                 axes_max: List[float], adaptive: bool = True):
         if len(axes_n_points) != len(axes_min) or len(axes_min) != len(axes_max):
             raise ValueError('The sizes of axes_points, axes_min and axes_max are not consistent.')
         self.func = func
