@@ -20,9 +20,9 @@ coverage:
 flake8:
   stage: Static Analysis
   script:
-    - flake8
+    - flake8  --max-line-length 120
 
 pylint:
   stage: Static Analysis
   script:
-    - pylint src
+    - pylint --max-line-length=120 -d C0114 src
