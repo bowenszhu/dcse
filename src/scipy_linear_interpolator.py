@@ -24,7 +24,7 @@ class ScipyLinearInterpolator:
         # move the first axis to the last place
         xi = np.rollaxis(grid, 0, self.n_dim + 1)
         # flatten all axis except the last
-        xi = xi.reshape((-1, 2))
+        xi = xi.reshape((-1, self.n_dim))
 
         # interpolate and shape the result
         return interpn(self.points, self.values, xi).reshape(result_shape)

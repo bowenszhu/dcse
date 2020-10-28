@@ -14,7 +14,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     ----------
     func : a function with n input arguments and float as output
         Function to approximate.
-    axes_n_points : a list of integers
+    axes_points : a list of integers
         The number of supporting points along each axis.
     axes_min : a list of integers
         The minimum value for each axis.
@@ -39,9 +39,9 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     >>> res = interpolator.interpolate_array(grid)
     """
     # pylint: disable=R0913
-    def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
+    def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
                  axes_max: List[float], adaptive: bool = True):
-        super().__init__(func, axes_n_points, axes_min, axes_max, adaptive)
+        super().__init__(func, axes_points, axes_min, axes_max, adaptive)
         triangulation_start_time = time.time()
         self.unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * self.n_dim)).T.reshape(-1, self.n_dim)
         self.tri = Delaunay(self.unit_hypercube)
