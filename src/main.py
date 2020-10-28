@@ -22,8 +22,8 @@ def func_3d(var1, var2, var3):
 if __name__ == '__main__':
     # create test grid 100*300
     points = [None] * 2
-    points[0] = np.linspace(-1, 0, 100)
-    points[1] = np.linspace(0, 1, 300)
+    points[0] = np.linspace(-0.1, 0, 1000)
+    points[1] = np.linspace(0, 0.1, 3000)
     test_grid = np.array(np.meshgrid(*points))
 
     # evaluate function on the test grid
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z)], filename='func_2d_exact.html')
 
     # create interpolator object for (-1.1, -1.1) to (1.1, 1.1) space using 400 data points along each axis
-    axes_points = [400, 400]
+    axes_points = [100, 100]
     axes_min = [-1.1, -1.1]
     axes_max = [1.1, 1.1]
     scipy_itor = ScipyLinearInterpolator(func_2d, axes_points, axes_min, axes_max)
@@ -52,7 +52,8 @@ if __name__ == '__main__':
     z_delaunay_static_itor = delaunay_static_itor.interpolate_array(test_grid)
     z_delaunay_adaptive_itor = delaunay_adaptive_itor.interpolate_array(test_grid)
 
-    print('\n\n2-dimensional (100, 300) grid')
+    print('\n\n2-dimensional (%d, %d) test grid over (%d, %d) supporting points grid' % (
+    len(points[0]), len(points[1]), axes_points[0], axes_points[1]))
     print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
           (darts_static_itor.get_init_time(), darts_static_itor.get_interpolation_time()))
     print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'), 'init: %f s, interpolation: %f s' %
