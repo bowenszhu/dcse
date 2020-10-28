@@ -42,8 +42,10 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     def __init__(self, func: Callable[..., float], axes_n_points: List[int], axes_min: List[float],
                  axes_max: List[float], adaptive: bool = True):
         super().__init__(func, axes_n_points, axes_min, axes_max, adaptive)
+        triangulation_start_time = time.time()
         self.unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * self.n_dim)).T.reshape(-1, self.n_dim)
         self.tri = Delaunay(self.unit_hypercube)
+        self.initialization_time += time.time() - triangulation_start_time
 
     def interpolate_point(self, point: np.ndarray) -> float:
         """
