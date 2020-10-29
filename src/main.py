@@ -82,7 +82,7 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
 
     print('\n\nValues at', point, ':')
     print('{:<33}'.format('function'), func(*point))
-    if n_dim <= 6:
+    if n_dim <= 10:
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
               darts_static_itor.interpolate_point(point))
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'),
