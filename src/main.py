@@ -44,7 +44,7 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
     axes_max = [1.1] * n_dim
     print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
-    if n_dim <= 6:
+    if n_dim <= 10:
         darts_static_itor = DartsMultilinearStaticInterpolator(func, axes_points, axes_min, axes_max)
         z_darts_static_itor = darts_static_itor.interpolate_array(test_grid)
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
