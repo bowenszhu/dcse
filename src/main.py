@@ -47,38 +47,52 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
     if n_dim <= 10:
         darts_static_itor = DartsMultilinearStaticInterpolator(func, axes_points, axes_min, axes_max)
         z_darts_static_itor = darts_static_itor.interpolate_array(test_grid)
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
-              (darts_static_itor.get_init_time(), darts_static_itor.get_interpolation_time()))
+        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
+              'init: %f s, interpolation: %f s (%.2e s per point)' %
+              (darts_static_itor.get_init_time(), darts_static_itor.get_interpolation_time(),
+               darts_static_itor.get_interpolation_time() / test_grid.size))
 
         darts_adaptive_itor = DartsMultilinearAdaptiveInterpolator(func, axes_points, axes_min, axes_max)
         z_darts_adaptive_itor = darts_adaptive_itor.interpolate_array(test_grid)
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'), 'init: %f s, interpolation: %f s' %
-              (darts_adaptive_itor.get_init_time(), darts_adaptive_itor.get_interpolation_time()), '\n')
+        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'),
+              'init: %f s, interpolation: %f s (%.2e s per point)' %
+              (darts_adaptive_itor.get_init_time(), darts_adaptive_itor.get_interpolation_time(),
+               darts_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
 
     linear_static_itor = PiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max, adaptive=False)
     z_linear_static_itor = linear_static_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
-          (linear_static_itor.get_init_time(), linear_static_itor.get_interpolation_time()))
+    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('static'),
+          'init: %f s, interpolation: %f s (%.2e s per point)' %
+          (linear_static_itor.get_init_time(), linear_static_itor.get_interpolation_time(),
+           linear_static_itor.get_interpolation_time() / test_grid.size))
 
     linear_adaptive_itor = PiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max)
     z_linear_adaptive_itor = linear_adaptive_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('adaptive'), 'init: %f s, interpolation: %f s' %
-          (linear_adaptive_itor.get_init_time(), linear_adaptive_itor.get_interpolation_time()), '\n')
+    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('adaptive'),
+          'init: %f s, interpolation: %f s (%.2e s per point)' %
+          (linear_adaptive_itor.get_init_time(), linear_adaptive_itor.get_interpolation_time(),
+           linear_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
 
     delaunay_static_itor = DelaunayBarycentricInterpolator(func, axes_points, axes_min, axes_max, adaptive=False)
     z_delaunay_static_itor = delaunay_static_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
-          (delaunay_static_itor.get_init_time(), delaunay_static_itor.get_interpolation_time()))
+    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('static'),
+          'init: %f s, interpolation: %f s (%.2e s per point)' %
+          (delaunay_static_itor.get_init_time(), delaunay_static_itor.get_interpolation_time(),
+           delaunay_static_itor.get_interpolation_time() / test_grid.size))
 
     delaunay_adaptive_itor = DelaunayBarycentricInterpolator(func, axes_points, axes_min, axes_max)
     z_delaunay_adaptive_itor = delaunay_adaptive_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('adaptive'), 'init: %f s, interpolation: %f s' %
-          (delaunay_adaptive_itor.get_init_time(), delaunay_adaptive_itor.get_interpolation_time()), '\n')
+    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('adaptive'),
+          'init: %f s, interpolation: %f s (%.2e s per point)' %
+          (delaunay_adaptive_itor.get_init_time(), delaunay_adaptive_itor.get_interpolation_time(),
+           delaunay_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
 
     scipy_linear_itor = ScipyRegularGridLinearInterpolator(func, axes_points, axes_min, axes_max)
     z_scipy_linear_itor = scipy_linear_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('SciPy_linear'), '{:<10}'.format('static'), 'init: %f s, interpolation: %f s' %
-          (scipy_linear_itor.get_init_time(), scipy_linear_itor.get_interpolation_time()))
+    print('{:<22}'.format('SciPy_linear'), '{:<10}'.format('static'),
+          'init: %f s, interpolation: %f s (%.2e s per point)' %
+          (scipy_linear_itor.get_init_time(), scipy_linear_itor.get_interpolation_time(),
+           scipy_linear_itor.get_interpolation_time() / test_grid.size))
 
     print('\n\nValues at', point, ':')
     print('{:<33}'.format('function'), func(*point))
