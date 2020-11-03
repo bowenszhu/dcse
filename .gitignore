@@ -1,4 +1,8 @@
 **/.idea/**
 **/__pycache__/**
 /.coverage
-src/*.html
+*.o
+*.so
+*.pyd
+*.html
+/src/engines/src/engines_build_info.cpp

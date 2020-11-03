@@ -11,7 +11,7 @@ class ScipyLinearInterpolator:
             p = np.linspace(axes_min[d], axes_max[d], axes_points[d])
             points_list.append(p)
         self.points = tuple(points_list)
-        self.values = func(*np.meshgrid(*self.points))
+        self.values = func(*np.meshgrid(*self.points, indexing='ij'))
 
     def interpolate_point(self, point):
         assert (len(point) == self.n_dim)
@@ -24,7 +24,7 @@ class ScipyLinearInterpolator:
         # move the first axis to the last place
         xi = np.rollaxis(grid, 0, self.n_dim + 1)
         # flatten all axis except the last
-        xi = xi.reshape((-1, 2))
+        xi = xi.reshape((-1, self.n_dim))
 
         # interpolate and shape the result
         return interpn(self.points, self.values, xi).reshape(result_shape)

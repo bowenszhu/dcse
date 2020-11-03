@@ -5,8 +5,32 @@ before_script:
   - python -m pip install -r requirements.txt
 
 stages:
-  - Test
   - Static Analysis
+  - Build
+  - Test
+
+flake8:
+  stage: Static Analysis
+  script:
+    - flake8  --max-line-length 120  --exclude pybind11
+
+pylint:
+  stage: Static Analysis
+  script:
+    - pylint --ignore=pybind11 --max-line-length=120 -d C0114 src
+
+build_linux:
+  stage: Build
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
+  script:
+    - cd src/engines
+    - make
+  artifacts:
+      paths:
+        - src/engines/*.so
+        - src/engines/*.pyd
+
 
 coverage:
   stage: Test
@@ -17,12 +41,8 @@ coverage:
       -m unittest discover -s tests -p test_*.py -v
     - coverage report -m
 
-flake8:
-  stage: Static Analysis
+test_linux:
+  stage: Test
   script:
-    - flake8  --max-line-length 120
+      -  PYTHONPATH=`pwd` python3 src/main.py
 
-pylint:
-  stage: Static Analysis
-  script:
-    - pylint --max-line-length=120 -d C0114 src

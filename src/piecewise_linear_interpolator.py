@@ -1,3 +1,4 @@
+import time
 from typing import Tuple
 import numpy as np
 
@@ -6,7 +7,7 @@ from src.interpolator_base import InterpolatorBase
 
 class PiecewiseLinearInterpolator(InterpolatorBase):
     """
-    Piecewise linear interpolation coupled with adaptive storage on a uniform grid in arbitrary dimensions
+    Piecewise linear interpolation coupled with adaptive storage on a uniform grid in arbitrary dimensions.
 
     Parameters
     ----------
@@ -141,9 +142,15 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         """
         res_shape = grid.shape[1:]
         points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
+
+        interpolation_start_time = time.process_time()
+
         simplices, ordered_scaled_points = self.find_simplices_array(points)
         values = self.get_simplices_values(simplices)
         ordered_scaled_points = np.hstack((ordered_scaled_points, np.ones((len(points), 1))))
         ordered_scaled_points[:, 1:] -= ordered_scaled_points[:, :-1]
         interpolants = np.einsum('ij,ij->i', ordered_scaled_points, values)
+
+        self.interpolation_time += time.process_time() - interpolation_start_time
+
         return interpolants.reshape(res_shape)
