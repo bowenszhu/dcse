@@ -520,48 +520,13 @@ void operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::get_body_poin
   }
 }
 
-template class operator_set_interpolator_gpu<double, 2, 4>;
-template class operator_set_interpolator_gpu<float, 2, 4>;
-template class operator_set_interpolator_gpu<double, 3, 6>;
-template class operator_set_interpolator_gpu<double, 4, 8>;
-template class operator_set_interpolator_gpu<double, 5, 10>;
-template class operator_set_interpolator_gpu<double, 6, 12>;
-template class operator_set_interpolator_gpu<double, 8, 16>;
-
-template class operator_set_interpolator_gpu<double, 2, 10>;
-template class operator_set_interpolator_gpu<double, 2, 6>;
-template class operator_set_interpolator_gpu<double, 3, 9>;
-template class operator_set_interpolator_gpu<double, 4, 12>;
-
-template class operator_set_interpolator_gpu<double, 3, 7>;
-template class operator_set_interpolator_gpu<double, 4, 10>;
-
-template class operator_set_interpolator_gpu<double, 2, 3>;
-template class operator_set_interpolator_gpu<double, 3, 5>;
-template class operator_set_interpolator_gpu<double, 4, 7>;
-template class operator_set_interpolator_gpu<double, 5, 9>;
-template class operator_set_interpolator_gpu<double, 5, 15>;
-
-// rates
-template class operator_set_interpolator_gpu<double, 1, 2>;
-template class operator_set_interpolator_gpu<double, 2, 2>;
-template class operator_set_interpolator_gpu<double, 3, 2>;
-template class operator_set_interpolator_gpu<double, 4, 2>;
-template class operator_set_interpolator_gpu<double, 5, 2>;
-template class operator_set_interpolator_gpu<double, 6, 2>;
-template class operator_set_interpolator_gpu<double, 8, 2>;
-
-template class operator_set_interpolator_gpu<double, 1, 3>;
-template class operator_set_interpolator_gpu<double, 3, 3>;
-template class operator_set_interpolator_gpu<double, 4, 4>;
-template class operator_set_interpolator_gpu<double, 2, 7>;
-template class operator_set_interpolator_gpu<double, 4, 11>;
-template class operator_set_interpolator_gpu<double, 2, 8>;
-template class operator_set_interpolator_gpu<double, 3, 15>;
-template class operator_set_interpolator_gpu<double, 3, 18>;
-template class operator_set_interpolator_gpu<double, 4, 16>;
-
-template class operator_set_interpolator_gpu<double, 3, 4>;
-
-template class operator_set_interpolator_gpu<double, 2, 12>;
-template class operator_set_interpolator_gpu<double, 3, 16>;
+template class operator_set_interpolator_gpu<double, 1, 1>;
+template class operator_set_interpolator_gpu<double, 2, 1>;
+template class operator_set_interpolator_gpu<double, 3, 1>;
+template class operator_set_interpolator_gpu<double, 4, 1>;
+template class operator_set_interpolator_gpu<double, 5, 1>;
+template class operator_set_interpolator_gpu<double, 6, 1>;
+template class operator_set_interpolator_gpu<double, 7, 1>;
+template class operator_set_interpolator_gpu<double, 8, 1>;
+template class operator_set_interpolator_gpu<double, 9, 1>;
+template class operator_set_interpolator_gpu<double, 10, 1>;
