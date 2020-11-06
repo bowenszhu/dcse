@@ -27,7 +27,7 @@ build_linux:
     GIT_SUBMODULE_STRATEGY: normal
   script:
     - cd src/engines
-    - make
+    - make gpu
   artifacts:
       paths:
         - src/engines/*.so
