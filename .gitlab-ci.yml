@@ -1,4 +1,4 @@
-image: python:3.8
+tags: gpu
 
 before_script:
   - python -V  # Print out python version for debugging

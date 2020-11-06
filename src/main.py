@@ -172,7 +172,7 @@ if __name__ == '__main__':
     grid[5] = np.linspace(-0.5, -0.4, grid_shape[5])
     axes_points = [7, 7, 8, 8, 9, 9]
     point = np.array([0.1, 0.2, -0.3, -0.5, 0.3, 0.8])
-    measure_performance(n_dim, func_6d, axes_points, grid_shape, grid, point)
+    #measure_performance(n_dim, func_6d, axes_points, grid_shape, grid, point)
 
     n_dim = 9
     grid_shape = [4, 3, 4, 2, 3, 2, 3, 3, 2]
@@ -188,6 +188,6 @@ if __name__ == '__main__':
     grid[8] = np.linspace(-0.1, 0, grid_shape[8])
     axes_points = [3, 3, 2, 3, 4, 3, 2, 2, 3]
     point = np.array([0.1, 0.6, -0.3, -0.5, 0.9, 0.8, 0.4, -0.7, 0.2])
-    measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
+    #measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
-    scipy_delaunay_performance()
+    #scipy_delaunay_performance()
