@@ -5,7 +5,7 @@
 #include <vector>
 #include "PiecewiseLinearInterpolator.h"
 
-float func2(float x, float y)
+double func2(double x, double y)
 {
     return x + y;
 }
