@@ -1,7 +1,7 @@
 
 before_script:
-  - python -V  # Print out python version for debugging
-  - python -m pip install -r requirements.txt
+  - python3 -V  # Print out python version for debugging
+  - python3 -m pip install -r requirements.txt
 
 stages:
   - Static Analysis
