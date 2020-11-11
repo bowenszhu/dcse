@@ -1,20 +1,19 @@
-//
-// Created by bowen on 11/5/20.
-//
-
-#include <vector>
+#include <iostream>
 #include "PiecewiseLinearInterpolator.h"
+#include "PiecewiseLinearInterpolator.cpp"
 
-double func2(double x, double y)
+template class PiecewiseLinearInterpolator<2>;
+
+double func2(std::array<double, 2> &vars)
 {
-    return x + y;
+    return vars[0] + vars[1];
 }
 
 int main()
 {
-    std::vector<int> axes_points{3, 4};
-    std::vector<double> axes_min{-1.1, -1.2};
-    std::vector<double> axes_max{1.1, 1.2};
-    PiecewiseLinearInterpolator interpolator {axes_points, axes_min, axes_max};
+    std::array<int, 2> axes_points {3, 2};
+    std::array<double, 2> axes_min {-1.1, -1.2};
+    std::array<double, 2> axes_max {1.1, 1.2};
+    PiecewiseLinearInterpolator<2> interpolator {func2, axes_points, axes_min, axes_max};
     return 0;
 }

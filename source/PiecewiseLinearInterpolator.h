@@ -1,23 +1,29 @@
-//
-// Created by bowen on 11/6/20.
-//
+#ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_H
+#define DCSE2020_PIECEWISELINEARINTERPOLATOR_H
 
-#ifndef PIECEWISE_LINEAR_INTERPOLATOR_H
-#define PIECEWISE_LINEAR_INTERPOLATOR_H
-
-
+#include <functional>
 #include <vector>
 
+template <int n_dim>
 class PiecewiseLinearInterpolator {
 public:
-    PiecewiseLinearInterpolator(const std::vector<int> &axesPoints, const std::vector<double> &axesMin,
-                                const std::vector<double> &axesMax);
+    PiecewiseLinearInterpolator(const std::function<double(std::array<double, n_dim>&)> &func,
+                                const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
+                                const std::array<double, n_dim> &axesMax);
+    void get_point(int index, std::array<int, n_dim> &point);
+    double compute_value(int index);
 
 private:
-    std::vector<int> axes_points;
-    std::vector<double> axes_min;
-    std::vector<double> axes_max;
+    const std::function<double(std::array<double, n_dim>&)> func;
+    const std::array<int, n_dim> axes_points;
+    const std::array<double, n_dim> axes_min;
+    const std::array<double, n_dim> axes_max;
+    std::vector<double> point_data;
+    std::array<int, n_dim> axes_mult;
+    std::array<double, n_dim> axes_step;
+
 };
 
 
-#endif //PIECEWISE_LINEAR_INTERPOLATOR_H
+
+#endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H
