@@ -10,8 +10,7 @@ public:
     PiecewiseLinearInterpolator(const std::function<double(std::array<double, n_dim>&)> &func,
                                 const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
                                 const std::array<double, n_dim> &axesMax);
-    void get_point(int index, std::array<int, n_dim> &point);
-    double compute_value(int index);
+    double interpolate_point(const std::array<double, n_dim> &point);
 
 private:
     const std::function<double(std::array<double, n_dim>&)> func;
@@ -21,9 +20,18 @@ private:
     std::vector<double> point_data;
     std::array<int, n_dim> axes_mult;
     std::array<double, n_dim> axes_step;
-
+    std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex;
+    void get_point(int index, std::array<int, n_dim> &point);
+    double compute_value(int index);
+    void find_hypercube(const std::array<double, n_dim> &point, std::array<int, n_dim> &hypercube,
+                        std::array<double, n_dim> &scaled_point);
+    void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
+                      std::array<int, n_dim> &tri_order, // order of coordinate in standard triangulation
+                      std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
+    double get_value(const std::array<int, n_dim> &vertex);
 };
 
 
 
+#include "PiecewiseLinearInterpolator.inl"
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H

@@ -7,4 +7,4 @@ include_directories(source)
 
 add_executable(dcse2020_cpp
         source/main.cpp
-        source/global.h source/PiecewiseLinearInterpolator.cpp source/PiecewiseLinearInterpolator.h)
+        source/PiecewiseLinearInterpolator.inl source/PiecewiseLinearInterpolator.h)
