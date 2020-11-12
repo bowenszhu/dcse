@@ -69,7 +69,9 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         axes_order = np.argsort(scaled_point)
         standard_simplex = np.tri(self.n_dim, self.n_dim + 1, dtype=np.bool_).T
         dim0 = np.arange(self.n_dim + 1)[:, np.newaxis]
-        simplex = standard_simplex[dim0, axes_order] + hypercube
+        simplex = np.empty((self.n_dim + 1, self.n_dim), dtype=np.int)
+        simplex[dim0, axes_order] = standard_simplex
+        simplex += hypercube
         return simplex, scaled_point[axes_order]
 
     def find_simplices_array(self, points: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -98,10 +100,12 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         scaled_points, hypercubes = self.find_hypercube_points(points)
         axes_orders = np.argsort(scaled_points)
         standard_simplex = np.tri(self.n_dim, self.n_dim + 1, dtype=np.bool_).T
-        simplices = np.tile(standard_simplex, (len(points), 1, 1))
+        standard_simplices = np.tile(standard_simplex, (len(points), 1, 1))
         dim0 = np.arange(self.n_dim + 1)[:, np.newaxis, np.newaxis]
         dim1 = np.arange(len(points))[np.newaxis, :, np.newaxis]
-        simplices = simplices.swapaxes(0, 1)[dim0, dim1, axes_orders[np.newaxis, :]] + hypercubes
+        simplices = np.empty((self.n_dim + 1, len(points), self.n_dim), dtype=np.int)
+        simplices[dim0, dim1, axes_orders[np.newaxis, :]] = standard_simplices.swapaxes(0, 1)
+        simplices += hypercubes
         return simplices.swapaxes(0, 1), np.take_along_axis(scaled_points, axes_orders, axis=-1)
 
     def interpolate_point(self, point: np.ndarray) -> float:

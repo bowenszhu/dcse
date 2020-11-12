@@ -6,3 +6,4 @@
 *.pyd
 *.html
 /src/engines/src/engines_build_info.cpp
+/cmake-build-debug/
