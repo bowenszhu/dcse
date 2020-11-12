@@ -123,21 +123,21 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
           scipy_linear_itor.interpolate_point(point), '\n\n')
 
     # if n_dim == 2:
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=func(*test_grid))],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=func(*test_grid))],
     #                         filename='func_2d_itor_exact.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_darts_static_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_darts_static_itor)],
     #                         filename='func_2d_itor_ds.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_darts_adaptive_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_darts_adaptive_itor)],
     #                         filename='func_2d_itor_da.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_linear_adaptive_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_linear_adaptive_itor)],
     #                         filename='func_2d_itor_la.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_linear_static_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_linear_static_itor)],
     #                         filename='func_2d_itor_ls.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_delaunay_adaptive_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_delaunay_adaptive_itor)],
     #                         filename='func_2d_itor_ba.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_delaunay_static_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_delaunay_static_itor)],
     #                         filename='func_2d_itor_bs.html')
-    #     plotly.offline.plot([go.Surface(x=points[0], y=points[1], z=z_scipy_linear_itor)],
+    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_scipy_linear_itor)],
     #                         filename='func_2d_itor_scipy.html')
 
 
