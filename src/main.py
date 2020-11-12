@@ -270,9 +270,9 @@ def interpolation_error_analysis():
     plt.savefig('interpolation_errors.png')
     plt.show()
 
-    plt.plot(dimensions, error_results[:, 4], label='multilinear')
-    plt.plot(dimensions, error_results[:, 5], label='linear')
-    plt.plot(dimensions, error_results[:, 6], label='delaunay')
+    plt.plot(dimensions, error_results[:, 3], label='multilinear')
+    plt.plot(dimensions, error_results[:, 4], label='linear')
+    plt.plot(dimensions, error_results[:, 5], label='delaunay')
     plt.legend()
     plt.xlabel('dimension')
     plt.ylabel('$\\frac{|(f-F)(z)|}{N h^2}$')
