@@ -221,7 +221,6 @@ def interpolation_error(n_dim, axes_points, error_results, n_points):
     error_results[n_dim - 2, 0] = get_interpolation_error(DartsMultilinearAdaptiveInterpolator)
     error_results[n_dim - 2, 1] = get_interpolation_error(PiecewiseLinearInterpolator)
     error_results[n_dim - 2, 2] = get_interpolation_error(DelaunayBarycentricInterpolator)
-    error_results[n_dim - 2, 3:] = error_results[n_dim - 2, :3] / n_dim * (axes_points[0] - 1) ** 2 / 4
 
 
 def interpolation_error_analysis():
@@ -268,17 +267,6 @@ def interpolation_error_analysis():
     plt.title('interpolation error comparison')
     plt.savefig('interpolation_errors.eps')
     plt.savefig('interpolation_errors.png')
-    plt.show()
-
-    plt.plot(dimensions, error_results[:, 3], label='multilinear')
-    plt.plot(dimensions, error_results[:, 4], label='linear')
-    plt.plot(dimensions, error_results[:, 5], label='delaunay')
-    plt.legend()
-    plt.xlabel('dimension')
-    plt.ylabel('$\\frac{|(f-F)(z)|}{N h^2}$')
-    plt.title('error bounds')
-    plt.savefig('error_bounds.eps')
-    plt.savefig('error_bounds.png')
     plt.show()
 
 
