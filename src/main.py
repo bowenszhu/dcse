@@ -192,7 +192,7 @@ def compare_execution_time():
     measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
 
-def interpolation_error(n_dim, axes_points, n_points):
+def interpolation_error(n_dim, axes_points, error_results, n_points):
     axes_min = [-2.1] * n_dim
     axes_max = [2.1] * n_dim
 
@@ -218,46 +218,46 @@ def interpolation_error(n_dim, axes_points, n_points):
               '{:f}'.format(time.process_time() - start_time), 's')
         return average_error
 
-    e_multilinear = get_interpolation_error(DartsMultilinearAdaptiveInterpolator)
-    e_linear = get_interpolation_error(PiecewiseLinearInterpolator)
-    e_delaunay = get_interpolation_error(DelaunayBarycentricInterpolator)
-    return e_multilinear, e_linear, e_delaunay
+    error_results[n_dim - 2, 0] = get_interpolation_error(DartsMultilinearAdaptiveInterpolator)
+    error_results[n_dim - 2, 1] = get_interpolation_error(PiecewiseLinearInterpolator)
+    error_results[n_dim - 2, 2] = get_interpolation_error(DelaunayBarycentricInterpolator)
+    error_results[n_dim - 2, 3:] = error_results[n_dim - 2, :3] / n_dim * (axes_points[0] - 1) ** 2 / 4
 
 
 def interpolation_error_analysis():
-    error_results = np.empty((8, 3))  # record interpolation errors for 3 interpolator in different dimensions
+    error_results = np.empty((8, 6))  # record interpolation errors for 3 interpolator in different dimensions
 
     n_dim = 2
     axes_points = [100] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=100000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=100000)
 
     n_dim = 3
     axes_points = [100] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=100000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=100000)
 
     n_dim = 4
     axes_points = [100] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     n_dim = 5
     axes_points = [84] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     n_dim = 6
     axes_points = [40] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     n_dim = 7
     axes_points = [23] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     n_dim = 8
     axes_points = [15] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     n_dim = 9
     axes_points = [11] * n_dim
-    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
 
     dimensions = np.arange(2, 10)
     plt.plot(dimensions, error_results[:, 1] / error_results[:, 0], label='linear/multilinear')
@@ -268,6 +268,17 @@ def interpolation_error_analysis():
     plt.title('interpolation error comparison')
     plt.savefig('interpolation_errors.eps')
     plt.savefig('interpolation_errors.png')
+    plt.show()
+
+    plt.plot(dimensions, error_results[:, 4], label='multilinear')
+    plt.plot(dimensions, error_results[:, 5], label='linear')
+    plt.plot(dimensions, error_results[:, 6], label='delaunay')
+    plt.legend()
+    plt.xlabel('dimension')
+    plt.ylabel('$\\frac{|(f-F)(z)|}{N h^2}$')
+    plt.title('error bounds')
+    plt.savefig('error_bounds.eps')
+    plt.savefig('error_bounds.png')
     plt.show()
 
 
