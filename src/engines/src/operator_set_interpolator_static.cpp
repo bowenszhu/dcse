@@ -65,11 +65,11 @@ operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::operator_set_in
     axis_body_mult[i] = axis_body_mult[i + 1] * (axis_points[i + 1] - 1);
   }
 
-  std::cout << "Allocatings storage for static interpolation..." << std::endl;
+//  std::cout << "Allocatings storage for static interpolation..." << std::endl;
   point_data.resize(n_points_total);
   body_data.resize(n_bodies_total);
 
-  std::cout << "Generating point data..." << std::endl;
+//  std::cout << "Generating point data..." << std::endl;
 
   // in fact timer is never there, since it`s set via init_timer_node procedure...
   if (timer)
@@ -110,7 +110,7 @@ operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::operator_set_in
   if (timer)
     timer->node["body generation"].node["point generation"].stop();
 
-  std::cout << "Populating body data..." << std::endl;
+//  std::cout << "Populating body data..." << std::endl;
 
   body_data_points_t points;
   for (auto i = 0; i < n_bodies_total; i++)

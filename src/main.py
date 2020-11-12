@@ -3,6 +3,7 @@
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 import plotly
 import plotly.graph_objs as go
 from scipy.spatial.qhull import Delaunay
@@ -141,7 +142,7 @@ def scipy_delaunay_performance():
         print('time:', time.process_time() - start_time, 's')
 
 
-if __name__ == '__main__':
+def compare_execution_time():
     n_dim = 2
     grid_shape = [1000, 3000]
     grid = [None] * n_dim
@@ -190,4 +191,85 @@ if __name__ == '__main__':
     point = np.array([0.1, 0.6, -0.3, -0.5, 0.9, 0.8, 0.4, -0.7, 0.2])
     measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
-    scipy_delaunay_performance()
+
+def interpolation_error(n_dim, axes_points, n_points):
+    axes_min = [-2.1] * n_dim
+    axes_max = [2.1] * n_dim
+
+    random_points = np.random.rand(n_points, n_dim) * 4 - 2  # random points in [-2, 2] ^ n_dim
+
+    def func(var):
+        return np.exp(-np.dot(var, var))  # inspired by PDF of multivariate normal distribution
+
+    def func_helper(*var):
+        return func(np.array(var))
+
+    real_values = np.apply_along_axis(func, 1, random_points)
+
+    print('\n\ndimension:', n_dim)
+    print('average of absolute errors:')
+
+    def get_interpolation_error(interpolation_method):
+        start_time = time.process_time()
+        itor = interpolation_method(func_helper, axes_points, axes_min, axes_max)
+        interpolation_values = np.apply_along_axis(itor.interpolate_point, 1, random_points)
+        average_error = np.mean(np.absolute(real_values - interpolation_values))
+        print('{:<36}'.format(itor.__class__.__name__), 'error:', '{:6.10f}'.format(average_error), 'time:',
+              '{:f}'.format(time.process_time() - start_time), 's')
+        return average_error
+
+    e_multilinear = get_interpolation_error(DartsMultilinearAdaptiveInterpolator)
+    e_linear = get_interpolation_error(PiecewiseLinearInterpolator)
+    e_delaunay = get_interpolation_error(DelaunayBarycentricInterpolator)
+    return e_multilinear, e_linear, e_delaunay
+
+
+def interpolation_error_analysis():
+    error_results = np.empty((8, 3))  # record interpolation errors for 3 interpolator in different dimensions
+
+    n_dim = 2
+    axes_points = [100] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=100000)
+
+    n_dim = 3
+    axes_points = [100] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=100000)
+
+    n_dim = 4
+    axes_points = [100] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    n_dim = 5
+    axes_points = [84] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    n_dim = 6
+    axes_points = [40] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    n_dim = 7
+    axes_points = [23] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    n_dim = 8
+    axes_points = [15] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    n_dim = 9
+    axes_points = [11] * n_dim
+    error_results[n_dim - 2] = interpolation_error(n_dim, axes_points, n_points=10000)
+
+    dimensions = np.arange(2, 10)
+    plt.plot(dimensions, error_results[:, 1] / error_results[:, 0], label='linear/multilinear')
+    plt.plot(dimensions, error_results[:, 2] / error_results[:, 0], label='delaunay/multilinear')
+    plt.legend()
+    plt.xlabel('dimension')
+    plt.ylabel('error ratio')
+    plt.title('interpolation error comparison')
+    plt.savefig('interpolation_errors.eps')
+    plt.savefig('interpolation_errors.png')
+    plt.show()
+
+
+if __name__ == '__main__':
+    interpolation_error_analysis()
