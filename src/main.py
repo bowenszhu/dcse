@@ -9,6 +9,7 @@ from scipy.spatial.qhull import Delaunay
 
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
+from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
 from src.scipy_regular_grid_linear_interpolator import ScipyRegularGridLinearInterpolator
@@ -45,6 +46,13 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
     print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
     if n_dim <= 10:
+        darts_static_gpu_itor = DartsMultilinearStaticInterpolatorGPU(func, axes_points, axes_min, axes_max)
+        z_darts_static_gpu_itor = darts_static_gpu_itor.interpolate_array(test_grid)
+        print('{:<22}'.format('Darts_multilinear_gpu'), '{:<10}'.format('static'),
+              'init: %f s, interpolation: %f s (%.2e s per point)' %
+              (darts_static_gpu_itor.get_init_time(), darts_static_gpu_itor.get_interpolation_time(),
+               darts_static_gpu_itor.get_interpolation_time() / test_grid.size))
+
         darts_static_itor = DartsMultilinearStaticInterpolator(func, axes_points, axes_min, axes_max)
         z_darts_static_itor = darts_static_itor.interpolate_array(test_grid)
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
@@ -97,6 +105,8 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
     print('\n\nValues at', point, ':')
     print('{:<33}'.format('function'), func(*point))
     if n_dim <= 10:
+        print('{:<22}'.format('Darts_multilinear_gpu'), '{:<10}'.format('static'),
+              darts_static_gpu_itor.interpolate_point(point))
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
               darts_static_itor.interpolate_point(point))
         print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'),
@@ -190,4 +200,4 @@ if __name__ == '__main__':
     point = np.array([0.1, 0.6, -0.3, -0.5, 0.9, 0.8, 0.4, -0.7, 0.2])
     measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
-    scipy_delaunay_performance()
+    #scipy_delaunay_performance()
