@@ -21,8 +21,8 @@ private:
     std::array<int, n_dim> axes_mult;
     std::array<double, n_dim> axes_step;
     std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex;
-    void get_point(int index, std::array<int, n_dim> &point);
-    double compute_value(int index);
+    void get_point(long index, std::array<int, n_dim> &point);
+    double compute_value(long index);
     void find_hypercube(const std::array<double, n_dim> &point, std::array<int, n_dim> &hypercube,
                         std::array<double, n_dim> &scaled_point);
     void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,

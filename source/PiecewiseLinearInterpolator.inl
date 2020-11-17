@@ -21,12 +21,12 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
     for (int dim {n_dim - 2}; dim >= 0; dim--)
         axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
     point_data.resize(axes_mult[0] * axes_points[0]);
-    for (std::size_t point_i {0}; point_i < point_data.size(); point_i++)
+    for (long point_i {0}; point_i < point_data.size(); point_i++)
         point_data[point_i] = compute_value(point_i);
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_dim> &point)
+void PiecewiseLinearInterpolator<n_dim>::get_point(long index, std::array<int, n_dim> &point)
 {
     for (int dim {0}; dim < n_dim; dim++)
     {
@@ -36,7 +36,7 @@ void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::compute_value(int index)
+double PiecewiseLinearInterpolator<n_dim>::compute_value(long index)
 {
     std::array<int, n_dim> point_axis_index;
     get_point(index, point_axis_index);
@@ -80,7 +80,7 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
 template<int n_dim>
 double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim> &vertex)
 {
-    int index { 0 };
+    long index { 0 };
     for (int dim_i { 0 }; dim_i < n_dim; dim_i++)
         index += vertex[dim_i] * axes_mult[dim_i];
     return point_data[index];
