@@ -19,15 +19,13 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
         }
         #pragma omp for nowait
         for (int vertex_i = 0; vertex_i < n_dim; vertex_i++)
-        {
             for (int dim_i = vertex_i; dim_i < n_dim; dim_i++)
                 standard_simplex[vertex_i][dim_i] = 1;
-        }
         axes_mult[n_dim - 1] = 1;
         for (int dim {n_dim - 2}; dim >= 0; dim--)
             axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
         point_data.resize(axes_mult[0] * axes_points[0]);
-        #pragma omp parallel for
+        #pragma omp for
         for (long point_i = 0; point_i < point_data.size(); point_i++)
             point_data[point_i] = compute_value(point_i);
     }
