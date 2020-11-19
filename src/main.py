@@ -192,11 +192,18 @@ def compare_execution_time():
     measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
 
-def interpolation_error(n_dim, axes_points, error_results, n_points):
-    axes_min = [-2.1] * n_dim
-    axes_max = [2.1] * n_dim
+def interpolation_error(n_dim, axes_points, error_results):
+    min_val = -2.1
+    max_val = 2.1
+    axes_min = [min_val] * n_dim
+    axes_max = [max_val] * n_dim
 
-    random_points = np.random.rand(n_points, n_dim) * 4 - 2  # random points in [-2, 2] ^ n_dim
+    pts_arr = np.linspace(min_val, max_val, 10000)
+    sample_points = np.copy(pts_arr)
+
+    for i in range(n_dim-1):
+        sample_points = np.vstack((sample_points, pts_arr))
+
 
     def func(var):
         return np.exp(-np.dot(var, var))  # inspired by PDF of multivariate normal distribution
@@ -204,7 +211,7 @@ def interpolation_error(n_dim, axes_points, error_results, n_points):
     def func_helper(*var):
         return func(np.array(var))
 
-    real_values = np.apply_along_axis(func, 1, random_points)
+    real_values = np.apply_along_axis(func, 0, sample_points)
 
     print('\n\ndimension:', n_dim)
     print('average of absolute errors:')
@@ -212,7 +219,7 @@ def interpolation_error(n_dim, axes_points, error_results, n_points):
     def get_interpolation_error(interpolation_method):
         start_time = time.process_time()
         itor = interpolation_method(func_helper, axes_points, axes_min, axes_max)
-        interpolation_values = np.apply_along_axis(itor.interpolate_point, 1, random_points)
+        interpolation_values = np.apply_along_axis(itor.interpolate_point, 0, sample_points)
         average_error = np.mean(np.absolute(real_values - interpolation_values))
         print('{:<36}'.format(itor.__class__.__name__), 'error:', '{:6.10f}'.format(average_error), 'time:',
               '{:f}'.format(time.process_time() - start_time), 's')
@@ -227,36 +234,36 @@ def interpolation_error_analysis():
     error_results = np.empty((8, 6))  # record interpolation errors for 3 interpolator in different dimensions
 
     n_dim = 2
-    axes_points = [100] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=100000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 3
-    axes_points = [100] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=100000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 4
-    axes_points = [100] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 5
-    axes_points = [84] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 6
-    axes_points = [40] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 7
-    axes_points = [23] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 8
-    axes_points = [15] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     n_dim = 9
-    axes_points = [11] * n_dim
-    interpolation_error(n_dim, axes_points, error_results, n_points=10000)
+    axes_points = [10] * n_dim
+    interpolation_error(n_dim, axes_points, error_results)
 
     dimensions = np.arange(2, 10)
     plt.plot(dimensions, error_results[:, 1] / error_results[:, 0], label='linear/multilinear')
