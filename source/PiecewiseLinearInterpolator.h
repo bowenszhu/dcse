@@ -31,7 +31,7 @@ public:
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate_point(const std::array<double, n_dim> &point);
+    double evaluate_point(const std::vector<double> &point);
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -39,17 +39,17 @@ public:
      *
      * @param[in] points std::vector with size n_dim * n_points
      *      A list of points.
-     *      For example, to input the two points [1.1, 1.2] and [3.3, 3.4], the input argument should be
+     *      For example, if the input is the two points [1.1, 1.2] and [3.3, 3.4], the input argument should be
      *      [1.1, 1.2, 3.3, 3.4].
      * @param[in] block_idx std::vector with size n_points
      *      Indices of the given points [0, 1, 2, ..., n_points - 1]
-     * @param[out] values std::vector with size n_points
+     * @param[out] interp_values std::vector with size n_points
      *      Interpolation values
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_array_with_derivatives(std::vector<double> &points, std::vector<long> &block_idx,
-                                         std::vector<double> &values, std::vector<double> &derivatives);
+    void evaluate_array_with_derivatives(const std::vector<double> &points, const std::vector<long> &block_idx,
+                                         std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
     const std::function<double(std::array<double, n_dim>&)> func;   ///< input function
@@ -61,6 +61,7 @@ private:
     std::array<int, n_dim> axes_mult;
     /// the distance between neighbor supporting points for each axis
     std::array<double, n_dim> axes_step;
+    std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
     std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex; ///< a standard simplex
     /**
      * This function transfers index of supporting point to its indices along axes.
@@ -85,12 +86,14 @@ private:
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
      *
-     * @param[in] point The coordinate of the given point
+     * @param[in] points The coordinate of the given point
      * @param[out] hypercube The lower-left vertex of the hypercube
      * @param[out] scaled_point The scaled coordinate of the given point inside the hypercube
+     * @param[in] point_index Index of the point in the std::vector points
+     *      The argument point_index is used only when std::vector points consists of multiple point.
      */
-    void find_hypercube(const std::array<double, n_dim> &point, std::array<int, n_dim> &hypercube,
-                        std::array<double, n_dim> &scaled_point);
+    void find_hypercube(const std::vector<double> &points, std::array<int, n_dim> &hypercube,
+                        std::array<double, n_dim> &scaled_point, const long point_index = 0);
     /**
      * Compute which simplex the given point is located in.
      *

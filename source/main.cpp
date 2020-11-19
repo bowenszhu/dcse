@@ -14,8 +14,15 @@ int main()
     PiecewiseLinearInterpolator<3> interpolator {func3, axes_points, axes_min, axes_max};
     std::array<int, 3> hypercube;
     std::array<double, 3> scaled_point;
-    std::array<double, 3> point {0.1, 0.1, 0.1};
+    std::vector<double> point {0.1, 0.1, 0.1};
     double res = interpolator.evaluate_point(point);
     std::cout << res << std::endl;
+
+    std::vector<double> points {0.1, 0.1, 0.1, 0.2, 0.2, 0.2};
+    std::vector<long> block_idx {0, 1};
+    std::vector<double> interp_values;
+    std::vector<double> derivatives;
+    interpolator.evaluate_array_with_derivatives(points, block_idx, interp_values, derivatives);
+
     return 0;
 }
