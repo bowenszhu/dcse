@@ -9,28 +9,28 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : func(func), axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
-    #pragma omp parallel for
-    for (int dim = 0; dim < n_dim; dim++)
+    #pragma omp parallel
     {
-        axes_step[dim] = (axes_max[dim] - axes_min[dim]) / (axes_points[dim] - 1);
-        axes_step_inv[dim] = 1 / axes_step[dim];
+        #pragma omp for nowait
+        for (int dim = 0; dim < n_dim; dim++)
+        {
+            axes_step[dim] = (axes_max[dim] - axes_min[dim]) / (axes_points[dim] - 1);
+            axes_step_inv[dim] = 1 / axes_step[dim];
+        }
+        #pragma omp for nowait
+        for (int vertex_i = 0; vertex_i < n_dim; vertex_i++)
+        {
+            for (int dim_i = vertex_i; dim_i < n_dim; dim_i++)
+                standard_simplex[vertex_i][dim_i] = 1;
+        }
+        axes_mult[n_dim - 1] = 1;
+        for (int dim {n_dim - 2}; dim >= 0; dim--)
+            axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
+        point_data.resize(axes_mult[0] * axes_points[0]);
+        #pragma omp parallel for
+        for (long point_i = 0; point_i < point_data.size(); point_i++)
+            point_data[point_i] = compute_value(point_i);
     }
-
-    #pragma omp parallel for
-    for (int vertex_i = 0; vertex_i < n_dim; vertex_i++)
-    {
-        for (int dim_i = vertex_i; dim_i < n_dim; dim_i++)
-            standard_simplex[vertex_i][dim_i] = 1;
-    }
-
-    axes_mult[n_dim - 1] = 1;
-    for (int dim {n_dim - 2}; dim >= 0; dim--)
-        axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
-    point_data.resize(axes_mult[0] * axes_points[0]);
-
-    #pragma omp parallel for
-    for (long point_i = 0; point_i < point_data.size(); point_i++)
-        point_data[point_i] = compute_value(point_i);
 }
 
 template<int n_dim>
@@ -85,10 +85,8 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
     #pragma omp parallel for
     for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
     {
-        #pragma omp parallel for
         for (int dim_i = 0; dim_i < n_dim; dim_i++)
             simplex[vertex_i][dim_i] = hypercube[dim_i];
-        #pragma omp parallel for
         for (int dim_i = 0; dim_i < n_dim; dim_i++)
             simplex[vertex_i][tri_order[dim_i]] += standard_simplex[vertex_i][dim_i];
     }
@@ -122,7 +120,7 @@ double PiecewiseLinearInterpolator<n_dim>::evaluate_point(const std::vector<doub
     #pragma omp parallel for
     for (int dim_i = 1; dim_i < n_dim; dim_i++)
         weights[dim_i] = scaled_point[tri_order[dim_i]] - scaled_point[tri_order[dim_i - 1]];
-    double interp {};
+    double interp = 0;
     #pragma omp parallel for reduction(+:interp)
     for (int dim_i = 0; dim_i <= n_dim; dim_i++)
         interp += weights[dim_i] * get_value(simplex[dim_i]);
@@ -141,8 +139,8 @@ void PiecewiseLinearInterpolator<n_dim>::evaluate_array_with_derivatives(const s
     #pragma omp parallel for
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
-        long point_i { block_idx[block_i] };
-        long point_index { point_i * n_dim }; ///< index of the point's first coordinate in the std::vector points
+        long point_i = block_idx[block_i];
+        long point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
 
         std::array<int, n_dim> hypercube;
         std::array<double, n_dim> scaled_point;
@@ -153,12 +151,10 @@ void PiecewiseLinearInterpolator<n_dim>::evaluate_array_with_derivatives(const s
         find_simplex(hypercube, scaled_point, tri_order, simplex);
 
         std::array<double, n_dim + 1> simplex_vertex_values;
-        #pragma omp parallel for
         for (int i = 0; i <= n_dim; i++)
             simplex_vertex_values[i] = get_value(simplex[i]);
 
         interp_values[point_i] = simplex_vertex_values[0];
-        #pragma omp parallel for
         for (int i = 0; i < n_dim; i++)
         {
             double simplex_vertex_values_gap = simplex_vertex_values[i + 1] - simplex_vertex_values[i];
