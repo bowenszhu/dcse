@@ -15,7 +15,7 @@ int main()
     std::array<int, 3> hypercube;
     std::array<double, 3> scaled_point;
     std::array<double, 3> point {0.1, 0.1, 0.1};
-    double res = interpolator.interpolate_point(point);
+    double res = interpolator.evaluate_point(point);
     std::cout << res << std::endl;
     return 0;
 }

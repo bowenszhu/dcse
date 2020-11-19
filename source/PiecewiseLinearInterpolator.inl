@@ -1,4 +1,5 @@
 #include <numeric>
+#include <algorithm>
 #include "PiecewiseLinearInterpolator.h"
 
 
@@ -8,7 +9,7 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : func(func), axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
-    for (int dim { 0 }; dim < n_dim; dim++)
+    for (int dim {0}; dim < n_dim; dim++)
         axes_step[dim] = (axes_max[dim] - axes_min[dim]) / (axes_points[dim] - 1);
 
     for (int vertex_i {0}; vertex_i < n_dim; vertex_i++)
@@ -26,11 +27,11 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::get_point(long index, std::array<int, n_dim> &point)
+void PiecewiseLinearInterpolator<n_dim>::get_point(long index, std::array<int, n_dim> &point_axis_index)
 {
     for (int dim {0}; dim < n_dim; dim++)
     {
-        point[dim] = index / axes_mult[dim];
+        point_axis_index[dim] = index / axes_mult[dim];
         index %= axes_mult[dim];
     }
 }
@@ -68,11 +69,11 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
     std::iota(tri_order.begin(), tri_order.end(), 0);
     std::sort(tri_order.begin(), tri_order.end(),
               [&scaled_point](int i1, int i2) {return scaled_point[i1] < scaled_point[i2];});
-    for (int vertex_i { 0 }; vertex_i <= n_dim; vertex_i++)
+    for (int vertex_i {0}; vertex_i <= n_dim; vertex_i++)
     {
-        for (int dim_i { 0 }; dim_i < n_dim; dim_i++)
+        for (int dim_i {0}; dim_i < n_dim; dim_i++)
             simplex[vertex_i][dim_i] = hypercube[dim_i];
-        for (int dim_i { 0 }; dim_i < n_dim; dim_i++)
+        for (int dim_i {0}; dim_i < n_dim; dim_i++)
             simplex[vertex_i][tri_order[dim_i]] += standard_simplex[vertex_i][dim_i];
     }
 }
@@ -80,14 +81,14 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
 template<int n_dim>
 double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim> &vertex)
 {
-    long index { 0 };
-    for (int dim_i { 0 }; dim_i < n_dim; dim_i++)
+    long index {0};
+    for (int dim_i {0}; dim_i < n_dim; dim_i++)
         index += vertex[dim_i] * axes_mult[dim_i];
     return point_data[index];
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::interpolate_point(const std::array<double, n_dim> &point)
+double PiecewiseLinearInterpolator<n_dim>::evaluate_point(const std::array<double, n_dim> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
