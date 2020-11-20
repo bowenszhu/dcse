@@ -49,7 +49,7 @@ public:
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_with_derivatives(std::vector<double> &points, std::vector<long> &block_idx,
+    void evaluate_with_derivatives(std::vector<double> &points, std::vector<int> &block_idx,
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
@@ -74,7 +74,7 @@ private:
      * @param[in] index
      * @param[out] point_axis_index
      */
-    void get_point(long index, std::array<int, n_dim> &point_axis_index);
+    void get_point(int index, std::array<int, n_dim> &point_axis_index);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
@@ -86,7 +86,7 @@ private:
      *      The argument point_index is used only when std::vector points consists of multiple point.
      */
     void find_hypercube(const std::vector<double> &points, std::array<int, n_dim> &hypercube,
-                        std::array<double, n_dim> &scaled_point, const long point_index = 0);
+                        std::array<double, n_dim> &scaled_point, const int point_index = 0);
     /**
      * Compute which simplex the given point is located in.
      *

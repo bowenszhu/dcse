@@ -45,17 +45,13 @@ class CppPiecewiseLinearInterpolator:
                                           value_vector(axes_max))
             self.initialization_time = time.process_time() - initialization_start_time
             self.interpolation_time = 0
-
-            # create a value for a interpolate_point output
-            self.value = value_vector([0])
         else:
             print("Engines are not available")
 
     def interpolate_point(self, point):
         if engines_available:
             assert (len(point) == self.n_dim)
-            self.interpolator.evaluate(value_vector(point), self.value)
-            return self.value[0]
+            return self.interpolator.evaluate(value_vector(point))
         else:
             print("Engines are not available")
 
