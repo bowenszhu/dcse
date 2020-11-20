@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <vector>
+#include "evaluator_iface.h"
 
 /**
  * Static piecewise linear interpolation.
@@ -10,7 +11,8 @@
  * @tparam n_dim The number of dimensions
  */
 template <int n_dim>
-class PiecewiseLinearInterpolator {
+class PiecewiseLinearInterpolator
+{
 public:
     /**
      * Initialize the interpolator.
@@ -22,16 +24,15 @@ public:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolator(const std::function<double(std::array<double, n_dim>&)> &func,
-                                const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
-                                const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator, std::vector<int> &axesPoints,
+                                std::vector<double> &axesMin, std::vector<double> &axesMax);
     /**
      * Compute the interpolation value at the given point.
      *
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate_point(const std::vector<double> &point);
+    double evaluate(std::vector<double> &point);
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -48,15 +49,14 @@ public:
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_array_with_derivatives(const std::vector<double> &points, const std::vector<long> &block_idx,
-                                         std::vector<double> &interp_values, std::vector<double> &derivatives);
+    void evaluate_with_derivatives(std::vector<double> &points, std::vector<long> &block_idx,
+                                   std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
-    const std::function<double(std::array<double, n_dim>&)> func;   ///< input function
-    const std::array<int, n_dim> axes_points;                       ///< number of supporting points along each axis
-    const std::array<double, n_dim> axes_min;                       ///< minimum at each axis
-    const std::array<double, n_dim> axes_max;                       ///< maximum of each axis
-    std::vector<double> point_data;                                 ///< the real values of all supporting points
+    const std::vector<int> axes_points;  ///< number of supporting points along each axis
+    const std::vector<double> axes_min;  ///< minimum at each axis
+    const std::vector<double> axes_max;  ///< maximum of each axis
+    std::vector<double> point_data;      ///< the real values of all supporting points
     /// multiplication factor used for transferring supporting point to point index
     std::array<int, n_dim> axes_mult;
     /// the distance between neighbor supporting points for each axis
@@ -75,13 +75,6 @@ private:
      * @param[out] point_axis_index
      */
     void get_point(long index, std::array<int, n_dim> &point_axis_index);
-    /**
-     * Compute the real value of supporting point.
-     *
-     * @param index The index of the supporting point
-     * @return The real function value of the supporting point
-     */
-    double compute_value(long index);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
@@ -116,5 +109,5 @@ private:
     double get_value(const std::array<int, n_dim> &vertex);
 };
 
-#include "PiecewiseLinearInterpolator.inl"
+#include "PiecewiseLinearInterpolator.cpp"
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H

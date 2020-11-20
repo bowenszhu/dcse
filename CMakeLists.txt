@@ -11,14 +11,9 @@ include_directories(src/engines/pybind11/include)
 include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
-include_directories(src/engines/src)
-
-add_executable(dcse2020
-        source/main.cpp
-        source/PiecewiseLinearInterpolator.h)
 
 add_executable(Darts
-        source/PiecewiseLinearInterpolator.inl
+        src/engines/src/PiecewiseLinearInterpolator.cpp
         src/engines/pybind11/include/pybind11/detail/class.h
         src/engines/pybind11/include/pybind11/detail/common.h
         src/engines/pybind11/include/pybind11/detail/descr.h
@@ -110,4 +105,4 @@ add_executable(Darts
         src/engines/src/py_operator_set_interpolator_gpu.cpp
         src/engines/src/py_operator_set_interpolator_rates.cpp
         src/engines/src/py_operator_set_interpolator_static.cpp
-        src/engines/src/timer_node.h)
+        src/engines/src/timer_node.h src/engines/src/py_piecewise_linear_interpolator_static.cpp)

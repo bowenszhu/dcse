@@ -5,9 +5,9 @@
 
 template<int n_dim>
 PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
-    const std::function<double(std::array<double, n_dim>&)> &func, const std::array<int, n_dim> &axesPoints,
-    const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
-    : func(func), axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
+    operator_set_evaluator_iface *base_points_generator, std::vector<int> &axesPoints,
+    std::vector<double> &axesMin, std::vector<double> &axesMax)
+    : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
     #pragma omp parallel
     {
@@ -27,32 +27,28 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
         point_data.resize(axes_mult[0] * axes_points[0]);
         #pragma omp for
         for (long point_i = 0; point_i < point_data.size(); point_i++)
-            point_data[point_i] = compute_value(point_i);
+        {
+            std::array<int, n_dim> point_axis_index;
+            get_point(point_i, point_axis_index);
+
+            std::vector<double> point (n_dim);
+            for (int i = 0; i < n_dim; i++)
+                point[i] = point_axis_index[i] * axes_step[i] + axes_min[i];
+            std::vector<double> operator_value (1);
+            base_points_generator->evaluate(point, operator_value);
+            point_data[point_i] = operator_value[0];
+        }
     }
 }
 
 template<int n_dim>
 void PiecewiseLinearInterpolator<n_dim>::get_point(long index, std::array<int, n_dim> &point_axis_index)
 {
-    #pragma omp parallel for
     for (int dim = 0; dim < n_dim; dim++)
     {
         point_axis_index[dim] = index / axes_mult[dim];
         index %= axes_mult[dim];
     }
-}
-
-template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::compute_value(long index)
-{
-    std::array<int, n_dim> point_axis_index;
-    get_point(index, point_axis_index);
-    std::array<double, n_dim> point;
-
-    #pragma omp parallel for
-    for (int i = 0; i < n_dim; i++)
-        point[i] = point_axis_index[i] * axes_step[i] + axes_min[i];
-    return func(point);
 }
 
 template<int n_dim>
@@ -103,7 +99,7 @@ double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::evaluate_point(const std::vector<double> &point)
+double PiecewiseLinearInterpolator<n_dim>::evaluate(std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
@@ -126,10 +122,10 @@ double PiecewiseLinearInterpolator<n_dim>::evaluate_point(const std::vector<doub
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::evaluate_array_with_derivatives(const std::vector<double> &points,
-                                                                         const std::vector<long> &block_idx,
-                                                                         std::vector<double> &interp_values,
-                                                                         std::vector<double> &derivatives)
+void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(std::vector<double> &points,
+                                                                   std::vector<long> &block_idx,
+                                                                   std::vector<double> &interp_values,
+                                                                   std::vector<double> &derivatives)
 {
     interp_values.resize(block_idx.size());
     derivatives.resize(block_idx.size() * n_dim);
