@@ -43,8 +43,8 @@ coverage:
       -m unittest discover -s tests -p test_*.py -v
     - coverage report -m
 
-#test_linux:
-#  stage: Test
-#  script:
-#      -  PYTHONPATH=`pwd` python3 src/main.py
+test_linux:
+  stage: Test
+  script:
+      -  PYTHONPATH=`pwd` python3 src/main.py
 

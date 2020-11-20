@@ -7,7 +7,7 @@ import importlib
 # try to import C++ python extension
 # (engines.so in Linux and engines.pyd in Windows)
 try:
-    from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
+    from src.engines.engines import operator_set_evaluator_iface, value_vector, index_vector
     engines_available = 1
 except ImportError:
     engines_available = 0
