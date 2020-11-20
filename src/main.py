@@ -3,6 +3,7 @@
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 import plotly
 import plotly.graph_objs as go
 from scipy.spatial.qhull import Delaunay
@@ -151,7 +152,7 @@ def scipy_delaunay_performance():
         print('time:', time.process_time() - start_time, 's')
 
 
-if __name__ == '__main__':
+def compare_execution_time():
     n_dim = 2
     grid_shape = [1000, 3000]
     grid = [None] * n_dim
@@ -200,4 +201,4 @@ if __name__ == '__main__':
     point = np.array([0.1, 0.6, -0.3, -0.5, 0.9, 0.8, 0.4, -0.7, 0.2])
     measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
 
-    #scipy_delaunay_performance()
+    scipy_delaunay_performance()
