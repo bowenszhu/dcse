@@ -109,5 +109,5 @@ private:
     double get_value(const std::array<int, n_dim> &vertex);
 };
 
-#include "PiecewiseLinearInterpolator.cpp"
+#include "PiecewiseLinearInterpolator.inl"
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H

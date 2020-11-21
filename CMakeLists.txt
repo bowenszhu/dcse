@@ -13,7 +13,7 @@ include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
 add_executable(Darts
-        src/engines/src/PiecewiseLinearInterpolator.cpp
+        src/engines/src/PiecewiseLinearInterpolator.inl
         src/engines/pybind11/include/pybind11/detail/class.h
         src/engines/pybind11/include/pybind11/detail/common.h
         src/engines/pybind11/include/pybind11/detail/descr.h
