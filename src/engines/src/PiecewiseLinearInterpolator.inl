@@ -127,9 +127,6 @@ void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(std::vector<d
                                                                    std::vector<double> &interp_values,
                                                                    std::vector<double> &derivatives)
 {
-    interp_values.resize(block_idx.size());
-    derivatives.resize(block_idx.size() * n_dim);
-
     #pragma omp parallel for
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
