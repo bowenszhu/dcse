@@ -5,8 +5,8 @@
 
 template<int n_dim>
 PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
-    operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
-    const std::vector<double> &axesMin, const std::vector<double> &axesMax)
+    operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
+    const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
     #pragma omp parallel
@@ -42,7 +42,7 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::get_point(const int index, std::array<int, n_dim> &point_axis_index)
+void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {

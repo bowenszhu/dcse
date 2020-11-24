@@ -25,8 +25,8 @@ public:
      * @param axesMax Maximum for each axis
      */
     PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator,
-                                const std::vector<int> &axesPoints, const std::vector<double> &axesMin,
-                                const std::vector<double> &axesMax);
+                                const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
+                                const std::array<double, n_dim> &axesMax);
     /**
      * Compute the interpolation value at the given point.
      *
@@ -54,9 +54,9 @@ public:
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
-    const std::vector<int> axes_points;  ///< number of supporting points along each axis
-    const std::vector<double> axes_min;  ///< minimum at each axis
-    const std::vector<double> axes_max;  ///< maximum of each axis
+    const std::array<int, n_dim> axes_points;  ///< number of supporting points along each axis
+    const std::array<double, n_dim> axes_min;  ///< minimum at each axis
+    const std::array<double, n_dim> axes_max;  ///< maximum of each axis
     std::vector<double> point_data;      ///< the real values of all supporting points
     /// multiplication factor used for transferring supporting point to point index
     std::array<int, n_dim> axes_mult;
@@ -75,7 +75,7 @@ private:
      * @param[in] index
      * @param[out] point_axis_index
      */
-    void get_point(const int index, std::array<int, n_dim> &point_axis_index);
+    void get_point(int index, std::array<int, n_dim> &point_axis_index);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
