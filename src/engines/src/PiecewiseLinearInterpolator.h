@@ -4,6 +4,7 @@
 #include <functional>
 #include <vector>
 #include "evaluator_iface.h"
+#include "PiecewiseLinearInterpolatorBase.h"
 
 /**
  * Static piecewise linear interpolation.
@@ -11,7 +12,7 @@
  * @tparam n_dim The number of dimensions
  */
 template <int n_dim>
-class PiecewiseLinearInterpolator
+class PiecewiseLinearInterpolator : public PiecewiseLinearInterpolatorBase<n_dim>
 {
 public:
     /**
@@ -54,16 +55,7 @@ public:
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
-    const std::array<int, n_dim> axes_points;  ///< number of supporting points along each axis
-    const std::array<double, n_dim> axes_min;  ///< minimum at each axis
-    const std::array<double, n_dim> axes_max;  ///< maximum of each axis
     std::vector<double> point_data;      ///< the real values of all supporting points
-    /// multiplication factor used for transferring supporting point to point index
-    std::array<int, n_dim> axes_mult;
-    /// the distance between neighbor supporting points for each axis
-    std::array<double, n_dim> axes_step;
-    std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
-    std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex; ///< a standard simplex
     /**
      * This function transfers index of supporting point to its indices along axes.
      *
