@@ -63,24 +63,24 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         itor = interpolation_method(func, axes_points, axes_min, axes_max, adaptive)
         itor.interpolate_array(test_grid)
         if adaptive:
-            storage = 'adaptive'
+            storage = 'Adaptive'
         else:
-            storage = 'static'
+            storage = 'Static'
         interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
         print('{:<36}'.format(itor.__class__.__name__), '{:<10}'.format(storage),
               'init: %f s, interpolation: %f s (%.2e s per point)' %
               (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
-        if storage + itor.__class__.__name__ in time_per_point:
-            time_per_point[storage + itor.__class__.__name__].append(interpolation_time_per_point)
+        if 'Py' + storage + itor.__class__.__name__ in time_per_point:
+            time_per_point['Py' + storage + itor.__class__.__name__].append(interpolation_time_per_point)
         else:
-            time_per_point[storage + itor.__class__.__name__] = [interpolation_time_per_point]
+            time_per_point['Py' + storage + itor.__class__.__name__] = [interpolation_time_per_point]
 
     if n_dim <= 10:
-        # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU, storage='static')
-        performance_itor_cpp(DartsMultilinearStaticInterpolator, storage='static')
-        performance_itor_cpp(DartsMultilinearAdaptiveInterpolator, storage='adaptive')
+        # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU, storage='Static')
+        performance_itor_cpp(DartsMultilinearStaticInterpolator, storage='Static')
+        performance_itor_cpp(DartsMultilinearAdaptiveInterpolator, storage='Adaptive')
         print()
-        performance_itor_cpp(CppPiecewiseLinearInterpolator, storage='static')
+        performance_itor_cpp(CppPiecewiseLinearInterpolator, storage='Static')
         print()
 
     performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
@@ -156,8 +156,8 @@ def compare_execution_time():
     plt.xlabel('dimension', fontsize=20)
     plt.ylabel('log interpolation time per point', fontsize=20)
     plt.legend(fontsize=18)
-    plt.savefig('interpolation_time_per_point.eps')
-    plt.savefig('interpolation_time_per_point.png')
+    plt.savefig('results/interpolation_time_per_point.eps')
+    plt.savefig('results/interpolation_time_per_point.png')
     plt.show()
 
 
