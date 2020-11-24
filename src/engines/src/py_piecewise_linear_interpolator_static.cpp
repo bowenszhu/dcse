@@ -3,6 +3,7 @@
 #include <stl.h>
 
 #include "PiecewiseLinearInterpolator.h"
+#include "PiecewiseLinearInterpolator.cpp"
 
 
 template <int n_dim>
@@ -18,8 +19,8 @@ struct piecewise_linear_interpolator_static_exposer
         try
         {
             py::class_<PiecewiseLinearInterpolator<n_dim>>(m, name.c_str(), long_name.c_str())
-                .def(py::init<operator_set_evaluator_iface *, std::array<int, n_dim> &, std::array<double, n_dim> &,
-                        std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
+                .def(py::init<operator_set_evaluator_iface *, std::vector<int> &, std::vector<double> &,
+                        std::vector<double> &>(), py::keep_alive<1, 2>())
                 .def("evaluate", &PiecewiseLinearInterpolator<n_dim>::evaluate, "point"_a)
                 .def("evaluate_with_derivatives",
                      &PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives,

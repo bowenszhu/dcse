@@ -24,16 +24,15 @@ public:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator,
-                                const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
-                                const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator, std::vector<int> &axesPoints,
+                                std::vector<double> &axesMin, std::vector<double> &axesMax);
     /**
      * Compute the interpolation value at the given point.
      *
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate(const std::vector<double> &point);
+    double evaluate(std::vector<double> &point);
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -50,13 +49,13 @@ public:
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
+    void evaluate_with_derivatives(std::vector<double> &points, std::vector<int> &block_idx,
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
-    const std::array<int, n_dim> axes_points;  ///< number of supporting points along each axis
-    const std::array<double, n_dim> axes_min;  ///< minimum at each axis
-    const std::array<double, n_dim> axes_max;  ///< maximum of each axis
+    const std::vector<int> axes_points;  ///< number of supporting points along each axis
+    const std::vector<double> axes_min;  ///< minimum at each axis
+    const std::vector<double> axes_max;  ///< maximum of each axis
     std::vector<double> point_data;      ///< the real values of all supporting points
     /// multiplication factor used for transferring supporting point to point index
     std::array<int, n_dim> axes_mult;
@@ -99,7 +98,8 @@ private:
      * @param[out] simplex
      */
     void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
-                      std::array<int, n_dim> &tri_order, std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
+                      std::array<int, n_dim> &tri_order, // order of coordinate in standard triangulation
+                      std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
     /**
      * Get the real function value of the given supporting point.
      *
@@ -109,5 +109,4 @@ private:
     double get_value(const std::array<int, n_dim> &vertex);
 };
 
-#include "PiecewiseLinearInterpolator.inl"
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H

@@ -8,13 +8,14 @@ import plotly
 import plotly.graph_objs as go
 from scipy.spatial.qhull import Delaunay
 
-from src.cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
-from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
-from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
-from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
-from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
-from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
-from src.scipy_regular_grid_linear_interpolator import ScipyRegularGridLinearInterpolator
+from cpp_static_piecewise_linear_interpolator_gpu import CppPiecewiseLinearInterpolatorGPU
+from cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
+from dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
+from piecewise_linear_interpolator import PiecewiseLinearInterpolator
+from darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
+from darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
+from darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
+from scipy_regular_grid_linear_interpolator import ScipyRegularGridLinearInterpolator
 
 
 def func_2d(var1, var2):
@@ -63,24 +64,24 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         itor = interpolation_method(func, axes_points, axes_min, axes_max, adaptive)
         itor.interpolate_array(test_grid)
         if adaptive:
-            storage = 'Adaptive'
+            storage = 'adaptive'
         else:
-            storage = 'Static'
+            storage = 'static'
         interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
         print('{:<36}'.format(itor.__class__.__name__), '{:<10}'.format(storage),
               'init: %f s, interpolation: %f s (%.2e s per point)' %
               (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
-        if 'Py' + storage + itor.__class__.__name__ in time_per_point:
-            time_per_point['Py' + storage + itor.__class__.__name__].append(interpolation_time_per_point)
+        if storage + itor.__class__.__name__ in time_per_point:
+            time_per_point[storage + itor.__class__.__name__].append(interpolation_time_per_point)
         else:
-            time_per_point['Py' + storage + itor.__class__.__name__] = [interpolation_time_per_point]
+            time_per_point[storage + itor.__class__.__name__] = [interpolation_time_per_point]
 
     if n_dim <= 10:
-        # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU, storage='Static')
-        performance_itor_cpp(DartsMultilinearStaticInterpolator, storage='Static')
-        performance_itor_cpp(DartsMultilinearAdaptiveInterpolator, storage='Adaptive')
+        # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU, storage='static')
+        performance_itor_cpp(DartsMultilinearStaticInterpolator, storage='static')
+        performance_itor_cpp(DartsMultilinearAdaptiveInterpolator, storage='adaptive')
         print()
-        performance_itor_cpp(CppPiecewiseLinearInterpolator, storage='Static')
+        performance_itor_cpp(CppPiecewiseLinearInterpolator, storage='static')
         print()
 
     performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
