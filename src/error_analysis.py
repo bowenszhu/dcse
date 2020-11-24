@@ -1,9 +1,5 @@
-import time
 import numpy as np
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
