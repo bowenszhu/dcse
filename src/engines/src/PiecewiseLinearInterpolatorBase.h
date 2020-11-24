@@ -72,13 +72,23 @@ protected:
      *
      * @param[in] hypercube The lower-left vertex of the hypercube
      * @param[in] scaled_point The scaled coordinate of the given point inside the hypercube
-     * @param[out] tri_order The order of the scaled coordinate which is used on
+     * @param[out] tri_order The order of the scaled coordinate which is used for
      *      1. finding simplex for standard triangulation
      *      2. computing weights of the barycentric interpolation
      * @param[out] simplex
      */
     void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
                       std::array<int, n_dim> &tri_order, std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
+    /**
+     * If static storage is used, the function extracts the real function value of the given supporting point from the
+     * pre-computed storage.
+     * If adaptive storage is used, the function checks whether the value at the given vertex is computed before,
+     *      if yes, the value is directly returned;
+     *      if not, the function computes the value, stores it and then returns it.
+     *
+     * @param vertex The index of the given supporting point along axes
+     * @return The real function value of the point
+     */
     virtual double get_value(const std::array<int, n_dim> &vertex) = 0;
 };
 
