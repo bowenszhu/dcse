@@ -156,8 +156,8 @@ def compare_execution_time():
     plt.xlabel('dimension', fontsize=20)
     plt.ylabel('log interpolation time per point', fontsize=20)
     plt.legend(fontsize=18)
-    plt.savefig('results/interpolation_time_per_point.eps')
-    plt.savefig('results/interpolation_time_per_point.png')
+    plt.savefig('src/results/interpolation_time_per_point.eps')
+    plt.savefig('src/results/interpolation_time_per_point.png')
     plt.show()
 
 
