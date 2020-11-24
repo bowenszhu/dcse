@@ -28,14 +28,14 @@ PiecewiseLinearInterpolatorCuda<n_dim>::PiecewiseLinearInterpolatorCuda(
         cudaMalloc(&c_axes_step, n_dim);
         cudaMalloc(&c_axes_step_inv, n_dim);
         cudaMalloc(&c_axes_mult, n_dim);
-        cudaMallocPitch(*&c_standard_simplex, &pitch, n_dim * sizeof(int), n_dim);
+        cudaMallocPitch(*&c_standard_simplex, &pitch, (n_dim + 1) * sizeof(int), n_dim);
         
         cudaMemcpy(c_axes_min, &axes_min[0], n_dim, cudaMemcpyHostToDevice);
         cudaMemcpy(c_axes_max, &axes_max[0], n_dim, cudaMemcpyHostToDevice);
         cudaMemcpy(c_axes_points, &axes_points[0], n_dim, cudaMemcpyHostToDevice);
         cudaMemcpy(c_axes_step, &axes_step[0], n_dim, cudaMemcpyHostToDevice);
         cudaMemcpy(c_axes_step_inv, &axes_step_inv[0], n_dim, cudaMemcpyHostToDevice);
-        cudaMemcpy2D(c_standard_simplex, pitch, &standard_simplex[0], n_dim * sizeof(int), n_dim * sizeof(int), n_dim, cudaMemcpyHostToDevice);
+        cudaMemcpy2D(c_standard_simplex, pitch, &standard_simplex[0][0], (n_dim + 1) * sizeof(int), (n_dim + 1) * sizeof(int), n_dim, cudaMemcpyHostToDevice);
         for (int dim = 0; dim < n_dim; dim++)
         {
             c_axes_step[dim] = (c_axes_max[dim] - c_axes_min[dim]) / (c_axes_points[dim] - 1);
@@ -51,14 +51,30 @@ PiecewiseLinearInterpolatorCuda<n_dim>::PiecewiseLinearInterpolatorCuda(
         cudaMalloc(&c_point_data, point_data.size());
         for (int point_i = 0; point_i < point_data.size(); point_i++)
         {
+            std::array<int, n_dim> point_axis_index;
+            int *c_point_axis_index;
             cudaMalloc(&c_point_axis_index, n_dim);
+            cudaMemcpy(c_point_axis_index, &point_axis_index[0], n_dim, cudaMemcpyHostToDevice);
+
             get_point(point_i, c_point_axis_index);
 
             std::vector<double> point (n_dim);
+            double *c_point;
+            cudaMalloc(&c_point, n_dim);
+            cudaMemcpy(c_point, &point[0], n_dim, cudaMemcpyHostToDevice);
+
             for (int i = 0; i < n_dim; i++)
                 point[i] = c_point_axis_index[i] * axes_step[i] + axes_min[i];
             std::vector<double> operator_value (1);
+            double *c_operator_value;
+            cudaMalloc(&c_operator_value, 1);
+            cudaMemcpy(c_operator_value, &operator_value[0], 1, cudaMemcpyHostToDevice);
+
             base_points_generator->evaluate(point, operator_value);
+
+            double *c_point_data;
+            cudaMalloc(&c_point_data, n_dim);
+            cudaMemcpy(c_point_data, point_data, n_dim, cudaMemcpyHostToDevice);
             point_data[point_i] = operator_value[0];
         }
         cudaFree(c_axes_max);
@@ -67,13 +83,15 @@ PiecewiseLinearInterpolatorCuda<n_dim>::PiecewiseLinearInterpolatorCuda(
         cudaFree(c_axes_step);
         cudaFree(c_axes_step_inv);
         cudaFree(c_axes_mult);
-        cudaFree(c_point_data);
         cudaFree(c_point_axis_index);
+        cudaFree(c_point);
+        cudaFree(c_operator_value);
+        cudaFree(c_point_data);
     }
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorCuda<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
+void PiecewiseLinearInterpolatorCuda<n_dim>::get_point(int index, int &point_axis_index)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {
@@ -130,20 +148,42 @@ template<int n_dim>
 double PiecewiseLinearInterpolatorCuda<n_dim>::evaluate(std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
+    int *c_hypercube;
+    cudaMalloc(&c_hypercube, n_dim);
+    cudaMemcpy(c_hypercube, &hypercube[0], n_dim, cudaMemcpyHostToDevice);
     std::array<double, n_dim> scaled_point;
+    double *c_scaled_point;
+    cudaMalloc(&c_scaled_point, n_dim);
+    cudaMemcpy(c_scaled_point, &scaled_point[0], n_dim, cudaMemcpyHostToDevice);
     find_hypercube(point, hypercube, scaled_point);
     std::array<std::array<int, n_dim>, n_dim + 1> simplex;
+    int **c_simplex;
+    size_t pitch_simplex;
+    cudaMallocPitch(&c_simplex, &pitch_simplex, (n_dim + 1) * sizeof(int), n_dim);
+    cudaMemcpy2D(c_simplex, pitch_simplex, &&standard_simplex[0][0], (n_dim + 1) * sizeof(int), (n_dim + 1) * sizeof(int), n_dim, cudaMemcpyHostToDevice);
     std::array<int, n_dim> tri_order;
+    int *c_tri_order;
+    cudaMalloc(&c_tri_order, n_dim);
+    cudaMemcpy(c_tri_order, &tri_order[0], n_dim, cudaMemcpyHostToDevice);
     find_simplex(hypercube, scaled_point, tri_order, simplex);
     std::array<double, n_dim + 1> weights;
-    weights[0] = scaled_point[tri_order[0]];
-    weights[n_dim] = 1 - scaled_point[tri_order[n_dim - 1]];
+    double *c_weights;
+    cudaMalloc(&c_weights, n_dim + 1);
+    cudaMemcpy(c_weights, &weights[0], n_dim + 1, cudaMemcpyHostToDevice);
+    c_weights[0] = c_scaled_point[c_tri_order[0]];
+    c_weights[n_dim] = 1 - c_scaled_point[c_tri_order[n_dim - 1]];
 
     for (int dim_i = 1; dim_i < n_dim; dim_i++)
-        weights[dim_i] = scaled_point[tri_order[dim_i]] - scaled_point[tri_order[dim_i - 1]];
+        c_weights[dim_i] = c_scaled_point[c_tri_order[dim_i]] - c_scaled_point[c_tri_order[dim_i - 1]];
     double interp = 0;
     for (int dim_i = 0; dim_i <= n_dim; dim_i++)
-        interp += weights[dim_i] * get_value(simplex[dim_i]);
+        interp += c_weights[dim_i] * get_value(c_simplex[dim_i]);
+
+    cudaFree(c_hypercube);
+    cudaFree(c_scaled_point);
+    cudaFree(c_simplex);
+    cudaFree(c_tri_order);
+    cudaFree(c_weights);
     return interp;
 }
 
