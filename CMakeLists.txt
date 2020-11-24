@@ -16,11 +16,11 @@ add_executable(PLI
         src/engines/src/main.cpp
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
-        src/engines/src/PiecewiseLinearInterpolator.h
-        src/engines/src/PiecewiseLinearInterpolator.inl)
+        src/engines/src/PiecewiseLinearInterpolator_static.h
+        src/engines/src/PiecewiseLinearInterpolator_static.inl)
 
 add_executable(Darts
-        src/engines/src/PiecewiseLinearInterpolator.inl
+        src/engines/src/PiecewiseLinearInterpolator_static.inl
         src/engines/pybind11/include/pybind11/detail/class.h
         src/engines/pybind11/include/pybind11/detail/common.h
         src/engines/pybind11/include/pybind11/detail/descr.h

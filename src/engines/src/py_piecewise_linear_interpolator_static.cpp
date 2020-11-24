@@ -2,7 +2,7 @@
 #include "py_globals.h"
 #include <stl.h>
 
-#include "PiecewiseLinearInterpolator.h"
+#include "PiecewiseLinearInterpolator_static.h"
 
 
 template <int n_dim>
@@ -17,12 +17,12 @@ struct piecewise_linear_interpolator_static_exposer
                 + "-dimensional parameter space with static storage";
         try
         {
-            py::class_<PiecewiseLinearInterpolator<n_dim>>(m, name.c_str(), long_name.c_str())
+            py::class_<PiecewiseLinearInterpolator_static<n_dim>>(m, name.c_str(), long_name.c_str())
                 .def(py::init<operator_set_evaluator_iface *, std::array<int, n_dim> &, std::array<double, n_dim> &,
                         std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
-                .def("evaluate", &PiecewiseLinearInterpolator<n_dim>::evaluate, "point"_a)
+                .def("evaluate", &PiecewiseLinearInterpolator_static<n_dim>::evaluate, "point"_a)
                 .def("evaluate_with_derivatives",
-                     &PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives,
+                     &PiecewiseLinearInterpolator_static<n_dim>::evaluate_with_derivatives,
                      "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a);
         }
         catch (...) {

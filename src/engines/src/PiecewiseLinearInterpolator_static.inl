@@ -1,10 +1,10 @@
 #include <numeric>
 #include <algorithm>
-#include "PiecewiseLinearInterpolator.h"
+#include "PiecewiseLinearInterpolator_static.h"
 
 
 template<int n_dim>
-PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
+PiecewiseLinearInterpolator_static<n_dim>::PiecewiseLinearInterpolator_static(
     operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : PiecewiseLinearInterpolatorBase<n_dim>(axesPoints, axesMin, axesMax)
@@ -25,7 +25,7 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
+void PiecewiseLinearInterpolator_static<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {
@@ -35,10 +35,10 @@ void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::find_hypercube(const std::vector<double> &points,
-                                                        std::array<int, n_dim> &hypercube,
-                                                        std::array<double, n_dim> &scaled_point,
-                                                        const int point_index)
+void PiecewiseLinearInterpolator_static<n_dim>::find_hypercube(const std::vector<double> &points,
+                                                               std::array<int, n_dim> &hypercube,
+                                                               std::array<double, n_dim> &scaled_point,
+                                                               const int point_index)
 {
     #pragma omp parallel for
     for (int i = 0; i < n_dim; i++)
@@ -50,10 +50,10 @@ void PiecewiseLinearInterpolator<n_dim>::find_hypercube(const std::vector<double
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_dim> &hypercube,
-                                                      const std::array<double, n_dim> &scaled_point,
-                                                      std::array<int, n_dim> &tri_order,
-                                                      std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
+void PiecewiseLinearInterpolator_static<n_dim>::find_simplex(const std::array<int, n_dim> &hypercube,
+                                                             const std::array<double, n_dim> &scaled_point,
+                                                             std::array<int, n_dim> &tri_order,
+                                                             std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
 {
     std::iota(tri_order.begin(), tri_order.end(), 0);
     std::sort(tri_order.begin(), tri_order.end(),
@@ -70,7 +70,7 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim> &vertex)
+double PiecewiseLinearInterpolator_static<n_dim>::get_value(const std::array<int, n_dim> &vertex)
 {
     int index = 0;
 
@@ -82,7 +82,7 @@ double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::evaluate(const std::vector<double> &point)
+double PiecewiseLinearInterpolator_static<n_dim>::evaluate(const std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
@@ -105,10 +105,10 @@ double PiecewiseLinearInterpolator<n_dim>::evaluate(const std::vector<double> &p
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
-                                                                   const std::vector<int> &block_idx,
-                                                                   std::vector<double> &interp_values,
-                                                                   std::vector<double> &derivatives)
+void PiecewiseLinearInterpolator_static<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+                                                                          const std::vector<int> &block_idx,
+                                                                          std::vector<double> &interp_values,
+                                                                          std::vector<double> &derivatives)
 {
     #pragma omp parallel for
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)

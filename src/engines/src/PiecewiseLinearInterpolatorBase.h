@@ -1,9 +1,12 @@
 #ifndef DCSE2020_PIECEWISELINEARINTERPOLATORBASE_H
 #define DCSE2020_PIECEWISELINEARINTERPOLATORBASE_H
 
-
 #include <array>
 
+/**
+ * Interpolator base for static/adaptive piecewise linear interpolator.
+ * @tparam n_dim The number of dimensions
+ */
 template <int n_dim>
 class PiecewiseLinearInterpolatorBase
 {
@@ -17,7 +20,12 @@ protected:
     std::array<double, n_dim> axes_step;
     std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
     std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex; ///< a standard simplex
-
+    /**
+     * Initialize fields.
+     * @param axesPoints Number of supporting points along axes
+     * @param axesMin Minimum for each axis
+     * @param axesMax Maximum for each axis
+     */
     PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
                                     const std::array<double, n_dim> &axesMax);
 };

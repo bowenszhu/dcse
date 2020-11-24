@@ -1,5 +1,5 @@
-#ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_H
-#define DCSE2020_PIECEWISELINEARINTERPOLATOR_H
+#ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_H
+#define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_H
 
 #include <functional>
 #include <vector>
@@ -12,7 +12,7 @@
  * @tparam n_dim The number of dimensions
  */
 template <int n_dim>
-class PiecewiseLinearInterpolator : public PiecewiseLinearInterpolatorBase<n_dim>
+class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim>
 {
 public:
     /**
@@ -25,9 +25,10 @@ public:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator,
-                                const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
-                                const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolator_static(operator_set_evaluator_iface *base_points_generator,
+                                       const std::array<int, n_dim> &axesPoints,
+                                       const std::array<double, n_dim> &axesMin,
+                                       const std::array<double, n_dim> &axesMax);
     /**
      * Compute the interpolation value at the given point.
      *
@@ -101,5 +102,5 @@ private:
     double get_value(const std::array<int, n_dim> &vertex);
 };
 
-#include "PiecewiseLinearInterpolator.inl"
-#endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_H
+#include "PiecewiseLinearInterpolator_static.inl"
+#endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_H
