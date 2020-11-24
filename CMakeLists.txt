@@ -17,7 +17,9 @@ add_executable(PLI
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
         src/engines/src/PiecewiseLinearInterpolator_static.h
-        src/engines/src/PiecewiseLinearInterpolator_static.inl)
+        src/engines/src/PiecewiseLinearInterpolator_static.inl
+        src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
+        src/engines/src/PiecewiseLinearInterpolator_adaptive.h)
 
 add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_static.inl
@@ -116,4 +118,5 @@ add_executable(Darts
         src/engines/src/py_piecewise_linear_interpolator_static.cpp
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
         src/engines/src/PiecewiseLinearInterpolatorBase.h
-        src/engines/src/main.cpp)
+        src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
+        src/engines/src/PiecewiseLinearInterpolator_adaptive.h)
