@@ -24,15 +24,16 @@ public:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator, std::vector<int> &axesPoints,
-                                std::vector<double> &axesMin, std::vector<double> &axesMax);
+    PiecewiseLinearInterpolator(operator_set_evaluator_iface *base_points_generator,
+                                const std::vector<int> &axesPoints, const std::vector<double> &axesMin,
+                                const std::vector<double> &axesMax);
     /**
      * Compute the interpolation value at the given point.
      *
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate(std::vector<double> &point);
+    double evaluate(const std::vector<double> &point);
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -49,7 +50,7 @@ public:
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_with_derivatives(std::vector<double> &points, std::vector<int> &block_idx,
+    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
@@ -74,7 +75,7 @@ private:
      * @param[in] index
      * @param[out] point_axis_index
      */
-    void get_point(int index, std::array<int, n_dim> &point_axis_index);
+    void get_point(const int index, std::array<int, n_dim> &point_axis_index);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
@@ -98,8 +99,7 @@ private:
      * @param[out] simplex
      */
     void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
-                      std::array<int, n_dim> &tri_order, // order of coordinate in standard triangulation
-                      std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
+                      std::array<int, n_dim> &tri_order, std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
     /**
      * Get the real function value of the given supporting point.
      *

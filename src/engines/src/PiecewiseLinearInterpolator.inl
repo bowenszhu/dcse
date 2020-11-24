@@ -5,8 +5,8 @@
 
 template<int n_dim>
 PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
-    operator_set_evaluator_iface *base_points_generator, std::vector<int> &axesPoints,
-    std::vector<double> &axesMin, std::vector<double> &axesMax)
+    operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
+    const std::vector<double> &axesMin, const std::vector<double> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
     #pragma omp parallel
@@ -42,7 +42,7 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
+void PiecewiseLinearInterpolator<n_dim>::get_point(const int index, std::array<int, n_dim> &point_axis_index)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {
@@ -99,7 +99,7 @@ double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolator<n_dim>::evaluate(std::vector<double> &point)
+double PiecewiseLinearInterpolator<n_dim>::evaluate(const std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
@@ -122,8 +122,8 @@ double PiecewiseLinearInterpolator<n_dim>::evaluate(std::vector<double> &point)
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(std::vector<double> &points,
-                                                                   std::vector<int> &block_idx,
+void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+                                                                   const std::vector<int> &block_idx,
                                                                    std::vector<double> &interp_values,
                                                                    std::vector<double> &derivatives)
 {
