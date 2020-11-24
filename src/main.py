@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from src.error_analysis import find_interp_error
 
 if __name__ == '__main__':
-    supp_grid = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
+    supp_grid = [10, 15, 20, 25, 30, 35, 40, 45, 50]
     del_mean_arr = []
     piece_mean_arr = []
     darts_mean_arr = []
@@ -17,9 +17,9 @@ if __name__ == '__main__':
         darts_mean_arr.append(np.mean(err_arr[2]))
 
     plt.figure(1)
-    plt.plot(supp_grid, del_mean_arr, label="Delaunay")
-    plt.plot(supp_grid, piece_mean_arr, label="Piecewise Linear")
-    plt.plot(supp_grid, darts_mean_arr, label="Darts multilinear")
+    plt.semilogy(supp_grid, del_mean_arr, label="Delaunay")
+    plt.semilogy(supp_grid, piece_mean_arr, label="Piecewise Linear")
+    plt.semilogy(supp_grid, darts_mean_arr, label="Darts multilinear")
     plt.legend()
     plt.title("Convergence of interpolation methods for n_dim=2")
     plt.xlabel("# of supporting points")
