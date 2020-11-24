@@ -49,6 +49,8 @@ void redirect_darts_output(std::string file_name) {
 }
 
 #ifdef WITH_GPU
+int device_num = 0;
+
 void set_gpu_device(int device_idx)
 {
   cudaError_t err = cudaSetDevice(device_idx);
