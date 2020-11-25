@@ -93,7 +93,7 @@ class CppStaticPiecewiseLinearInterpolator:
             return self.interpolation_time
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}'.format('piecewise_linear', 'C++', 'static')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'static', 'CPU')
 
 
 if __name__ == '__main__':

@@ -105,4 +105,4 @@ class DartsMultilinearAdaptiveInterpolator:
             pass
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}'.format('DARTS_multilinear', 'C++', 'adaptive')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('DARTS_multilinear', 'C++', 'adaptive', 'CPU')

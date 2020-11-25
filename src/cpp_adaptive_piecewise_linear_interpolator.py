@@ -93,4 +93,4 @@ class CppAdaptivePiecewiseLinearInterpolator:
             return self.interpolation_time
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}'.format('piecewise_linear', 'C++', 'adaptive')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'adaptive', 'CPU')
