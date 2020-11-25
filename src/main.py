@@ -59,20 +59,16 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         else:
             time_per_point[str(itor)] = [interpolation_time_per_point]
 
-    def performance_itor_py(interpolation_method, adaptive):
-        itor = interpolation_method(func, axes_points, axes_min, axes_max, adaptive)
-        itor.interpolate_array(test_grid)
-        if adaptive:
-            storage = 'Adaptive'
-        else:
-            storage = 'Static'
-        interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
-        print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
-              (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
-        if str(itor) in time_per_point:
-            time_per_point[str(itor)].append(interpolation_time_per_point)
-        else:
-            time_per_point[str(itor)] = [interpolation_time_per_point]
+    # def performance_itor_py(interpolation_method, adaptive):
+    #     itor = interpolation_method(func, axes_points, axes_min, axes_max, adaptive)
+    #     itor.interpolate_array(test_grid)
+    #     interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
+    #     print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
+    #           (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
+    #     if str(itor) in time_per_point:
+    #         time_per_point[str(itor)].append(interpolation_time_per_point)
+    #     else:
+    #         time_per_point[str(itor)] = [interpolation_time_per_point]
 
     if n_dim <= 10:
         # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU)
@@ -83,9 +79,9 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
         print()
 
-    performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
-    performance_itor_py(PiecewiseLinearInterpolator, adaptive=True)
-    print()
+    # performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
+    # performance_itor_py(PiecewiseLinearInterpolator, adaptive=True)
+    # print()
 
 
 def scipy_delaunay_performance():
@@ -101,59 +97,28 @@ def scipy_delaunay_performance():
 def compare_execution_time():
     time_per_point = dict()
 
-    n_dim = 2
-    grid_shape = [1000, 3000]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    axes_points = [100, 100]
-    measure_performance(n_dim, func_2d, axes_points, grid_shape, grid, time_per_point)
+    def func(*var):
+        return np.dot(var, var)
 
-    n_dim = 3
-    grid_shape = [100, 100, 300]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    axes_points = [21, 21, 22]
-    measure_performance(n_dim, func_3d, axes_points, grid_shape, grid, time_per_point)
-
-    n_dim = 6
-    grid_shape = [13, 13, 14, 14, 15, 15]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    grid[3] = np.linspace(0.1, 0.2, grid_shape[3])
-    grid[4] = np.linspace(0.3, 0.4, grid_shape[4])
-    grid[5] = np.linspace(-0.5, -0.4, grid_shape[5])
-    axes_points = [7, 7, 8, 8, 9, 9]
-    measure_performance(n_dim, func_6d, axes_points, grid_shape, grid, time_per_point)
-
-    n_dim = 9
-    grid_shape = [4, 3, 4, 2, 3, 2, 3, 3, 2]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    grid[3] = np.linspace(0.1, 0.2, grid_shape[3])
-    grid[4] = np.linspace(0.3, 0.4, grid_shape[4])
-    grid[5] = np.linspace(-0.5, -0.4, grid_shape[5])
-    grid[6] = np.linspace(-0.4, -0.3, grid_shape[6])
-    grid[7] = np.linspace(0, 0.1, grid_shape[7])
-    grid[8] = np.linspace(-0.1, 0, grid_shape[8])
-    axes_points = [3, 3, 2, 3, 4, 3, 2, 2, 3]
-    measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, time_per_point)
+    n_supporting_pints = 3000000
+    n_interp_points = 10000
+    grid_min = [-0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1]
+    grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
+    for n_dim in range(2, 10):
+        grid_shape = [int(n_supporting_pints ** (1/n_dim))] * n_dim
+        interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
+        axes_points = [int(n_interp_points ** (1/n_dim))] * n_dim
+        measure_performance(n_dim, func, axes_points, grid_shape, interp_grid, time_per_point)
 
     plt.figure(figsize=(19, 12))
     for i in range(len(time_per_point)):
         interpolator_name = list(time_per_point.keys())[i]
         times = time_per_point[interpolator_name]
-        plt.plot([2, 3, 6, 9], times, 'o-', label=interpolator_name)
+        plt.plot(list(range(2, 10)), times, 'o-', label=interpolator_name)
     plt.yscale('log')
     plt.xlabel('dimension', fontsize=20)
     plt.ylabel('log interpolation time per point', fontsize=20)
-    plt.legend(fontsize=17)
+    plt.legend(fontsize=18)
     plt.savefig('interpolation_time_per_point.eps')
     plt.savefig('interpolation_time_per_point.png')
     plt.show()
