@@ -32,7 +32,7 @@ public:
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate(std::vector<double> &point);
+    double evaluate(double *point);
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -74,7 +74,7 @@ private:
      * @param[in] index
      * @param[out] point_axis_index
      */
-    void get_point(int index, std::array<int, n_dim> &point_axis_index);
+    void get_point(int index, int *point_axis_index);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
@@ -85,8 +85,8 @@ private:
      * @param[in] point_index Index of the point in the std::vector points
      *      The argument point_index is used only when std::vector points consists of multiple point.
      */
-    void find_hypercube(const std::vector<double> &points, std::array<int, n_dim> &hypercube,
-                        std::array<double, n_dim> &scaled_point, const int point_index = 0);
+    void find_hypercube(const double *points, int *hypercube,
+                        double *scaled_point, const int point_index = 0);
     /**
      * Compute which simplex the given point is located in.
      *
@@ -97,16 +97,16 @@ private:
      *      2. computing weights of the barycentric interpolation
      * @param[out] simplex
      */
-    void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
+    void find_simplex(const int *hypercube, const double *scaled_point,
                       std::array<int, n_dim> &tri_order, // order of coordinate in standard triangulation
-                      std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
+                      int **simplex);
     /**
      * Get the real function value of the given supporting point.
      *
      * @param vertex The index of the given supporting point along axes
      * @return The real function value of the point
      */
-    double get_value(const std::array<int, n_dim> &vertex);
+    double get_value(const int *vertex);
 };
 
 #endif //DCSE2020_PiecewiseLinearInterpolatorCuda_H

@@ -1,5 +1,7 @@
 import numpy as np
+import time
 from cpp_static_piecewise_linear_interpolator_gpu import CppPiecewiseLinearInterpolatorGPU
+from cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
 
 def func_2d(var1, var2):
     return np.sin(np.pi * var1) * np.sin(np.pi * var2) + 2 * var1 + var2
@@ -36,6 +38,13 @@ point = np.array([0.11111, 0.66666, -0.33333])
 test_grid = np.array(np.meshgrid(*grid))
 axes_min = [-1.1] * n_dim
 axes_max = [1.1] * n_dim
+interpolation_start_time = time.process_time()
 itor = CppPiecewiseLinearInterpolatorGPU(func_3d, axes_points, axes_min, axes_max)
 z_itor = itor.interpolate_array(test_grid)
-print(z_itor)
+print("Interpolation time:", time.process_time() - interpolation_start_time)
+
+interpolation_start_time = time.process_time()
+itor = CppPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
+z_itor = itor.interpolate_array(test_grid)
+print("Interpolation time:", time.process_time() - interpolation_start_time)
+#print(z_itor)
