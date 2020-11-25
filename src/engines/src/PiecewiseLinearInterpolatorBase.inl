@@ -107,3 +107,20 @@ void PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std
         }
     }
 }
+
+template<int n_dim>
+int PiecewiseLinearInterpolatorBase<n_dim>::get_index_from_point(const std::array<int, n_dim> &vertex)
+{
+    int index = 0;
+    for (int dim_i = 0; dim_i < n_dim; dim_i++)
+        index += vertex[dim_i] * this->axes_mult[dim_i];
+    return index;
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase<n_dim>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
+                                                                             std::vector<double> &point)
+{
+    for (int i = 0; i < n_dim; i++)
+        point[i] = vertex[i] * axes_step[i] + axes_min[i];
+}

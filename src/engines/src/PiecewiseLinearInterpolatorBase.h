@@ -90,6 +90,22 @@ protected:
      * @return The real function value of the point
      */
     virtual double get_value(const std::array<int, n_dim> &vertex) = 0;
+    /**
+     * Given a supporting point, compute its index.
+     *
+     * This function is used as a hash for std::array<int, n_dim>.
+     *
+     * @param vertex The supporting point's indices along axes
+     * @return The index of point among all supporting point
+     */
+    int get_index_from_point(const std::array<int, n_dim> &vertex);
+    /**
+     * Transfer a index version of supporting point to its real coordinate.
+     *
+     * @param[in] vertex The supporting point's index along each axis
+     * @param[out] point The real coordinate of the supporting point
+     */
+    void get_real_point_from_index_point(const std::array<int, n_dim> &vertex, std::vector<double> &point);
 };
 
 #include "PiecewiseLinearInterpolatorBase.inl"

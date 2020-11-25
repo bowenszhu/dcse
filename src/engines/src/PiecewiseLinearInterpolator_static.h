@@ -17,7 +17,6 @@ class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBas
 public:
     /**
      * Initialize the interpolator.
-     *
      * Compute the real function values at all supporting points.
      * 
      * @param func Input function
@@ -40,10 +39,10 @@ private:
      * the supporting point with index 4 is [1, 0],
      * the supporting point with index 10 is [3, 1].
      *
-     * @param[in] index
-     * @param[out] point_axis_index
+     * @param[in] index Index of the supporting point in the storage
+     * @param[out] vertex The supporting point's index along each axis
      */
-    void get_point(int index, std::array<int, n_dim> &point_axis_index);
+    void get_point_from_index(int index, std::array<int, n_dim> &vertex);
     /**
      * Get the real function value of the given supporting point.
      *

@@ -11,11 +11,11 @@ PiecewiseLinearInterpolator_static<n_dim>::PiecewiseLinearInterpolator_static(
     for (int point_i = 0; point_i < point_data.size(); point_i++)
     {
         std::array<int, n_dim> point_axis_index;
-        get_point(point_i, point_axis_index);
+        get_point_from_index(point_i, point_axis_index);
 
         std::vector<double> point (n_dim);
-        for (int i = 0; i < n_dim; i++)
-            point[i] = point_axis_index[i] * this->axes_step[i] + axesMin[i];
+        this->get_real_point_from_index_point(point_axis_index, point);
+
         std::vector<double> operator_value (1);
         base_points_generator->evaluate(point, operator_value);
         point_data[point_i] = operator_value[0];
@@ -23,11 +23,12 @@ PiecewiseLinearInterpolator_static<n_dim>::PiecewiseLinearInterpolator_static(
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolator_static<n_dim>::get_point(int index, std::array<int, n_dim> &point_axis_index)
+void PiecewiseLinearInterpolator_static<n_dim>::get_point_from_index(int index,
+                                                                     std::array<int, n_dim> &vertex)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {
-        point_axis_index[dim] = index / this->axes_mult[dim];
+        vertex[dim] = index / this->axes_mult[dim];
         index %= this->axes_mult[dim];
     }
 }
@@ -35,8 +36,6 @@ void PiecewiseLinearInterpolator_static<n_dim>::get_point(int index, std::array<
 template<int n_dim>
 double PiecewiseLinearInterpolator_static<n_dim>::get_value(const std::array<int, n_dim> &vertex)
 {
-    int index = 0;
-    for (int dim_i = 0; dim_i < n_dim; dim_i++)
-        index += vertex[dim_i] * this->axes_mult[dim_i];
+    int index = this->get_index_from_point(vertex);
     return point_data[index];
 }

@@ -20,7 +20,17 @@ public:
                                          const std::array<double, n_dim> &axesMax);
 
 private:
-    std::unordered_map<std::array<int, n_dim>, double> point_data;
+    std::unordered_map<int, double> point_data;             ///< adaptive storage
+    operator_set_evaluator_iface *base_points_generator;    ///< real function
+    /**
+     * The function checks whether the value at the given vertex is computed before,
+     *      if yes, the value is directly returned;
+     *      if not, the function computes the value, stores it and then returns it.
+     *
+     * @param vertex The index of the given supporting point along axes
+     * @return The real function value of the point
+     */
+    double get_value(const std::array<int, n_dim> &vertex) override;
 };
 
 #include "PiecewiseLinearInterpolator_adaptive.inl"

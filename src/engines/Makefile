@@ -24,6 +24,7 @@ OBJ =  operator_set_interpolator_static.o \
 	py_operator_set_interpolator_rates.o \
 	py_operator_set_interpolator_static.o \
 	py_piecewise_linear_interpolator_static.o \
+	py_piecewise_linear_interpolator_adaptive.o \
 	engines_build_info.o
 
 OBJ_GPU =  	operator_set_interpolator_gpu.cu.o \

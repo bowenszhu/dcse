@@ -13,7 +13,7 @@ include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
 add_executable(PLI
-        src/engines/src/main.cpp
+        src/engines/src/main_debug.cpp
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
         src/engines/src/PiecewiseLinearInterpolator_static.h
@@ -119,4 +119,5 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
-        src/engines/src/PiecewiseLinearInterpolator_adaptive.h)
+        src/engines/src/PiecewiseLinearInterpolator_adaptive.h
+        src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp)
