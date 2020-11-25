@@ -97,8 +97,8 @@ def scipy_delaunay_performance():
 def compare_execution_time():
     time_per_point = dict()
 
-    def func(*var):
-        return np.dot(var, var)
+    def func(*vars):
+        return sum([var * var for var in vars])
 
     n_supporting_pints = 3000000
     n_interp_points = 10000
