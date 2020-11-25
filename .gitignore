@@ -9,3 +9,5 @@
 /cmake-build-debug/
 /src/interpolation_errors.eps
 /src/interpolation_errors.png
+/src/interpolation_time_per_point.eps
+/src/interpolation_time_per_point.png
