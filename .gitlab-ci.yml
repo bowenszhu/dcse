@@ -47,4 +47,6 @@ test_linux:
   stage: Test
   script:
       -  PYTHONPATH=`pwd` python3 src/main.py
-
+  artifacts:
+    paths:
+      - src/interpolation_time_per_point.png
