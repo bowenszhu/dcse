@@ -50,3 +50,4 @@ test_linux:
   artifacts:
     paths:
       - src/interpolation_time_per_point.png
+      - src/interpolation_time_per_point.eps
