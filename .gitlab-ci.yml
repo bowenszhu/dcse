@@ -49,5 +49,5 @@ test_linux:
       -  PYTHONPATH=`pwd` python3 src/main.py
   artifacts:
     paths:
-      - src/interpolation_time_per_point.png
-      - src/interpolation_time_per_point.eps
+      - src/*.png
+      - src/*.eps
