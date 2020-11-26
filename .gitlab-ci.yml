@@ -48,6 +48,6 @@ test_linux:
   script:
       - PYTHONPATH=`pwd` python3 src/main.py
   artifacts:
-    path:
+    paths:
       - interpolation_time_per_point.png
       - interpolation_time_per_point.eps
