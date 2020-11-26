@@ -49,8 +49,7 @@ test_linux:
     - uname -m && cat /etc/*release     # verify supported version of Linux
     - nvidia-smi -q                     # display GPU info
     - gcc --version                     # verify gcc
-    - uname -a                          # verify system info
-    - cat /proc/driver/nvidia/version   # verify GPU driver version
+    - uname -a                          # display system info
     - PYTHONPATH=`pwd` python3 src/main.py
   artifacts:
     paths:
