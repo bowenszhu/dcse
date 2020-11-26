@@ -63,8 +63,11 @@ class CppPiecewiseLinearInterpolator:
 
             # move the first axis to the last place
             # flatten all axes
-            states = np.moveaxis(grid, 0, -1).flatten()
-            points = value_vector(np.moveaxis(grid, 0, -1).flatten())
+            states = np.moveaxis(grid, 0, -1)
+            gradient_shape = states.shape
+
+            states = states.flatten()
+            points = value_vector(states)
 
             block_idx = index_vector(np.arange(int(len(states) / self.n_dim), dtype=np.int32))
 
@@ -79,8 +82,9 @@ class CppPiecewiseLinearInterpolator:
             self.interpolator.evaluate_with_derivatives(points, block_idx, values, derivatives)
             self.interpolation_time += time.process_time() - interpolation_start_time
 
-            result = np.array(values, copy=False)
-            return result.reshape(result_shape)
+            values = np.array(values, copy=False).reshape(result_shape)
+            derivatives = np.array(derivatives, copy=False).reshape(gradient_shape)
+            return values, derivatives
         else:
             print("Engines are not available")
 
@@ -110,7 +114,7 @@ if __name__ == '__main__':
     axes_max = [1.1] * n_dim
 
     itor = CppPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
-    z_itor = itor.interpolate_array(test_grid)
+    values, gradients = itor.interpolate_array(test_grid)
     print('{:<22}'.format('cpp_linear'), '{:<10}'.format('static'),
           'init: %f s, interpolation: %f s (%.2e s per point)' %
           (itor.get_init_time(), itor.get_interpolation_time(),
