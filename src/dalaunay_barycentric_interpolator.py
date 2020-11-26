@@ -115,13 +115,12 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         -------
         interpolants : (nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
             Interpolation values at the input grid.
-        gradients : (nP_1, nP_2, ..., nP_nDim, n_dim) where nP_i is the number of points in the i-th axis
+        gradients : (n_dim, nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
             Approximate gradients at the input grid.
         """
         res_shape = grid.shape[1:]
-        points = np.moveaxis(grid, 0, -1)
-        gradient_shape = points.shape
-        points = points.reshape((-1, len(grid)))
+        gradient_shape = grid.shape
+        points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
 
         interpolation_start_time = time.process_time()
 
