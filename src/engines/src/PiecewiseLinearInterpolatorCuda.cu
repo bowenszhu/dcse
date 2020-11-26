@@ -1,6 +1,7 @@
 #include <numeric>
 #include <algorithm>
 #include "PiecewiseLinearInterpolatorCuda.h"
+#include "evaluator_iface.h"
 
 
 template<int n_dim>
@@ -10,6 +11,7 @@ PiecewiseLinearInterpolatorCuda<n_dim>::PiecewiseLinearInterpolatorCuda(
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
     {
+        /*
         double *c_axes_max;
         double *c_axes_min;
         int *c_axes_points;
@@ -86,6 +88,7 @@ PiecewiseLinearInterpolatorCuda<n_dim>::PiecewiseLinearInterpolatorCuda(
         cudaFree(c_point);
         cudaFree(c_operator_value);
         cudaFree(c_point_data);
+        */
     }
 }
 
@@ -159,7 +162,7 @@ double PiecewiseLinearInterpolatorCuda<n_dim>::evaluate(double *point)
     cudaMemcpy(c_hypercube, &hypercube[0], n_dim, cudaMemcpyHostToDevice);
     cudaMemcpy(c_scaled_point, &scaled_point[0], n_dim, cudaMemcpyHostToDevice);
 
-    find_hypercube(point, c_hypercube, c_scaled_point);
+    //find_hypercube(point, c_hypercube, c_scaled_point);
     std::array<std::array<int, n_dim>, n_dim + 1> simplex;
     int **c_simplex;
     size_t pitch_simplex;
@@ -169,26 +172,26 @@ double PiecewiseLinearInterpolatorCuda<n_dim>::evaluate(double *point)
     int *c_tri_order;
     cudaMalloc(&c_tri_order, n_dim);
     cudaMemcpy(c_tri_order, &tri_order[0], n_dim, cudaMemcpyHostToDevice);
-    find_simplex(c_hypercube, c_scaled_point, tri_order, c_simplex);
+    //find_simplex(c_hypercube, c_scaled_point, tri_order, c_simplex);
     std::array<double, n_dim + 1> weights;
     double *c_weights;
     cudaMalloc(&c_weights, n_dim + 1);
     cudaMemcpy(c_weights, &weights[0], n_dim + 1, cudaMemcpyHostToDevice);
-    c_weights[0] = c_scaled_point[c_tri_order[0]];
-    c_weights[n_dim] = 1 - c_scaled_point[c_tri_order[n_dim - 1]];
+    //c_weights[0] = c_scaled_point[c_tri_order[0]];
+    //c_weights[n_dim] = 1 - c_scaled_point[c_tri_order[n_dim - 1]];
 
-    for (int dim_i = 1; dim_i < n_dim; dim_i++)
-        c_weights[dim_i] = c_scaled_point[c_tri_order[dim_i]] - c_scaled_point[c_tri_order[dim_i - 1]];
-    double interp = 0;
-    for (int dim_i = 0; dim_i <= n_dim; dim_i++)
-        interp += c_weights[dim_i] * get_value(c_simplex[dim_i]);
+    //for (int dim_i = 1; dim_i < n_dim; dim_i++)
+    //    c_weights[dim_i] = c_scaled_point[c_tri_order[dim_i]] - c_scaled_point[c_tri_order[dim_i - 1]];
+    //double interp = 0;
+    //for (int dim_i = 0; dim_i <= n_dim; dim_i++)
+    //    interp += c_weights[dim_i] * get_value(c_simplex[dim_i]);
 
     cudaFree(c_hypercube);
     cudaFree(c_scaled_point);
     cudaFree(c_simplex);
     cudaFree(c_tri_order);
     cudaFree(c_weights);
-    return interp;
+    return 0;
 }
 
 template<int n_dim>
@@ -214,7 +217,7 @@ void PiecewiseLinearInterpolatorCuda<n_dim>::evaluate_with_derivatives(std::vect
     cudaMemcpy(c_derivatives, &derivatives[0], block_idx.size() * n_dim, cudaMemcpyHostToDevice);
     cudaMemcpy(c_points, &points[0], points.size(), cudaMemcpyHostToDevice);
     cudaMemcpy(c_block_idx, &block_idx[0], block_idx.size(), cudaMemcpyHostToDevice);
-
+    /*
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
         int point_i = c_block_idx[block_i];
@@ -267,12 +270,34 @@ void PiecewiseLinearInterpolatorCuda<n_dim>::evaluate_with_derivatives(std::vect
         
         cudaFree(c_interp_values);
         cudaFree(c_derivatives);
+        cudaFree(c_points);
+        cudaFree(c_block_idx)
         cudaFree(c_scaled_point);
         cudaFree(c_hypercube);
-        cudaFree(c_points);
         cudaFree(c_simplex);
         cudaFree(c_tri_order);
         cudaFree(c_simplex_vertex_values);
         cudaFree(c_axes_step_inv);
     }
+    */
+}
+
+double func(double x, double y)
+{
+    return 2 * x + 2 * y;
+}
+
+int main()
+{
+    std::vector<int> axesPoints = {21, 21, 22};
+    std::vector<double> axesMin = {-1.1, -1.1, -1.1};
+    std::vector<double> axesMax = {1.1, 1.1, 1.1};
+    double *point = new double[3];
+    point[0] = 0;
+    point[1] = -0.2;
+    point[2] = 0.5;
+
+    PiecewiseLinearInterpolatorCuda<3>::PiecewiseLinearInterpolatorCuda = {func, axesPoints, axesMin, axesMax};
+    PiecewiseLinearInterpolatorCuda<3>::PiecewiseLinearInterpolatorCuda.evaluate(point);
+    return 0;
 }
