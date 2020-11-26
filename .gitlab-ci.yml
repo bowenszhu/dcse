@@ -46,7 +46,12 @@ coverage:
 test_linux:
   stage: Test
   script:
-      - PYTHONPATH=`pwd` python3 src/main.py
+    - lspci | grep -i nvidia          # verify CUDA-capable GPU
+    - uname -m && cat /etc/*release   # verify supported version of Linux
+    - gcc --version                   # verify gcc
+    - uname -r                        # verify version of kernel
+    - cat /proc/driver/nvidia/version # verify GPU driver version
+    - PYTHONPATH=`pwd` python3 src/main.py
   artifacts:
     paths:
       - interpolation_time_per_point.png
