@@ -46,11 +46,12 @@ coverage:
 test_linux:
   stage: Test
   script:
-    - lspci | grep -i nvidia          # verify CUDA-capable GPU
-    - uname -m && cat /etc/*release   # verify supported version of Linux
-    - gcc --version                   # verify gcc
-    - uname -r                        # verify version of kernel
-    - cat /proc/driver/nvidia/version # verify GPU driver version
+    - sudo apt-get install -y pciutils  # add utilities for inspecting and setting of devices connected to the PCI bus
+    - lspci | grep -i nvidia            # verify CUDA-capable GPU
+    - uname -m && cat /etc/*release     # verify supported version of Linux
+    - gcc --version                     # verify gcc
+    - uname -r                          # verify version of kernel
+    - cat /proc/driver/nvidia/version   # verify GPU driver version
     - PYTHONPATH=`pwd` python3 src/main.py
   artifacts:
     paths:
