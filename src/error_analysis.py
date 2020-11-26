@@ -43,7 +43,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     # Delaunay Barycentric (static) interpolation
     print("Performing Delaunay (static) interpolation...", end=" ")
     delaunay_itor = DelaunayBarycentricInterpolator(func_helper, ax_supp_pts, ax_min, ax_max)
-    delaunay_vals = delaunay_itor.interpolate_array(checking_grid)
+    delaunay_vals, delaunay_gradients = delaunay_itor.interpolate_array(checking_grid)
     delaunay_err = np.abs(exact_vals - delaunay_vals)
     print("Done.\nInitialization:", round(delaunay_itor.initialization_time, 6),
           "s Interpolation:", round(delaunay_itor.interpolation_time, 6), "s\n")
