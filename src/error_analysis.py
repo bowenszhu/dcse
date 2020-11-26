@@ -65,7 +65,10 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
           "s Interpolation:", darts_multi_stat_itor.get_interpolation_time(), "s\n")
 
     # Assemble return array
-    error_arr = np.empty([3, n_checking_points, n_checking_points])
+    list_cp=[]
+    for i in range(n_dim):
+        list_cp.append(n_checking_points)
+    error_arr = np.empty([3, *list_cp])
     error_arr[0] = delaunay_err
     error_arr[1] = piecewise_linear_err
     error_arr[2] = darts_multi_stat_err

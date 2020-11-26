@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from src.error_analysis import find_interp_error
+from src.plotting_error_different_dimensions import barplot
 
 if __name__ == '__main__':
     supp_grid = [10, 15, 20, 25, 30, 35, 40, 45, 50]
@@ -26,6 +27,5 @@ if __name__ == '__main__':
     plt.ylabel("Mean grid error")
     plt.show()
 
-
-
-
+    # # For plotting the bar plot comparing different interpolators at different dims for the same number of supporting points per axis
+    # barplot(5,5,20,-1,1)
