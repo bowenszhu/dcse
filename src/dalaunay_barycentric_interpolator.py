@@ -135,7 +135,8 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         values = self.get_simplices_values(simplices)
         interpolants = np.einsum('ij,ij->i', barycentric, values).reshape(res_shape)
         ts_inv = np.append(ts_inv, np.expand_dims(-ts_inv.sum(axis=1), axis=1), axis=1)
-        gradients = np.einsum('ijk,ij->ik', ts_inv, values).reshape(gradient_shape)
+        gradients = np.einsum('ijk,ij->ik', ts_inv, values) / self.axes_len_interval
+        gradients = gradients.reshape(gradient_shape)
 
         self.interpolation_time += time.process_time() - interpolation_start_time
 
