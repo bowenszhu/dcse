@@ -46,8 +46,8 @@ coverage:
 test_linux:
   stage: Test
   script:
-    - nvidia-smi -L                     # verify CUDA-capable GPU
     - uname -m && cat /etc/*release     # verify supported version of Linux
+    - nvidia-smi -q                     # display GPU info
     - gcc --version                     # verify gcc
     - uname -r                          # verify version of kernel
     - cat /proc/driver/nvidia/version   # verify GPU driver version
