@@ -10,7 +10,7 @@ def barplot(max_n_dim, n_supp, n_check, axis_min, axis_max):
         err_arr = find_interp_error(i+2, n_supp, n_check, axis_min, axis_max, False)
         del_mean_arr[i] = np.mean(err_arr[0])
         piece_mean_arr[i] = np.mean(err_arr[1])
-        darts_mean_arr[i] = err_arr[2]
+        darts_mean_arr[i] = np.mean(err_arr[2])
     #Preparing the bar plot
     dims = range(2,max_n_dim+1)
     x = np.arange(len(dims))
