@@ -158,3 +158,10 @@ class PiecewiseLinearInterpolator(InterpolatorBase):
         self.interpolation_time += time.process_time() - interpolation_start_time
 
         return interpolants.reshape(res_shape)
+
+    def __str__(self):
+        if self.adaptive:
+            storage = 'adaptive'
+        else:
+            storage = 'static'
+        return '{:<19}{:<5}{:<9}'.format('piecewise_linear', 'Py', storage)

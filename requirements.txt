@@ -4,3 +4,4 @@ plotly
 flake8
 pylint
 coverage
+matplotlib

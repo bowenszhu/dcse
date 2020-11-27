@@ -3,12 +3,16 @@
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 import plotly
 import plotly.graph_objs as go
 from scipy.spatial.qhull import Delaunay
 
+from src.cpp_adaptive_piecewise_linear_interpolator import CppAdaptivePiecewiseLinearInterpolator
+from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
+from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
 from src.scipy_regular_grid_linear_interpolator import ScipyRegularGridLinearInterpolator
@@ -38,97 +42,46 @@ def func_9d(var1, var2, var3, var4, var5, var6, var7, var8, var9):
     return 2 * var1 * var1 + 3 * var2 - var3 + var4 * var5 * var6 + 7 * var7 + var8 * var9
 
 
-def measure_performance(n_dim, func, axes_points, grid_shape, grid, point):
-    test_grid = np.array(np.meshgrid(*grid))
+def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_point):
+    test_grid = np.array(np.meshgrid(*grid, indexing='ij'))
     axes_min = [-1.1] * n_dim
     axes_max = [1.1] * n_dim
     print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
+    def performance_itor_cpp(interpolation_method):
+        itor = interpolation_method(func, axes_points, axes_min, axes_max)
+        itor.interpolate_array(test_grid)
+        interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
+        print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
+              (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
+        if str(itor) in time_per_point:
+            time_per_point[str(itor)].append(interpolation_time_per_point)
+        else:
+            time_per_point[str(itor)] = [interpolation_time_per_point]
+
+    # def performance_itor_py(interpolation_method, adaptive):
+    #     itor = interpolation_method(func, axes_points, axes_min, axes_max, adaptive)
+    #     itor.interpolate_array(test_grid)
+    #     interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
+    #     print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
+    #           (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
+    #     if str(itor) in time_per_point:
+    #         time_per_point[str(itor)].append(interpolation_time_per_point)
+    #     else:
+    #         time_per_point[str(itor)] = [interpolation_time_per_point]
+
     if n_dim <= 10:
-        darts_static_itor = DartsMultilinearStaticInterpolator(func, axes_points, axes_min, axes_max)
-        z_darts_static_itor = darts_static_itor.interpolate_array(test_grid)
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
-              'init: %f s, interpolation: %f s (%.2e s per point)' %
-              (darts_static_itor.get_init_time(), darts_static_itor.get_interpolation_time(),
-               darts_static_itor.get_interpolation_time() / test_grid.size))
+        performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU)
+        performance_itor_cpp(DartsMultilinearStaticInterpolator)
+        performance_itor_cpp(DartsMultilinearAdaptiveInterpolator)
+        print()
+        performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
+        performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
+        print()
 
-        darts_adaptive_itor = DartsMultilinearAdaptiveInterpolator(func, axes_points, axes_min, axes_max)
-        z_darts_adaptive_itor = darts_adaptive_itor.interpolate_array(test_grid)
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'),
-              'init: %f s, interpolation: %f s (%.2e s per point)' %
-              (darts_adaptive_itor.get_init_time(), darts_adaptive_itor.get_interpolation_time(),
-               darts_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
-
-    linear_static_itor = PiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max, adaptive=False)
-    z_linear_static_itor = linear_static_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('static'),
-          'init: %f s, interpolation: %f s (%.2e s per point)' %
-          (linear_static_itor.get_init_time(), linear_static_itor.get_interpolation_time(),
-           linear_static_itor.get_interpolation_time() / test_grid.size))
-
-    linear_adaptive_itor = PiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max)
-    z_linear_adaptive_itor = linear_adaptive_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('adaptive'),
-          'init: %f s, interpolation: %f s (%.2e s per point)' %
-          (linear_adaptive_itor.get_init_time(), linear_adaptive_itor.get_interpolation_time(),
-           linear_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
-
-    delaunay_static_itor = DelaunayBarycentricInterpolator(func, axes_points, axes_min, axes_max, adaptive=False)
-    z_delaunay_static_itor = delaunay_static_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('static'),
-          'init: %f s, interpolation: %f s (%.2e s per point)' %
-          (delaunay_static_itor.get_init_time(), delaunay_static_itor.get_interpolation_time(),
-           delaunay_static_itor.get_interpolation_time() / test_grid.size))
-
-    delaunay_adaptive_itor = DelaunayBarycentricInterpolator(func, axes_points, axes_min, axes_max)
-    z_delaunay_adaptive_itor = delaunay_adaptive_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('adaptive'),
-          'init: %f s, interpolation: %f s (%.2e s per point)' %
-          (delaunay_adaptive_itor.get_init_time(), delaunay_adaptive_itor.get_interpolation_time(),
-           delaunay_adaptive_itor.get_interpolation_time() / test_grid.size), '\n')
-
-    scipy_linear_itor = ScipyRegularGridLinearInterpolator(func, axes_points, axes_min, axes_max)
-    z_scipy_linear_itor = scipy_linear_itor.interpolate_array(test_grid)
-    print('{:<22}'.format('SciPy_linear'), '{:<10}'.format('static'),
-          'init: %f s, interpolation: %f s (%.2e s per point)' %
-          (scipy_linear_itor.get_init_time(), scipy_linear_itor.get_interpolation_time(),
-           scipy_linear_itor.get_interpolation_time() / test_grid.size))
-
-    print('\n\nValues at', point, ':')
-    print('{:<33}'.format('function'), func(*point))
-    if n_dim <= 10:
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('static'),
-              darts_static_itor.interpolate_point(point))
-        print('{:<22}'.format('Darts_multilinear'), '{:<10}'.format('adaptive'),
-              darts_adaptive_itor.interpolate_point(point))
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('static'),
-          linear_static_itor.interpolate_point(point))
-    print('{:<22}'.format('piecewise_linear'), '{:<10}'.format('adaptive'),
-          linear_adaptive_itor.interpolate_point(point))
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('static'),
-          delaunay_static_itor.interpolate_point(point))
-    print('{:<22}'.format('Delaunay_barycentric'), '{:<10}'.format('adaptive'),
-          delaunay_adaptive_itor.interpolate_point(point))
-    print('{:<22}'.format('SciPy_linear'), '{:<10}'.format('static'),
-          scipy_linear_itor.interpolate_point(point), '\n\n')
-
-    # if n_dim == 2:
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=func(*test_grid))],
-    #                         filename='func_2d_itor_exact.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_darts_static_itor)],
-    #                         filename='func_2d_itor_ds.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_darts_adaptive_itor)],
-    #                         filename='func_2d_itor_da.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_linear_adaptive_itor)],
-    #                         filename='func_2d_itor_la.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_linear_static_itor)],
-    #                         filename='func_2d_itor_ls.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_delaunay_adaptive_itor)],
-    #                         filename='func_2d_itor_ba.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_delaunay_static_itor)],
-    #                         filename='func_2d_itor_bs.html')
-    #     plotly.offline.plot([go.Surface(x=test_grid[0], y=test_grid[1], z=z_scipy_linear_itor)],
-    #                         filename='func_2d_itor_scipy.html')
+    # performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
+    # performance_itor_py(PiecewiseLinearInterpolator, adaptive=True)
+    # print()
 
 
 def scipy_delaunay_performance():
@@ -141,53 +94,35 @@ def scipy_delaunay_performance():
         print('time:', time.process_time() - start_time, 's')
 
 
+def compare_execution_time():
+    time_per_point = dict()
+
+    def func(*vars):
+        return sum([var * var for var in vars])
+
+    n_supporting_pints = 3000000
+    n_interp_points = 10000
+    grid_min = [-0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1]
+    grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
+    for n_dim in range(2, 10):
+        grid_shape = [int(n_supporting_pints ** (1/n_dim))] * n_dim
+        interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
+        axes_points = [int(n_interp_points ** (1/n_dim))] * n_dim
+        measure_performance(n_dim, func, axes_points, grid_shape, interp_grid, time_per_point)
+
+    plt.figure(figsize=(19, 12))
+    for i in range(len(time_per_point)):
+        interpolator_name = list(time_per_point.keys())[i]
+        times = time_per_point[interpolator_name]
+        plt.plot(list(range(2, 10)), times, 'o-', label=interpolator_name)
+    plt.yscale('log')
+    plt.xlabel('dimension', fontsize=20)
+    plt.ylabel('log interpolation time per point', fontsize=20)
+    plt.legend(fontsize=18)
+    plt.savefig('interpolation_time_per_point.eps')
+    plt.savefig('interpolation_time_per_point.png')
+    plt.show()
+
+
 if __name__ == '__main__':
-    n_dim = 2
-    grid_shape = [1000, 3000]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    axes_points = [100, 100]
-    point = np.array([0.1, 0.6])
-    measure_performance(n_dim, func_2d, axes_points, grid_shape, grid, point)
-
-    n_dim = 3
-    grid_shape = [100, 100, 300]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    axes_points = [21, 21, 22]
-    point = np.array([0.11111, 0.66666, -0.33333])
-    measure_performance(n_dim, func_3d, axes_points, grid_shape, grid, point)
-
-    n_dim = 6
-    grid_shape = [13, 13, 14, 14, 15, 15]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    grid[3] = np.linspace(0.1, 0.2, grid_shape[3])
-    grid[4] = np.linspace(0.3, 0.4, grid_shape[4])
-    grid[5] = np.linspace(-0.5, -0.4, grid_shape[5])
-    axes_points = [7, 7, 8, 8, 9, 9]
-    point = np.array([0.1, 0.2, -0.3, -0.5, 0.3, 0.8])
-    measure_performance(n_dim, func_6d, axes_points, grid_shape, grid, point)
-
-    n_dim = 9
-    grid_shape = [4, 3, 4, 2, 3, 2, 3, 3, 2]
-    grid = [None] * n_dim
-    grid[0] = np.linspace(-0.1, 0, grid_shape[0])
-    grid[1] = np.linspace(0, 0.1, grid_shape[1])
-    grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-    grid[3] = np.linspace(0.1, 0.2, grid_shape[3])
-    grid[4] = np.linspace(0.3, 0.4, grid_shape[4])
-    grid[5] = np.linspace(-0.5, -0.4, grid_shape[5])
-    grid[6] = np.linspace(-0.4, -0.3, grid_shape[6])
-    grid[7] = np.linspace(0, 0.1, grid_shape[7])
-    grid[8] = np.linspace(-0.1, 0, grid_shape[8])
-    axes_points = [3, 3, 2, 3, 4, 3, 2, 2, 3]
-    point = np.array([0.1, 0.6, -0.3, -0.5, 0.9, 0.8, 0.4, -0.7, 0.2])
-    measure_performance(n_dim, func_9d, axes_points, grid_shape, grid, point)
-
-    scipy_delaunay_performance()
+    compare_execution_time()

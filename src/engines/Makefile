@@ -23,6 +23,8 @@ OBJ =  operator_set_interpolator_static.o \
 	py_main.o \
 	py_operator_set_interpolator_rates.o \
 	py_operator_set_interpolator_static.o \
+	py_piecewise_linear_interpolator_static.o \
+	py_piecewise_linear_interpolator_adaptive.o \
 	engines_build_info.o
 
 OBJ_GPU =  	operator_set_interpolator_gpu.cu.o \
@@ -72,7 +74,7 @@ $(BUILD_DIR)/%.gpu.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU)  -c -o  $@ $<
 
 $(BUILD_DIR)/%.cu.gpu.o:          src/%.cu
-	$(NVCC) $(NVCCFLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
 	
 $(BUILD_DIR)/%.mt.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS) $(OMP_FLAG) $(IFLAGS) $(DFLAGS)  -c -o  $@ $<
@@ -84,7 +86,7 @@ $(BUILD_DIR)/%.gpu.d.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS_DEBUG) $(IFLAGS_GPU) $(DFLAGS_GPU)  -c -o  $@ $<
 
 $(BUILD_DIR)/%.cu.gpu.d.o:          src/%.cu
-	$(NVCC) $(NVCCFLAGS_DEBUG) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
+	$(NVCC) $(NVCCFLAGS_DEBUG) $(GENCODE_FLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
 	
 $(BUILD_DIR)/%.mt.od:          src/%.cpp
 	$(CXX) $(CXXFLAGS_DEBUG) $(OMP_FLAG) $(IFLAGS) $(DFLAGS)  -c -o  $@ $<

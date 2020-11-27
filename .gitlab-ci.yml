@@ -1,8 +1,8 @@
-image: python:3.8
+image: cuda10.2-devel-py
 
 before_script:
-  - python -V  # Print out python version for debugging
-  - python -m pip install -r requirements.txt
+  - python3 -V  # Print out python version for debugging
+  - python3 -m pip install -r requirements.txt
 
 stages:
   - Static Analysis
@@ -21,11 +21,13 @@ pylint:
 
 build_linux:
   stage: Build
+  tags: 
+    - gpu
   variables:
     GIT_SUBMODULE_STRATEGY: normal
   script:
     - cd src/engines
-    - make
+    - make gpu
   artifacts:
       paths:
         - src/engines/*.so
@@ -44,5 +46,12 @@ coverage:
 test_linux:
   stage: Test
   script:
-      -  PYTHONPATH=`pwd` python3 src/main.py
-
+    - uname -m && cat /etc/*release     # verify supported version of Linux
+    - nvidia-smi -q                     # display GPU info
+    - gcc --version                     # verify gcc
+    - uname -a                          # display system info
+    - PYTHONPATH=`pwd` python3 src/main.py
+  artifacts:
+    paths:
+      - interpolation_time_per_point.png
+      - interpolation_time_per_point.eps

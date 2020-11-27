@@ -55,4 +55,8 @@ void pybind_operator_set_interpolator_gpu(py::module &m)
   EXPOSE_TABLE(4, 1);
   EXPOSE_TABLE(5, 1);
   EXPOSE_TABLE(6, 1);
+  EXPOSE_TABLE(7, 1);
+  EXPOSE_TABLE(8, 1);
+  EXPOSE_TABLE(9, 1);
+  EXPOSE_TABLE(10, 1);
 }
