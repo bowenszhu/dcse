@@ -84,10 +84,12 @@ class DartsMultilinearStaticInterpolator:
 
             # interpolate and shape the result
             self.interpolator.evaluate_with_derivatives(self.states, self.block_idx, self.values, self.derivs)
-            result = np.array(self.values, copy=False)
+
             # timer_output = self.timer.print('', str())
             # print(timer_output)
-            return result.reshape(result_shape)
+            values = np.array(self.values, copy=False).reshape(result_shape)
+            derivs = np.array(self.derivs, copy=False).reshape(grid.shape)
+            return values, derivs
         else:
             print("Engines are not available")
             pass
