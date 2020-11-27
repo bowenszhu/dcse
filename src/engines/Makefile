@@ -74,7 +74,7 @@ $(BUILD_DIR)/%.gpu.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU)  -c -o  $@ $<
 
 $(BUILD_DIR)/%.cu.gpu.o:          src/%.cu
-	$(NVCC) $(NVCCFLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
 	
 $(BUILD_DIR)/%.mt.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS) $(OMP_FLAG) $(IFLAGS) $(DFLAGS)  -c -o  $@ $<
@@ -86,7 +86,7 @@ $(BUILD_DIR)/%.gpu.d.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS_DEBUG) $(IFLAGS_GPU) $(DFLAGS_GPU)  -c -o  $@ $<
 
 $(BUILD_DIR)/%.cu.gpu.d.o:          src/%.cu
-	$(NVCC) $(NVCCFLAGS_DEBUG) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
+	$(NVCC) $(NVCCFLAGS_DEBUG) $(GENCODE_FLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
 	
 $(BUILD_DIR)/%.mt.od:          src/%.cpp
 	$(CXX) $(CXXFLAGS_DEBUG) $(OMP_FLAG) $(IFLAGS) $(DFLAGS)  -c -o  $@ $<
