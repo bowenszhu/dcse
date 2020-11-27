@@ -91,12 +91,13 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     # Plot error grid for Delaunay
     if plot2d:
         if n_dim == 2:
-            fig = go.Figure(data=[go.Surface(z=delaunay_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
+            fig = go.Figure(data=[go.Surface(z=darts_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
                                             y=np.linspace(axis_min, axis_max, n_checking_points))])
             fig.show()
 
-            img = plt.imshow(delaunay_val_err, vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
+            img = plt.imshow(darts_val_err, vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
             plt.colorbar(img)
+            plt.title("Error heatmap")
             plt.xlabel('x')
             plt.ylabel('y')
             plt.show()
