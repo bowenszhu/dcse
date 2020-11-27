@@ -46,11 +46,14 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
     test_grid = np.array(np.meshgrid(*grid, indexing='ij'))
     axes_min = [-1.1] * n_dim
     axes_max = [1.1] * n_dim
+    real_values = func(*test_grid)
+    print('real_values:', real_values)
     print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
     def performance_itor_cpp(interpolation_method):
         itor = interpolation_method(func, axes_points, axes_min, axes_max)
-        itor.interpolate_array(test_grid)
+        interpolation_values = itor.interpolate_array(test_grid)
+        print('interpolation_values:', interpolation_values)
         interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
         print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
               (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
@@ -106,7 +109,10 @@ def compare_execution_time():
     grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
     for n_dim in range(2, 10):
         grid_shape = [int(n_supporting_pints ** (1/n_dim))] * n_dim
-        interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
+        # interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
+
+        interp_grid = [np.linspace(grid_min[i], grid_max[i], 2) for i in range(n_dim)]
+
         axes_points = [int(n_interp_points ** (1/n_dim))] * n_dim
         measure_performance(n_dim, func, axes_points, grid_shape, interp_grid, time_per_point)
 
