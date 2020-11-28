@@ -14,7 +14,7 @@ def func(x):
 
 
 def func_deriv(x):
-    derivs = (-2*np.dot(x[0], np.ones_like(x[0])), -2*np.dot(x[1], np.ones_like(x[1])))
+    derivs = (-2 * np.dot(x[0], np.ones_like(x[0])), -2 * np.dot(x[1], np.ones_like(x[1])))
     return derivs
 
 
@@ -94,7 +94,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     if plot2d:
         if n_dim == 2:
             fig = go.Figure(data=[go.Surface(z=darts_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
-                                            y=np.linspace(axis_min, axis_max, n_checking_points))])
+                                             y=np.linspace(axis_min, axis_max, n_checking_points))])
             fig.show()
 
             img = plt.imshow(darts_val_err, vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
