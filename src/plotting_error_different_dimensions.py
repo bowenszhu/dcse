@@ -1,3 +1,5 @@
+# pylint: skip-file
+
 import matplotlib.pyplot as plt
 import numpy as np
 from src.error_analysis import find_interp_error

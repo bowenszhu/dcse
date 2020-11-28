@@ -24,10 +24,19 @@ def func_helper(*var):
 
 def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
     """
-    Returns an array error_arr with each entry the 2D error arrays:
+    RETURNS:
+        an array error_arr with each entry the 2D error arrays:
         error_arr[0] = delaunay_err
         error_arr[1] = piecewise_linear_err
         error_arr[2] = darts_multi_stat_err
+
+    PARAMETERS:
+        n_dim               : number of dimensions that will be interpolated
+        n_supporting_points : number of supporting points per axis
+        n_checking_points   : number of points to check the interpolation at per axis
+        axis_min            : minimum axis coordinate value
+        axis_max            : maximum axis coordinate value
+        plot2d (boolean)    : plot 2d error graphs
     """
 
     assert n_dim > 0
