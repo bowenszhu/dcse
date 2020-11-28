@@ -24,19 +24,40 @@ def func_helper(*var):
 
 def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
     """
-    RETURNS:
-        an array error_arr with each entry the 2D error arrays:
-        error_arr[0] = delaunay_err
-        error_arr[1] = piecewise_linear_err
-        error_arr[2] = darts_multi_stat_err
+    Finds interpolation errors for Delaunay, Piecewise Linear and DARTS interpolators.
+    Currently only returns error in function values
+    Derivatives are WIP
 
-    PARAMETERS:
-        n_dim               : number of dimensions that will be interpolated
-        n_supporting_points : number of supporting points per axis
-        n_checking_points   : number of points to check the interpolation at per axis
-        axis_min            : minimum axis coordinate value
-        axis_max            : maximum axis coordinate value
-        plot2d (boolean)    : plot 2d error graphs
+    Returns
+    ------------
+    val_error_arr : shape (n_dim, n_checking_points, ..., n_checking_points) array with:
+        val_error_arr[0] : n_dim-dimensional array containing Delaunay function value error
+        val_error_arr[1] : n_dim-dimensional array containing Piecewise Linear function value error
+        val_error_arr[2] : n_dim-dimensional array containing DARTS Multilinear function value error
+
+    #### WIP ####
+    deriv_error_arr : shape () array with:
+        deriv_error_arr[0]
+            : ()-dimensional array containing Delaunay function derivative errors
+        deriv_error_arr[1]
+            : ()-dimensional array containing Piecewise Linear function derivative errors
+        deriv_error_arr[2]
+            : ()-dimensional array containing DARTS Multilinear function derivative errors
+
+    Parameters
+    -------------
+    n_dim : an integer value
+        Number of dimensions that will be interpolated
+    n_supporting_points : an integer value
+        The number of supporting points per axis
+    n_checking_points : an integer value
+        The number of points to check the interpolation at per axis
+    axis_min : a float value
+        The minimum axis value
+    axis_max : a float value
+        The maximum axis value
+    plot2d : boolean
+        Plot 2d error graphs when n_dim == 2
     """
 
     assert n_dim > 0
