@@ -1,3 +1,6 @@
+# pylint: skip-file
+# flake8: noqa
+
 import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
@@ -28,9 +31,9 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
         error_arr[2] = darts_multi_stat_err
     """
 
-    assert (n_dim > 0)
-    assert (n_checking_points > n_supporting_points)
-    assert (axis_max > axis_min)
+    assert n_dim > 0
+    assert n_checking_points > n_supporting_points
+    assert axis_max > axis_min
 
     # Create grids
     ax_supp_pts = np.ones(n_dim).astype('int32') * n_supporting_points

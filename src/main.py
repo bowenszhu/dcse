@@ -1,5 +1,4 @@
 # pylint: skip-file
-# flake8: noqa
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,14 +18,14 @@ if __name__ == '__main__':
         piece_mean_arr.append(np.mean(val_err[1]))
         darts_mean_arr.append(np.mean(val_err[2]))
 
-    # plt.figure(1)
-    # plt.semilogy(supp_grid, np.clip(del_mean_arr, 0, 2), label="Delaunay")
-    # plt.semilogy(supp_grid, np.clip(piece_mean_arr, 0, 2), label="Piecewise Linear")
-    # plt.semilogy(supp_grid, np.clip(darts_mean_arr, 0, 2), label="Darts multilinear")
-    # plt.legend()
-    # plt.title("Convergence of interpolation methods for n_dim=2")
-    # plt.xlabel("# of supporting points")
-    # plt.ylabel("Mean grid error")
+    plt.figure(1)
+    plt.semilogy(supp_grid, np.clip(del_mean_arr, 0, 2), label="Delaunay")
+    plt.semilogy(supp_grid, np.clip(piece_mean_arr, 0, 2), label="Piecewise Linear")
+    plt.semilogy(supp_grid, np.clip(darts_mean_arr, 0, 2), label="Darts multilinear")
+    plt.legend()
+    plt.title("Convergence of interpolation methods for n_dim=2")
+    plt.xlabel("# of supporting points")
+    plt.ylabel("Mean grid error")
     # plt.show()
 
     # For plotting the bar plot comparing different interpolators at
