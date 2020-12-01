@@ -1,10 +1,9 @@
 /**
- * This file is used to debug the Piecewise Linear Interpolator in C++.
+ * This file is used to debug the Piecewise Linear Interpolator in CUDA.
+ * The file will be removed later.
  */
 #include <array>
 //#include "evaluator_iface.h"
-//#include "PiecewiseLinearInterpolator_static.h"
-//#include "PiecewiseLinearInterpolator_adaptive.h"
 #include "PiecewiseLinearInterpolatorBase_GPU.cuh"
 
 int main()
@@ -15,17 +14,31 @@ int main()
     std::array<double, n_dim> axes_max {1.1, 1.2};
 //    operator_set_evaluator_iface *face;
 
-    std::vector<double> points {0.0, 0.1, 0.2, 0.3};
-    std::vector<int> block_idx {0, 1};
-    std::vector<double> interp_values (2);
-    std::vector<double> derivatives (n_dim * 2);
+//    std::vector<double> points {0.0, 0.1, 0.2, 0.3};
+//    std::vector<int> block_idx {0, 1};
+//    std::vector<double> interp_values (2);
+//    std::vector<double> derivatives (n_dim * 2);
 
     PiecewiseLinearInterpolatorBase_GPU<n_dim> interpolator (axes_points, axes_min, axes_max);
 //    interpolator.evaluate_with_derivatives(points, block_idx, interp_values, derivatives);
-    for(int i = 0; i < interpolator.axes_points.size(); i++) {
+    for (int i = 0; i < interpolator.axes_points.size(); i++) {
         std::cout << "axes_points[" << i << "] = " << interpolator.axes_points[i] << std::endl;
         std::cout << "axes_min[" << i << "] = " << interpolator.axes_min[i] << std::endl;
         std::cout << "axes_max[" << i << "] = " << interpolator.axes_max[i] << std::endl;
+        std::cout << "axes_step[" << i << "] = " << interpolator.axes_step[i] << std::endl;
+        std::cout << "axes_mult[" << i << "] = " << interpolator.axes_mult[i] << std::endl;
     }
+    thrust::device_vector<double> points (n_dim * 10, 0.1);
+    int point_i = 5;
+    thrust::fill(points.begin() + n_dim * point_i, points.begin() + n_dim * (point_i + 1), -0.1);
+    thrust::device_vector<int> hypercube (n_dim);
+    thrust::device_vector<double> scaled_point (n_dim);
+
+    interpolator.find_hypercube(points, hypercube, scaled_point, n_dim * point_i);
+
+    for (int i = 0; i < n_dim; i++)
+        std::cout << "hypercube[" << i << "] = " << hypercube[i] << std::endl;
+    for (int i = 0; i < n_dim; i++)
+        std::cout << "scaled_point[" << i << "] = " << scaled_point[i] << std::endl;
     return 0;
 }
