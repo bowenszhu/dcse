@@ -1,19 +1,23 @@
 cmake_minimum_required(VERSION 3.17)
-project(dcse2020)
+project(dcse2020 C CXX CUDA)
 
 # OpenMP
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(source)
+include_directories(src/engines/src)
 include_directories(src/engines/pybind11/include)
 include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
+add_executable(PLI_GPU
+        src/engines/src/main_debug.cu
+        src/engines/src/PiecewiseLinearInterpolatorBase_GPU.cuh)
+
 add_executable(PLI
-        src/engines/src/main_debug.cpp
+        src/engines/src/main_debug.cu
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolatorBase.inl
         src/engines/src/PiecewiseLinearInterpolator_static.h
@@ -120,4 +124,5 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolatorBase.h
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h
-        src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp)
+        src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
+        src/engines/src/PiecewiseLinearInterpolatorBase_GPU.cuh)
