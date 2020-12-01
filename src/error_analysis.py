@@ -68,18 +68,19 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     ax_supp_pts = np.ones(n_dim).astype('int32') * n_supporting_points
     ax_min = np.ones(n_dim) * axis_min
     ax_max = np.ones(n_dim) * axis_max
-    checking_pts = np.tile(np.linspace(axis_min, axis_max, n_checking_points), (n_dim, 1))
+    # Checking grid made slightly smaller than supporting grid to prevent errors
+    checking_pts = np.tile(np.linspace(axis_min+0.01, axis_max-0.01, n_checking_points), (n_dim, 1))
     checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
     print("Calculating exact values...", end=" ")
     exact_vals = np.apply_along_axis(func, 0, checking_grid)
-    print("Done.")
+    print("Done")
 
     # Calculate exact derivatives
     print("Calculating exact derivatives...", end=" ")
     exact_derivs = np.apply_along_axis(func_deriv, 0, checking_grid)
-    print("Done.")
+    print("Done")
 
     # Delaunay Barycentric (static) interpolation
     print("Performing Delaunay (static) interpolation...", end=" ")
@@ -87,7 +88,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     delaunay_vals, delaunay_derivs = delaunay_itor.interpolate_array(checking_grid)
     delaunay_val_err = np.abs(exact_vals - delaunay_vals)
     delaunay_deriv_err = np.abs(exact_derivs - delaunay_derivs)
-    print("Done.\nInitialization:", round(delaunay_itor.initialization_time, 6),
+    print("Done\nInitialization:", round(delaunay_itor.initialization_time, 6),
           "s Interpolation:", round(delaunay_itor.interpolation_time, 6), "s\n")
 
     # Piecewise Linear (static) interpolation
@@ -96,7 +97,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     piecewise_vals, piecewise_derivs = piecewise_itor.interpolate_array(checking_grid)
     piecewise_val_err = np.abs(exact_vals - piecewise_vals)
     piecewise_deriv_err = np.abs(exact_derivs - np.moveaxis(piecewise_derivs, -1, 0))
-    print("Done.\nInitialization:", round(piecewise_itor.initialization_time, 6),
+    print("Done\nInitialization:", round(piecewise_itor.initialization_time, 6),
           "s Interpolation:", round(piecewise_itor.interpolation_time, 6), "s\n")
 
     # Darts Multilinear (Static) interpolation
@@ -105,7 +106,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     darts_vals, darts_derivs = darts_itor.interpolate_array(checking_grid)
     darts_val_err = np.abs(exact_vals - darts_vals)
     darts_deriv_err = np.abs(exact_derivs - darts_derivs)
-    print("Done.\nInitialization:", darts_itor.get_init_time(),
+    print("Done\nInitialization:", darts_itor.get_init_time(),
           "s Interpolation:", darts_itor.get_interpolation_time(), "s\n")
 
     # Assemble function error array
