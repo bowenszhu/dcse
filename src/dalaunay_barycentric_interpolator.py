@@ -120,7 +120,6 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         """
         res_shape = grid.shape[1:]
         points = np.moveaxis(grid, 0, -1)
-        gradient_shape = points.shape
         points = points.reshape((-1, len(grid)))
 
         interpolation_start_time = time.process_time()
@@ -136,7 +135,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         interpolants = np.einsum('ij,ij->i', barycentric, values).reshape(res_shape)
         ts_inv = np.append(ts_inv, np.expand_dims(-ts_inv.sum(axis=1), axis=1), axis=1)
         gradients = np.einsum('ijk,ij->ik', ts_inv, values) / self.axes_len_interval
-        gradients = gradients.reshape(gradient_shape)
+        gradients = gradients.reshape(points.shape)
         gradients = np.moveaxis(gradients, -1, 0)
 
         self.interpolation_time += time.process_time() - interpolation_start_time
