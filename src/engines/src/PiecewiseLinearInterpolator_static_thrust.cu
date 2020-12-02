@@ -1,8 +1,8 @@
-#ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CUH
-#define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CUH
+#ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CU
+#define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CU
 
 
-#include "PiecewiseLinearInterpolatorBase_thrust.cuh"
+#include "PiecewiseLinearInterpolatorBase_thrust.cu"
 #include "evaluator_iface.h"
 
 template <int n_dim>
@@ -28,7 +28,6 @@ PiecewiseLinearInterpolator_static_thrust<n_dim>::PiecewiseLinearInterpolator_st
         : PiecewiseLinearInterpolatorBase_thrust<n_dim>(axesPoints, axesMin, axesMax),
                 point_data(this->axes_mult[0] * axesPoints[0])
 {
-#pragma omp parallel for
     for (int point_i = 0; point_i < point_data.size(); point_i++)
     {
         thrust::device_vector<int> point_axis_index (n_dim);
@@ -62,4 +61,4 @@ double PiecewiseLinearInterpolator_static_thrust<n_dim>::get_value(const thrust:
 }
 
 
-#endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CUH
+#endif //DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_THRUST_CU

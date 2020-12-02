@@ -1,5 +1,5 @@
-#ifndef DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
-#define DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
+#ifndef DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CU
+#define DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CU
 
 #include <array>
 #include <vector>
@@ -10,7 +10,6 @@
 #include <thrust/zip_function.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
-#include <omp.h>
 
 typedef thrust::device_vector<double>::iterator ElementIterator;
 typedef thrust::device_vector<int>::iterator    IndexIterator;
@@ -246,7 +245,6 @@ double PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate(const std::vector
     weights[n_dim] = 1 - scaled_point[n_dim - 1];
 
     double interp = 0;
-#pragma omp parallel for reduction(+: interp)
     for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
         interp += weights[vertex_i] * get_value(simplex.data() + vertex_i * n_dim);
     return interp;
@@ -255,8 +253,7 @@ double PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate(const std::vector
 struct compute_interp_deriv
 {
     template <typename Tuple>
-    __host__ __device__
-    double operator()(Tuple t)
+    __device__ double operator()(Tuple t)
     {
         double simplex_vertex_values_gap = thrust::get<0>(t) - thrust::get<1>(t);
         thrust::get<4>(t) = - simplex_vertex_values_gap / thrust::get<3>(t);
@@ -270,7 +267,6 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
                                                                               std::vector<double> &interp_values,
                                                                               std::vector<double> &derivatives)
 {
-#pragma omp parallel for
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
         int point_i = block_idx[block_i];
@@ -280,7 +276,7 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
         thrust::device_vector<int> hypercube (n_dim);
         thrust::device_vector<double> scaled_point (n_dim);
         find_hypercube(d_point.data(), hypercube, scaled_point);
-        std::cout << "threads: " << omp_get_num_threads() << std::endl;
+
         thrust::device_vector<int> tri_order (n_dim), simplex ((n_dim + 1) * n_dim);
         find_simplex(hypercube, scaled_point, tri_order, simplex);
 
@@ -306,4 +302,4 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
     }
 }
 
-#endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
+#endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CU

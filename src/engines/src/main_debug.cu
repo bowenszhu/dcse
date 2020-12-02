@@ -5,8 +5,8 @@
 #include <array>
 #include <numeric>
 #include "evaluator_iface.h"
-#include "PiecewiseLinearInterpolatorBase_thrust.cuh"
-#include "PiecewiseLinearInterpolator_static_thrust.cuh"
+#include "PiecewiseLinearInterpolatorBase_thrust.cu"
+#include "PiecewiseLinearInterpolator_static_thrust.cu"
 #include "PiecewiseLinearInterpolator_static.h"
 
 class op : public operator_set_evaluator_iface {
