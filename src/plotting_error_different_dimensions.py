@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from src.error_analysis import find_interp_error
+from src.error_analysis import find_interp_errors
 
 
 def barplot(max_n_dim, n_supp, n_check, axis_min, axis_max):
@@ -10,7 +10,7 @@ def barplot(max_n_dim, n_supp, n_check, axis_min, axis_max):
     piece_mean_arr = np.ones(max_n_dim-1)
     darts_mean_arr = np.ones(max_n_dim-1)
     for i in range(max_n_dim-1):
-        err_arr = find_interp_error(i+2, n_supp, n_check, axis_min, axis_max, False)
+        err_arr = find_interp_errors(i+2, n_supp, n_check, axis_min, axis_max, False)
         del_mean_arr[i] = np.mean(err_arr[0])
         piece_mean_arr[i] = np.mean(err_arr[1])
         darts_mean_arr[i] = np.mean(err_arr[2])

@@ -22,7 +22,7 @@ def func_helper(*var):
     return func(np.array(var))
 
 
-def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
+def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
     """
     Finds interpolation errors for Delaunay, Piecewise Linear and DARTS interpolators.
     Currently only returns error in function values
@@ -69,7 +69,7 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     ax_min = np.ones(n_dim) * axis_min
     ax_max = np.ones(n_dim) * axis_max
     # Checking grid made slightly smaller than supporting grid to prevent errors
-    checking_pts = np.tile(np.linspace(axis_min+0.01, axis_max-0.01, n_checking_points), (n_dim, 1))
+    checking_pts = np.tile(np.linspace(axis_min + 0.01, axis_max - 0.01, n_checking_points), (n_dim, 1))
     checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
@@ -124,15 +124,64 @@ def find_interp_error(n_dim, n_supporting_points, n_checking_points, axis_min, a
     # Plot error grid for Delaunay
     if plot2d:
         if n_dim == 2:
-            fig = go.Figure(data=[go.Surface(z=darts_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
+            fig = go.Figure(data=[go.Surface(z=delaunay_val_err, x=np.linspace(axis_min, axis_max, n_checking_points),
                                              y=np.linspace(axis_min, axis_max, n_checking_points))])
             fig.show()
 
-            img = plt.imshow(darts_val_err, vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
+            img = plt.imshow(piecewise_val_err, vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
             plt.colorbar(img)
             plt.title("Error heatmap")
             plt.xlabel('x')
             plt.ylabel('y')
             plt.show()
 
-    return val_error_arr
+    return val_error_arr, deriv_error_arr
+
+
+def plot_interp_error(supp_grids):
+    """
+    Plots log-log plots of interpolator errors vs grid sizes.
+
+    Parameters:
+    ----------------
+    supp_grids : list of ints
+        List containing the number of supporting points per grid axis to calculate the error
+    """
+    del_mean_valerr = []
+    del_mean_dererr = []
+    piece_mean_valerr = []
+    piece_mean_dererr = []
+    darts_mean_valerr = []
+    darts_mean_dererr = []
+
+    for i in range(len(supp_grids)):
+        val_err, deriv_err = find_interp_errors(2, supp_grids[i], supp_grids[i] * 10, -1.0, 1.0, False)
+        del_mean_valerr.append(np.mean(val_err[0]))
+        del_mean_dererr.append(np.mean(deriv_err[0]))
+        piece_mean_valerr.append(np.mean(val_err[1]))
+        piece_mean_dererr.append(np.mean(deriv_err[1]))
+        darts_mean_valerr.append(np.mean(val_err[2]))
+        darts_mean_dererr.append(np.mean(deriv_err[2]))
+
+    plt.figure(1)
+    plt.subplot(121)
+    plt.loglog(supp_grids, del_mean_valerr, label="Delaunay")
+    plt.loglog(supp_grids, piece_mean_valerr, label="Piecewise Linear")
+    plt.loglog(supp_grids, darts_mean_valerr, label="Darts multilinear")
+    plt.legend()
+    plt.title("Function error")
+    plt.xlabel("# of supporting points")
+    plt.ylabel("Mean error")
+
+    plt.subplot(122)
+    plt.loglog(supp_grids, del_mean_dererr, label="Delaunay")
+    plt.loglog(supp_grids, piece_mean_dererr, label="Piecewise Linear")
+    plt.loglog(supp_grids, darts_mean_dererr, label="Darts multilinear")
+    plt.legend()
+    plt.title("Derivative error")
+    plt.xlabel("# of supporting points")
+    plt.ylabel("Mean error")
+
+    plt.suptitle("Interpolator errors for n_dim=2")
+    plt.tight_layout()
+    plt.show()
