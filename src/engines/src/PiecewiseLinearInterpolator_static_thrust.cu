@@ -30,7 +30,7 @@ PiecewiseLinearInterpolator_static_thrust<n_dim>::PiecewiseLinearInterpolator_st
 {
     for (int point_i = 0; point_i < point_data.size(); point_i++)
     {
-        std::cout << "compute supporting point " << point_i << " / " << point_data.size() << std::endl;
+//        std::cout << "compute supporting point " << point_i << " / " << point_data.size() << std::endl;
         thrust::device_vector<int> point_axis_index (n_dim);
         get_point_from_index(point_i, point_axis_index);
 
@@ -41,7 +41,7 @@ PiecewiseLinearInterpolator_static_thrust<n_dim>::PiecewiseLinearInterpolator_st
         base_points_generator->evaluate(point, operator_value);
         point_data[point_i] = operator_value[0];
     }
-    std::cout << "static initialization done" << std::endl;
+//    std::cout << "static initialization done" << std::endl;
 }
 
 template<int n_dim>

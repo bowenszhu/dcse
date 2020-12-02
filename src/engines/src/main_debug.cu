@@ -4,6 +4,7 @@
  */
 #include <array>
 #include <numeric>
+#include <chrono>
 #include "evaluator_iface.h"
 #include "PiecewiseLinearInterpolatorBase_thrust.cu"
 #include "PiecewiseLinearInterpolator_static_thrust.cu"
@@ -21,10 +22,10 @@ public:
 
 int main()
 {
-    const int n_dim = 3;
-    std::array<int, n_dim> axes_points {3, 4, 5};
-    std::array<double, n_dim> axes_min {-1.1, -1.2, -1.3};
-    std::array<double, n_dim> axes_max {1.1, 1.2, 1.3};
+//    const int n_dim = 3;
+//    std::array<int, n_dim> axes_points {3, 4, 5};
+//    std::array<double, n_dim> axes_min {-1.1, -1.2, -1.3};
+//    std::array<double, n_dim> axes_max {1.1, 1.2, 1.3};
 
     op face = op();
 
@@ -76,38 +77,42 @@ int main()
 //    std::cout << "----------------------------------" << std::endl;
 
 
+    const int n_dim = 3;
+    std::array<int, n_dim> axes_points {3, 4, 5};
+    std::array<double, n_dim> axes_min {-1.1, -1.2, -1.3};
+    std::array<double, n_dim> axes_max {1.1, 1.2, 1.3};
 
+    int test_size = 10 * 10 * 10;
+    double step = 2.0 / test_size;
+    std::vector<int> t_block_id (test_size);
+    std::iota(t_block_id.begin(), t_block_id.end(), 0);
+    std::vector<double> test_points (test_size * n_dim);
+    for (int point_i = 0; point_i < test_size; point_i++)
+        std::fill(test_points.begin() + point_i * n_dim, test_points.begin() + (point_i + 1) * n_dim,
+                  step * point_i - 1.0);
+
+    std::vector<double> interp_values (test_size);
+    std::vector<double> derivatives (test_size * n_dim);
+
+    auto init_start = std::chrono::high_resolution_clock::now();
     PiecewiseLinearInterpolator_static_thrust<n_dim> thrust_static_itor (&face, axes_points, axes_min, axes_max);
-//    std::cout << "point_data.size = " << thrust_static_itor.point_data.size() << std::endl;
-//    std::cout << "----------------------------------" << std::endl;
-    std::vector<double> t_point {0.1, 0.2, 0.3};
-    double res = thrust_static_itor.evaluate(t_point);
-    std::cout << "thrust_static_itor = " << res << std::endl;
+    auto init_stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(init_stop - init_start);
+    std::cout << "init: " << duration.count() * 1e-9 << " s" << std::endl;
 
-    PiecewiseLinearInterpolator_static<n_dim> static_itor (&face, axes_points, axes_min, axes_max);
-    double res2 = static_itor.evaluate(t_point);
-    std::cout << "static_itor = " << res2 << std::endl;
+    auto interp_start = std::chrono::high_resolution_clock::now();
+    thrust_static_itor.evaluate_with_derivatives(test_points, t_block_id, interp_values, derivatives);
+    auto interp_stop = std::chrono::high_resolution_clock::now();
+    auto interp_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(interp_stop - interp_start);
+    std::cout << "interp: " << interp_duration.count() * 1e-9 << " s" << std::endl;
+    std::cout << "interp per point: " << interp_duration.count() * 1e-9 / test_size << " s" << std::endl;
 
-
-    std::vector<double> t_points {1, 0.1, 0.1, -1, -0.1, -0.1};
-    std::vector<int> t_block_id {0, 1};
-    std::vector<double> interp_values (2);
-    std::vector<double> derivatives (2 * n_dim);
-    thrust_static_itor.evaluate_with_derivatives(t_points, t_block_id, interp_values, derivatives);
-    for (int i = 0; i < interp_values.size(); i++) {
-        std::cout << "interp[" << i << "] = " << interp_values[i] << std::endl;
-        for (int j = 0; j < n_dim; j++)
-            std::cout << "deriv[" << i << ", " << j << "] = " << derivatives[i * n_dim + j] << std::endl;
-    }
-    std::cout << "---------------------------------" << std::endl;
-
-    static_itor.evaluate_with_derivatives(t_points, t_block_id, interp_values, derivatives);
-    for (int i = 0; i < interp_values.size(); i++) {
-        std::cout << "interp[" << i << "] = " << interp_values[i] << std::endl;
-        for (int j = 0; j < n_dim; j++)
-            std::cout << "deriv[" << i << ", " << j << "] = " << derivatives[i * n_dim + j] << std::endl;
-    }
-    std::cout << "---------------------------------" << std::endl;
+//    for (int point_i = 0; point_i < test_size; point_i++) {
+//        std::cout << "interp[" << point_i << "] = " << interp_values[point_i] << std::endl;
+//        for (int j = 0; j < n_dim; j++)
+//            std::cout << "deriv[" << point_i << ", " << j << "] = " << derivatives[point_i * n_dim + j] << std::endl;
+//    }
+//    std::cout << "---------------------------------" << std::endl;
 
 
     return 0;

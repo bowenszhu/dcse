@@ -144,7 +144,7 @@ PiecewiseLinearInterpolatorBase_thrust<n_dim>::PiecewiseLinearInterpolatorBase_t
     thrust::multiplies<int> multiply_op;
     thrust::exclusive_scan(axes_points.rbegin(), axes_points.rend(),
                            axes_mult.rbegin(), 1, multiply_op);
-    std::cout << "base initialization done" << std::endl;
+//    std::cout << "base initialization done" << std::endl;
 }
 
 struct compute_hypercube
@@ -270,11 +270,17 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
 {
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
-        std::cout << "interpolation point " << block_i << " / " << block_idx.size() << std::endl;
+//        std::cout << "interpolation point " << block_i << " / " << block_idx.size() << std::endl;
         int point_i = block_idx[block_i];
         int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
 
         thrust::device_vector<double> d_point (points.begin() + point_index, points.begin() + point_index + n_dim);
+
+//        std::cout << "test point[" << point_i << "] = (";
+//        for (int i = 0; i < n_dim; i++)
+//            std::cout << d_point[i] << ", ";
+//        std::cout << ")" << std::endl;
+
         thrust::device_vector<int> hypercube (n_dim);
         thrust::device_vector<double> scaled_point (n_dim);
         find_hypercube(d_point.data(), hypercube, scaled_point);
