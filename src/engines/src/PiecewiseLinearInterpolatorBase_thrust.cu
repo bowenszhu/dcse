@@ -10,6 +10,7 @@
 #include <thrust/zip_function.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
+#include <chrono>
 
 typedef thrust::device_vector<double>::iterator ElementIterator;
 typedef thrust::device_vector<int>::iterator    IndexIterator;
@@ -268,34 +269,49 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
                                                                               std::vector<double> &interp_values,
                                                                               std::vector<double> &derivatives)
 {
+    std::vector<double> times (6);
+    auto start = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+    
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
-//        std::cout << "interpolation point " << block_i << " / " << block_idx.size() << std::endl;
         int point_i = block_idx[block_i];
         int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
 
+        start = std::chrono::high_resolution_clock::now();
         thrust::device_vector<double> d_point (points.begin() + point_index, points.begin() + point_index + n_dim);
-
-//        std::cout << "test point[" << point_i << "] = (";
-//        for (int i = 0; i < n_dim; i++)
-//            std::cout << d_point[i] << ", ";
-//        std::cout << ")" << std::endl;
-
         thrust::device_vector<int> hypercube (n_dim);
         thrust::device_vector<double> scaled_point (n_dim);
         find_hypercube(d_point.data(), hypercube, scaled_point);
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[0] += duration.count();
 
+        start = std::chrono::high_resolution_clock::now();
         thrust::device_vector<int> tri_order (n_dim), simplex ((n_dim + 1) * n_dim);
         find_simplex(hypercube, scaled_point, tri_order, simplex);
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[1] += duration.count();
 
+        start = std::chrono::high_resolution_clock::now();
         thrust::device_vector<double> simplex_vertex_values (n_dim + 1);
         for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
             simplex_vertex_values[vertex_i] = get_value(simplex.data() + vertex_i * n_dim);
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[2] += duration.count();
 
+        start = std::chrono::high_resolution_clock::now();
         thrust::device_vector<double> d_derivatives (n_dim);
         PermutationIterator deriv_iter(d_derivatives.begin(), tri_order.begin());
         PermutationIterator step_iter(axes_step.begin(), tri_order.begin());
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[3] += duration.count();
 
+        start = std::chrono::high_resolution_clock::now();
         double init = simplex_vertex_values[0];
         interp_values[block_i] = thrust::transform_reduce(
                 thrust::make_zip_iterator(thrust::make_tuple(
@@ -305,9 +321,18 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
                         simplex_vertex_values.end(),simplex_vertex_values.end() - 1,
                         scaled_point.end(), step_iter + n_dim, deriv_iter + n_dim)),
                 compute_interp_deriv(), init, thrust::plus<double>());
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[4] += duration.count();
 
+        start = std::chrono::high_resolution_clock::now();
         thrust::copy(d_derivatives.begin(), d_derivatives.end(), derivatives.begin() + point_index);
+        stop = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        times[5] += duration.count();
     }
+    for (int i = 0; i < times.size(); i++)
+        std::cout << "step " << i << " : " << times[i] * 1e-9 << " s" << std::endl;
 }
 
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CU

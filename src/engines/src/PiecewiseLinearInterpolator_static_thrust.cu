@@ -14,7 +14,7 @@ public:
                                               const std::array<double, n_dim> &axesMax);
 
 private:
-    thrust::device_vector<double> point_data;
+    std::vector<double> point_data;
 
     void get_point_from_index(int index, thrust::device_vector<int> &vertex);
 
@@ -58,8 +58,7 @@ void PiecewiseLinearInterpolator_static_thrust<n_dim>::get_point_from_index(int 
 template<int n_dim>
 double PiecewiseLinearInterpolator_static_thrust<n_dim>::get_value(const thrust::device_ptr<int> &vertex)
 {
-    int index = this->get_index_from_point(vertex);
-    return point_data[index];
+    return point_data[this->get_index_from_point(vertex)];
 }
 
 
