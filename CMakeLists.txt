@@ -14,7 +14,7 @@ include_directories(src/engines/pybind11/tests)
 
 add_executable(PLI_GPU
         src/engines/src/main_debug.cu
-        src/engines/src/PiecewiseLinearInterpolatorBase_GPU.cuh)
+        src/engines/src/PiecewiseLinearInterpolatorBase_thrust.cuh)
 
 add_executable(PLI
         src/engines/src/main_debug.cu
@@ -125,4 +125,4 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h
         src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
-        src/engines/src/PiecewiseLinearInterpolatorBase_GPU.cuh)
+        src/engines/src/PiecewiseLinearInterpolatorBase_thrust.cuh)

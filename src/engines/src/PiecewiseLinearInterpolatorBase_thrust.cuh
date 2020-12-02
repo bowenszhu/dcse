@@ -1,5 +1,5 @@
-#ifndef DCSE2020_PIECEWISELINEARINTERPOLATORBASE_GPU_CUH
-#define DCSE2020_PIECEWISELINEARINTERPOLATORBASE_GPU_CUH
+#ifndef DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
+#define DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
 
 #include <array>
 #include <vector>
@@ -11,7 +11,7 @@
  * @tparam n_dim The number of dimensions
  */
 template <int n_dim>
-class PiecewiseLinearInterpolatorBase_GPU {
+class PiecewiseLinearInterpolatorBase_thrust {
 public:
 //    /**
 //     * Compute the interpolation value at the given point.
@@ -54,9 +54,9 @@ public:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolatorBase_GPU(const std::array<int, n_dim> &axesPoints,
-                                        const std::array<double, n_dim> &axesMin,
-                                        const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolatorBase_thrust(const std::array<int, n_dim> &axesPoints,
+                                           const std::array<double, n_dim> &axesMin,
+                                           const std::array<double, n_dim> &axesMax);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.
@@ -67,7 +67,7 @@ public:
      * @param[in] point_index Index of the point in the std::vector points
      *      The argument point_index is used only when std::vector points consists of multiple point.
      */
-    __host__ __device__
+    __host__
     void find_hypercube(const thrust::device_vector<double> &points, thrust::device_vector<int> &hypercube,
                         thrust::device_vector<double> &scaled_point, const int point_index = 0);
     /**
@@ -75,12 +75,13 @@ public:
      *
      * @param[in] hypercube The lower-left vertex of the hypercube
      * @param[in,out] scaled_point The scaled coordinate of the given point inside the hypercube
+     *      Output is in ascending order.
      * @param[out] tri_order The order of the scaled coordinate which is used for
      *      1. finding simplex for standard triangulation
      *      2. computing weights of the barycentric interpolation
      * @param[out] simplex
      */
-    __host__ __device__
+    __host__
     void find_simplex(const thrust::device_vector<int> &hypercube, thrust::device_vector<double> &scaled_point,
                       thrust::device_vector<int> &tri_order, thrust::device_vector<int> &simplex);
 //    /**
@@ -122,7 +123,7 @@ struct compute_step
 };
 
 template<int n_dim>
-PiecewiseLinearInterpolatorBase_GPU<n_dim>::PiecewiseLinearInterpolatorBase_GPU(
+PiecewiseLinearInterpolatorBase_thrust<n_dim>::PiecewiseLinearInterpolatorBase_thrust(
         const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
         const std::array<double, n_dim> &axesMax)
         : axes_points(axesPoints.begin(), axesPoints.end()), axes_min(axesMin.begin(), axesMin.end()),
@@ -151,8 +152,8 @@ struct compute_hypercube
 };
 
 template<int n_dim>
-__host__ __device__ void
-PiecewiseLinearInterpolatorBase_GPU<n_dim>::find_hypercube(const thrust::device_vector<double> &points,
+__host__ void
+PiecewiseLinearInterpolatorBase_thrust<n_dim>::find_hypercube(const thrust::device_vector<double> &points,
         thrust::device_vector<int> &hypercube, thrust::device_vector<double> &scaled_point, const int point_index)
 {
     thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(points.begin() + point_index,
@@ -162,22 +163,37 @@ PiecewiseLinearInterpolatorBase_GPU<n_dim>::find_hypercube(const thrust::device_
                      compute_hypercube());
 }
 
+struct upper_triangular
+{
+    int vertex_i;
+
+    upper_triangular(int _vertex_i) : vertex_i(_vertex_i) {}
+
+    __host__ __device__
+    bool operator()(int dim_i)
+    {
+        return vertex_i <= dim_i;
+    }
+};
+
 template<int n_dim>
-__host__ __device__ void
-PiecewiseLinearInterpolatorBase_GPU<n_dim>::find_simplex(const thrust::device_vector<int> &hypercube,
+__host__ void
+PiecewiseLinearInterpolatorBase_thrust<n_dim>::find_simplex(const thrust::device_vector<int> &hypercube,
         thrust::device_vector<double> &scaled_point, thrust::device_vector<int> &tri_order,
         thrust::device_vector<int> &simplex)
 {
     thrust::sequence(tri_order.begin(), tri_order.end());
     thrust::sort_by_key(scaled_point.begin(), scaled_point.end(), tri_order.begin());
 
-//    for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
-//    {
-//        for (int dim_i = 0; dim_i < n_dim; dim_i++)
-//            simplex[vertex_i][dim_i] = hypercube[dim_i];
-//        for (int dim_i = 0; dim_i < n_dim; dim_i++)
-//            simplex[vertex_i][tri_order[dim_i]] += standard_simplex[vertex_i][dim_i];
-//    }
+    thrust::constant_iterator<int> const_one_iter(1);
+    for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
+    {
+        thrust::scatter_if(const_one_iter, const_one_iter + n_dim, tri_order.begin(),
+                           thrust::make_counting_iterator(0), simplex.begin() + vertex_i * n_dim,
+                           upper_triangular(vertex_i));
+        thrust::transform(hypercube.begin(), hypercube.end(), simplex.begin() + vertex_i * n_dim,
+                          simplex.begin() + vertex_i * n_dim, thrust::plus<int>());
+    }
 }
 
-#endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_GPU_CUH
+#endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
