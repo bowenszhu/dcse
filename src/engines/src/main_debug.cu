@@ -3,8 +3,20 @@
  * The file will be removed later.
  */
 #include <array>
-//#include "evaluator_iface.h"
+#include <numeric>
+#include "evaluator_iface.h"
 #include "PiecewiseLinearInterpolatorBase_thrust.cuh"
+#include "PiecewiseLinearInterpolator_static_thrust.cuh"
+
+class op : public operator_set_evaluator_iface {
+public:
+    op() {}
+
+    int evaluate(std::vector<value_t> &state, std::vector<value_t> &values) override {
+        values[0] = std::accumulate(state.begin(), state.end(), 0.0);
+        return 0;
+    }
+};
 
 int main()
 {
@@ -12,14 +24,10 @@ int main()
     std::array<int, n_dim> axes_points {3, 4, 5};
     std::array<double, n_dim> axes_min {-1.1, -1.2, -1.3};
     std::array<double, n_dim> axes_max {1.1, 1.2, 1.3};
-//    operator_set_evaluator_iface *face;
 
-//    std::vector<double> points {0.0, 0.1, 0.2, 0.3};
-//    std::vector<int> block_idx {0, 1};
-//    std::vector<double> interp_values (2);
-//    std::vector<double> derivatives (n_dim * 2);
+    op face = op();
 
-    PiecewiseLinearInterpolatorBase_thrust<n_dim> interpolator (axes_points, axes_min, axes_max);
+    PiecewiseLinearInterpolator_static_thrust<n_dim> interpolator (&face, axes_points, axes_min, axes_max);
 //    interpolator.evaluate_with_derivatives(points, block_idx, interp_values, derivatives);
     for (int i = 0; i < n_dim; i++) {
         std::cout << "axes_points[" << i << "] = " << interpolator.axes_points[i] << std::endl;
@@ -60,11 +68,19 @@ int main()
 
     int h_point[n_dim] {1, 2, 3};
     thrust::device_vector<int> vertex (h_point, h_point + n_dim);
-    thrust::device_vector<double> point (n_dim);
+    std::vector<double> point (n_dim);
     interpolator.get_real_point_from_index_point(vertex, point);
     for (int i = 0; i < n_dim; i++)
         std::cout << "point[" << i << "] = " << point[i] << std::endl;
     std::cout << "----------------------------------" << std::endl;
+
+
+
+    PiecewiseLinearInterpolator_static_thrust<n_dim> static_interpolator (&face, axes_points, axes_min, axes_max);
+    std::cout << "point_data.size = " << static_interpolator.point_data.size() << std::endl;
+    std::cout << "----------------------------------" << std::endl;
+    for (int i = 0; i < static_interpolator.point_data.size(); i++)
+        std::cout << "point_data[" << i << "] = " << static_interpolator.point_data[i] << std::endl;
 
 
     return 0;

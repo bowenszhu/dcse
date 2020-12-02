@@ -82,17 +82,17 @@ public:
      */
     void find_simplex(const thrust::device_vector<int> &hypercube, thrust::device_vector<double> &scaled_point,
                       thrust::device_vector<int> &tri_order, thrust::device_vector<int> &simplex);
-//    /**
-//     * If static storage is used, the function extracts the real function value of the given supporting point from the
-//     * pre-computed storage.
-//     * If adaptive storage is used, the function checks whether the value at the given vertex is computed before,
-//     *      if yes, the value is directly returned;
-//     *      if not, the function computes the value, stores it and then returns it.
-//     *
-//     * @param vertex The index of the given supporting point along axes
-//     * @return The real function value of the point
-//     */
-//    virtual double get_value(const std::array<int, n_dim> &vertex) = 0;
+    /**
+     * If static storage is used, the function extracts the real function value of the given supporting point from the
+     * pre-computed storage.
+     * If adaptive storage is used, the function checks whether the value at the given vertex is computed before,
+     *      if yes, the value is directly returned;
+     *      if not, the function computes the value, stores it and then returns it.
+     *
+     * @param vertex The index of the given supporting point along axes
+     * @return The real function value of the point
+     */
+    virtual double get_value(const thrust::device_ptr<int> &vertex) = 0;
     /**
      * Given a supporting point, compute its index.
      *
@@ -108,8 +108,7 @@ public:
      * @param[in] vertex The supporting point's index along each axis
      * @param[out] point The real coordinate of the supporting point
      */
-    void get_real_point_from_index_point(const thrust::device_vector<int> &vertex,
-                                         thrust::device_vector<double> &point);
+    void get_real_point_from_index_point(const thrust::device_vector<int> &vertex, std::vector<double> &point);
 };
 
 struct compute_step
@@ -194,8 +193,7 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::find_simplex(const thrust::d
 }
 
 template<int n_dim>
-__host__ int
-PiecewiseLinearInterpolatorBase_thrust<n_dim>::get_index_from_point(const thrust::device_ptr<int> &vertex_ptr)
+int PiecewiseLinearInterpolatorBase_thrust<n_dim>::get_index_from_point(const thrust::device_ptr<int> &vertex_ptr)
 {
     return thrust::inner_product(vertex_ptr, vertex_ptr + n_dim, axes_mult.begin(), 0);
 }
@@ -211,13 +209,15 @@ struct compute_point
 
 template<int n_dim>
 void PiecewiseLinearInterpolatorBase_thrust<n_dim>::get_real_point_from_index_point(
-        const thrust::device_vector<int> &vertex, thrust::device_vector<double> &point)
+        const thrust::device_vector<int> &vertex, std::vector<double> &point)
 {
+    thrust::device_vector<double> device_point (n_dim);
     thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(vertex.begin(), axes_step.begin(),
-                                                                  axes_min.begin(), point.begin())),
+                                                                  axes_min.begin(), device_point.begin())),
                      thrust::make_zip_iterator(thrust::make_tuple(vertex.end(), axes_step.end(),
-                                                                  axes_min.end(), point.end())),
+                                                                  axes_min.end(), device_point.end())),
                      compute_point());
+    thrust::copy(device_point.begin(), device_point.end(), point.begin());
 }
 
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH
