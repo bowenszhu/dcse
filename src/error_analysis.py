@@ -152,10 +152,13 @@ def plot_interp_error(supp_grids):
     supp_grids : list of ints
         List containing the number of supporting points per grid axis to calculate the error
     """
+
     del_mean_valerr = []
     del_mean_dererr = []
+
     piece_mean_valerr = []
     piece_mean_dererr = []
+
     darts_mean_valerr = []
     darts_mean_dererr = []
 
