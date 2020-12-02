@@ -6,6 +6,15 @@
 #include <thrust/device_vector.h>
 #include <thrust/advance.h>
 #include <thrust/inner_product.h>
+#include <thrust/adjacent_difference.h>
+#include <thrust/zip_function.h>
+#include <thrust/transform_reduce.h>
+#include <thrust/functional.h>
+#include <omp.h>
+
+typedef thrust::device_vector<double>::iterator ElementIterator;
+typedef thrust::device_vector<int>::iterator    IndexIterator;
+typedef thrust::permutation_iterator<ElementIterator, IndexIterator> PermutationIterator;
 
 /**
  * Interpolator base for static/adaptive piecewise linear interpolator.
@@ -14,33 +23,33 @@
 template <int n_dim>
 class PiecewiseLinearInterpolatorBase_thrust {
 public:
-//    /**
-//     * Compute the interpolation value at the given point.
-//     *
-//     * @param point
-//     * @return The interpolation value at the given point
-//     */
-//    double evaluate(const std::vector<double> &point);
-//    /**
-//     * Given an array of points, compute their interpolation values and approximate gradients.
-//     *
-//     * n_points is the number of given points.
-//     *
-//     * @param[in] points std::vector with size n_dim * n_points
-//     *      A list of points.
-//     *      For example, if the input is the two points [1.1, 1.2] and [3.3, 3.4], the input argument should be
-//     *      [1.1, 1.2, 3.3, 3.4].
-//     * @param[in] block_idx std::vector with size n_points
-//     *      Indices of the given points [0, 1, 2, ..., n_points - 1]
-//     * @param[out] interp_values std::vector with size n_points
-//     *      Interpolation values
-//     * @param[out] derivatives std::vector with size n_dim * n_points
-//     *      Approximate gradients
-//     */
-//    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
-//                                   std::vector<double> &interp_values, std::vector<double> &derivatives);
+    /**
+     * Compute the interpolation value at the given point.
+     *
+     * @param point
+     * @return The interpolation value at the given point
+     */
+    double evaluate(const std::vector<double> &point);
+    /**
+     * Given an array of points, compute their interpolation values and approximate gradients.
+     *
+     * n_points is the number of given points.
+     *
+     * @param[in] points std::vector with size n_dim * n_points
+     *      A list of points.
+     *      For example, if the input is the two points [1.1, 1.2] and [3.3, 3.4], the input argument should be
+     *      [1.1, 1.2, 3.3, 3.4].
+     * @param[in] block_idx std::vector with size n_points
+     *      Indices of the given points [0, 1, 2, ..., n_points - 1]
+     * @param[out] interp_values std::vector with size n_points
+     *      Interpolation values
+     * @param[out] derivatives std::vector with size n_dim * n_points
+     *      Approximate gradients
+     */
+    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
+                                   std::vector<double> &interp_values, std::vector<double> &derivatives);
 
-public:
+protected:
     thrust::device_vector<int> axes_points;  ///< number of supporting points along each axis
     thrust::device_vector<double> axes_min;  ///< minimum at each axis
     thrust::device_vector<double> axes_max;  ///< maximum of each axis
@@ -67,8 +76,8 @@ public:
      * @param[in] point_index Index of the point in the std::vector points
      *      The argument point_index is used only when std::vector points consists of multiple point.
      */
-    void find_hypercube(const thrust::device_vector<double> &points, thrust::device_vector<int> &hypercube,
-                        thrust::device_vector<double> &scaled_point, const int point_index = 0);
+    void find_hypercube(const thrust::device_ptr<double> &point_ptr, thrust::device_vector<int> &hypercube,
+                        thrust::device_vector<double> &scaled_point);
     /**
      * Compute which simplex the given point is located in.
      *
@@ -113,10 +122,10 @@ public:
 
 struct compute_step
 {
-    template <typename Tuple>
-    __device__ void operator()(Tuple t)
+    __device__
+    void operator()(const int& axes_points, const double& axes_min, const double& axes_max, double& axes_step)
     {
-        thrust::get<3>(t) = (thrust::get<2>(t) - thrust::get<1>(t)) / (thrust::get<0>(t) - 1);
+        axes_step = (axes_max - axes_min) / (axes_points - 1);
     }
 };
 
@@ -131,7 +140,7 @@ PiecewiseLinearInterpolatorBase_thrust<n_dim>::PiecewiseLinearInterpolatorBase_t
                                                                   axes_max.begin(), axes_step.begin())),
                      thrust::make_zip_iterator(thrust::make_tuple(axes_points.end(), axes_min.end(),
                                                                   axes_max.end(), axes_step.end())),
-                     compute_step());
+                     thrust::make_zip_function(compute_step()));
 
     thrust::multiplies<int> multiply_op;
     thrust::exclusive_scan(axes_points.rbegin(), axes_points.rend(),
@@ -140,24 +149,25 @@ PiecewiseLinearInterpolatorBase_thrust<n_dim>::PiecewiseLinearInterpolatorBase_t
 
 struct compute_hypercube
 {
-    template <typename Tuple>
-    __device__ void operator()(Tuple t)
+    __device__ void operator()(const double& point, const double& axes_min, const double& axes_step,
+            int& hypercube, double& scaled_point)
     {
-        thrust::get<4>(t) = (thrust::get<0>(t) - thrust::get<1>(t)) / thrust::get<2>(t);
-        thrust::get<3>(t) = __double2int_rz(thrust::get<4>(t));
-        thrust::get<4>(t) -= thrust::get<3>(t);
+        scaled_point = (point - axes_min) / axes_step;
+        hypercube = __double2int_rz(scaled_point);
+        scaled_point -= hypercube;
     }
 };
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase_thrust<n_dim>::find_hypercube(const thrust::device_vector<double> &points,
-        thrust::device_vector<int> &hypercube, thrust::device_vector<double> &scaled_point, const int point_index)
+void PiecewiseLinearInterpolatorBase_thrust<n_dim>::find_hypercube(const thrust::device_ptr<double> &point_ptr,
+        thrust::device_vector<int> &hypercube, thrust::device_vector<double> &scaled_point)
 {
-    thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(points.begin() + point_index,
-                            axes_min.begin(), axes_step.begin(), hypercube.begin(), scaled_point.begin())),
-                     thrust::make_zip_iterator(thrust::make_tuple(points.begin() + point_index + n_dim,
+    thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(point_ptr, axes_min.begin(),
+                            axes_step.begin(), hypercube.begin(), scaled_point.begin())),
+                     thrust::make_zip_iterator(thrust::make_tuple(point_ptr + n_dim,
                             axes_min.end(), axes_step.end(), hypercube.end(), scaled_point.end())),
-                     compute_hypercube());
+//                     compute_hypercube());
+                     thrust::make_zip_function(compute_hypercube()));
 }
 
 struct upper_triangular
@@ -200,10 +210,9 @@ int PiecewiseLinearInterpolatorBase_thrust<n_dim>::get_index_from_point(const th
 
 struct compute_point
 {
-    template <typename Tuple>
-    __device__ void operator()(Tuple t)
+    __device__ void operator()(const int& vertex, const double& axes_step, const double& axes_min, double& point)
     {
-        thrust::get<3>(t) = thrust::get<0>(t) * thrust::get<1>(t) + thrust::get<2>(t);
+        point = vertex * axes_step + axes_min;
     }
 };
 
@@ -216,8 +225,85 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::get_real_point_from_index_po
                                                                   axes_min.begin(), device_point.begin())),
                      thrust::make_zip_iterator(thrust::make_tuple(vertex.end(), axes_step.end(),
                                                                   axes_min.end(), device_point.end())),
-                     compute_point());
+                     thrust::make_zip_function(compute_point()));
     thrust::copy(device_point.begin(), device_point.end(), point.begin());
+}
+
+template<int n_dim>
+double PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate(const std::vector<double> &point)
+{
+    thrust::device_vector<double> d_point (point.begin(), point.end());
+    thrust::device_vector<int> hypercube (n_dim);
+    thrust::device_vector<double> scaled_point (n_dim);
+    find_hypercube(d_point.data(), hypercube, scaled_point);
+
+    thrust::device_vector<int> simplex ((n_dim + 1) * n_dim);
+    thrust::device_vector<int> tri_order (n_dim);
+    find_simplex(hypercube, scaled_point, tri_order, simplex);
+
+    thrust::device_vector<double> weights (n_dim + 1);
+    thrust::adjacent_difference(scaled_point.begin(), scaled_point.end(), weights.begin());
+    weights[n_dim] = 1 - scaled_point[n_dim - 1];
+
+    double interp = 0;
+#pragma omp parallel for reduction(+: interp)
+    for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
+        interp += weights[vertex_i] * get_value(simplex.data() + vertex_i * n_dim);
+    return interp;
+}
+
+struct compute_interp_deriv
+{
+    template <typename Tuple>
+    __host__ __device__
+    double operator()(Tuple t)
+    {
+        double simplex_vertex_values_gap = thrust::get<0>(t) - thrust::get<1>(t);
+        thrust::get<4>(t) = - simplex_vertex_values_gap / thrust::get<3>(t);
+        return (1.0 - thrust::get<2>(t)) * simplex_vertex_values_gap;
+    }
+};
+
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+                                                                              const std::vector<int> &block_idx,
+                                                                              std::vector<double> &interp_values,
+                                                                              std::vector<double> &derivatives)
+{
+#pragma omp parallel for
+    for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
+    {
+        int point_i = block_idx[block_i];
+        int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
+
+        thrust::device_vector<double> d_point (points.begin() + point_index, points.begin() + point_index + n_dim);
+        thrust::device_vector<int> hypercube (n_dim);
+        thrust::device_vector<double> scaled_point (n_dim);
+        find_hypercube(d_point.data(), hypercube, scaled_point);
+        std::cout << "threads: " << omp_get_num_threads() << std::endl;
+        thrust::device_vector<int> tri_order (n_dim), simplex ((n_dim + 1) * n_dim);
+        find_simplex(hypercube, scaled_point, tri_order, simplex);
+
+        thrust::device_vector<double> simplex_vertex_values (n_dim + 1);
+        for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
+            simplex_vertex_values[vertex_i] = get_value(simplex.data() + vertex_i * n_dim);
+
+        thrust::device_vector<double> d_derivatives (n_dim);
+        PermutationIterator deriv_iter(d_derivatives.begin(), tri_order.begin());
+        PermutationIterator step_iter(axes_step.begin(), tri_order.begin());
+
+        double init = simplex_vertex_values[0];
+        interp_values[block_i] = thrust::transform_reduce(
+                thrust::make_zip_iterator(thrust::make_tuple(
+                        simplex_vertex_values.begin() + 1, simplex_vertex_values.begin(),
+                        scaled_point.begin(), step_iter, deriv_iter)),
+                thrust::make_zip_iterator(thrust::make_tuple(
+                        simplex_vertex_values.end(),simplex_vertex_values.end() - 1,
+                        scaled_point.end(), step_iter + n_dim, deriv_iter + n_dim)),
+                compute_interp_deriv(), init, thrust::plus<double>());
+
+        thrust::copy(d_derivatives.begin(), d_derivatives.end(), derivatives.begin() + point_index);
+    }
 }
 
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_THRUST_CUH

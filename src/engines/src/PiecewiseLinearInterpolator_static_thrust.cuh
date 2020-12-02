@@ -13,7 +13,7 @@ public:
                                               const std::array<double, n_dim> &axesMin,
                                               const std::array<double, n_dim> &axesMax);
 
-public:
+private:
     thrust::device_vector<double> point_data;
 
     void get_point_from_index(int index, thrust::device_vector<int> &vertex);
