@@ -13,7 +13,7 @@ except ImportError:
     engines_available = 0
 
 
-class CUDAStaticPiecewiseLinearInterpolator:
+class ThrustStaticPiecewiseLinearInterpolator:
     def __init__(self, func, axes_points, axes_min, axes_max):
         if engines_available:
             # create a darts wrapper for function
@@ -93,7 +93,7 @@ class CUDAStaticPiecewiseLinearInterpolator:
             return self.interpolation_time
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'static', 'GPU')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('thrust_linear', 'C++', 'static', 'GPU')
 
 
 if __name__ == '__main__':
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     axes_min = [-1.1] * n_dim
     axes_max = [1.1] * n_dim
 
-    itor = CUDAStaticPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
+    itor = ThrustStaticPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
     z_itor = itor.interpolate_array(test_grid)
     print('{:<22}'.format('cpp_linear'), '{:<10}'.format('static'),
           'init: %f s, interpolation: %f s (%.2e s per point)' %
