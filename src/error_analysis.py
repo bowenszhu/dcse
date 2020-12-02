@@ -10,11 +10,16 @@ from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInte
 
 
 def func(x):
-    return -np.dot(x[0], x[0]) - np.dot(x[1], x[1])
+    f = np.cos(x[0])
+    for i in range(x.shape[0]):
+        f += np.cos(x[0])
+    return f
 
 
 def func_deriv(x):
-    derivs = (-2 * np.dot(x[0], np.ones_like(x[0])), -2 * np.dot(x[1], np.ones_like(x[1])))
+    derivs = -np.sin(x[0])
+    for i in range(x.shape[0]):
+        derivs.append(-np.sin(x[0]))
     return derivs
 
 
