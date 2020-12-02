@@ -144,6 +144,7 @@ PiecewiseLinearInterpolatorBase_thrust<n_dim>::PiecewiseLinearInterpolatorBase_t
     thrust::multiplies<int> multiply_op;
     thrust::exclusive_scan(axes_points.rbegin(), axes_points.rend(),
                            axes_mult.rbegin(), 1, multiply_op);
+    std::cout << "base initialization done" << std::endl;
 }
 
 struct compute_hypercube
@@ -269,6 +270,7 @@ void PiecewiseLinearInterpolatorBase_thrust<n_dim>::evaluate_with_derivatives(co
 {
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
+        std::cout << "interpolation point " << block_i << " / " << block_idx.size() << std::endl;
         int point_i = block_idx[block_i];
         int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
 

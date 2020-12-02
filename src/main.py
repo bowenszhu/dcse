@@ -10,6 +10,7 @@ from scipy.spatial.qhull import Delaunay
 
 from src.cpp_adaptive_piecewise_linear_interpolator import CppAdaptivePiecewiseLinearInterpolator
 from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
+from src.cuda_static_piecewise_linear_interpolator import CUDAStaticPiecewiseLinearInterpolator
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
@@ -77,6 +78,8 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         print()
         performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
+        print()
+        performance_itor_cpp(CUDAStaticPiecewiseLinearInterpolator)
         print()
 
     # performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
