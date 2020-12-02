@@ -10,5 +10,3 @@ if __name__ == '__main__':
     # For plotting the bar plot comparing different interpolators at
     # different dims for the same number of supporting points per axis
     # barplot(5,5,20,-1,1)
-
-    # test4
