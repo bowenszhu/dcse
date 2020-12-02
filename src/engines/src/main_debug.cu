@@ -56,6 +56,15 @@ int main()
         for (int j = 0; j < n_dim; j++)
             std::cout << "simplex[" << i << ", " << j << "] = " << simplex[i * n_dim + j] << std::endl;
     }
+    std::cout << "----------------------------------" << std::endl;
+
+    int h_point[n_dim] {1, 2, 3};
+    thrust::device_vector<int> vertex (h_point, h_point + n_dim);
+    thrust::device_vector<double> point (n_dim);
+    interpolator.get_real_point_from_index_point(vertex, point);
+    for (int i = 0; i < n_dim; i++)
+        std::cout << "point[" << i << "] = " << point[i] << std::endl;
+    std::cout << "----------------------------------" << std::endl;
 
 
     return 0;
