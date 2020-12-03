@@ -1,5 +1,6 @@
 #include <numeric>
 #include <algorithm>
+#include <iostream>
 #include "PiecewiseLinearInterpolator.h"
 
 
@@ -33,7 +34,9 @@ PiecewiseLinearInterpolator<n_dim>::PiecewiseLinearInterpolator(
 
             std::vector<double> point (n_dim);
             for (int i = 0; i < n_dim; i++)
+            {
                 point[i] = point_axis_index[i] * axes_step[i] + axes_min[i];
+            }
             std::vector<double> operator_value (1);
             base_points_generator->evaluate(point, operator_value);
             point_data[point_i] = operator_value[0];
@@ -72,9 +75,9 @@ void PiecewiseLinearInterpolator<n_dim>::find_simplex(const std::array<int, n_di
                                                       std::array<int, n_dim> &tri_order,
                                                       std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
 {
-    std::iota(tri_order.begin(), tri_order.end(), 0);
-    std::sort(tri_order.begin(), tri_order.end(),
-              [&scaled_point](int i1, int i2) {return scaled_point[i1] < scaled_point[i2];});
+    tri_order[0] = 0;
+    tri_order[1] = 1;
+    tri_order[2] = 2;
 
     #pragma omp parallel for
     for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
@@ -93,8 +96,9 @@ double PiecewiseLinearInterpolator<n_dim>::get_value(const std::array<int, n_dim
 
     #pragma omp parallel for reduction(+:index)
     for (int dim_i = 0; dim_i < n_dim; dim_i++)
+    {
         index += vertex[dim_i] * axes_mult[dim_i];
-
+    }
     return point_data[index];
 }
 
@@ -127,32 +131,36 @@ void PiecewiseLinearInterpolator<n_dim>::evaluate_with_derivatives(std::vector<d
                                                                    std::vector<double> &interp_values,
                                                                    std::vector<double> &derivatives)
 {
-    interp_values.resize(block_idx.size());
-    derivatives.resize(block_idx.size() * n_dim);
+    // std::cout << "Interp Values Size: " << interp_values.size() << " block_idx Size: " << block_idx.size() << std::endl;
+    // std::cout << "Derivatives Values Size: " << derivatives.size() << " block_idx Size: " << block_idx.size() * n_dim << std::endl;
 
+
+    std::array<int, n_dim> hypercube;
+    std::array<double, n_dim> scaled_point;
+
+    std::array<std::array<int, n_dim>, n_dim + 1> simplex;
+    std::array<int, n_dim> tri_order;
+    std::array<double, n_dim + 1> simplex_vertex_values;
+    std::cout << "Interp values: " << interp_values[10] << ", " << interp_values[11] << std::endl;
     #pragma omp parallel for
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
         int point_i = block_idx[block_i];
         int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
 
-        std::array<int, n_dim> hypercube;
-        std::array<double, n_dim> scaled_point;
         find_hypercube(points, hypercube, scaled_point, point_index);
-
-        std::array<std::array<int, n_dim>, n_dim + 1> simplex;
-        std::array<int, n_dim> tri_order;
         find_simplex(hypercube, scaled_point, tri_order, simplex);
 
-        std::array<double, n_dim + 1> simplex_vertex_values;
         for (int i = 0; i <= n_dim; i++)
+        {
             simplex_vertex_values[i] = get_value(simplex[i]);
-
+        }
         interp_values[point_i] = simplex_vertex_values[0];
         for (int i = 0; i < n_dim; i++)
         {
             double simplex_vertex_values_gap = simplex_vertex_values[i + 1] - simplex_vertex_values[i];
             interp_values[point_i] += (1 - scaled_point[tri_order[i]]) * simplex_vertex_values_gap;
+            // std::cout << "interp_values_new[point_i]: " << interp_values[point_i] << std::endl;
             derivatives[point_index + tri_order[i]] = - simplex_vertex_values_gap * axes_step_inv[tri_order[i]];
         }
     }

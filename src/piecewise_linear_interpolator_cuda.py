@@ -33,18 +33,22 @@ grid = [None] * n_dim
 grid[0] = np.linspace(-0.1, 0, grid_shape[0])
 grid[1] = np.linspace(0, 0.1, grid_shape[1])
 grid[2] = np.linspace(-0.2, -0.1, grid_shape[2])
-axes_points = [21, 21, 22]
+axes_points = [4, 4, 5]
 point = np.array([0.11111, 0.66666, -0.33333])
 test_grid = np.array(np.meshgrid(*grid))
 axes_min = [-1.1] * n_dim
 axes_max = [1.1] * n_dim
-interpolation_start_time = time.process_time()
-itor = CppPiecewiseLinearInterpolatorGPU(func_3d, axes_points, axes_min, axes_max)
-z_itor = itor.interpolate_array(test_grid)
-print("Interpolation time:", time.process_time() - interpolation_start_time)
 
 interpolation_start_time = time.process_time()
 itor = CppPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
 z_itor = itor.interpolate_array(test_grid)
 print("Interpolation time:", time.process_time() - interpolation_start_time)
-#print(z_itor)
+print(z_itor)
+
+interpolation_start_time = time.process_time()
+itor = CppPiecewiseLinearInterpolatorGPU(func_3d, axes_points, axes_min, axes_max)
+z_itor1 = itor.interpolate_array(test_grid)
+print("Interpolation time:", time.process_time() - interpolation_start_time)
+print(z_itor1)
+print(np.linalg.norm(z_itor1 - z_itor))
+print(len(z_itor1[0]))

@@ -56,13 +56,17 @@ private:
     const std::vector<int> axes_points;  ///< number of supporting points along each axis
     const std::vector<double> axes_min;  ///< minimum at each axis
     const std::vector<double> axes_max;  ///< maximum of each axis
-    std::vector<double> point_data;      ///< the real values of all supporting points
+    double *point_data;      ///< the real values of all supporting points
+    int point_data_size;
     /// multiplication factor used for transferring supporting point to point index
-    std::array<int, n_dim> axes_mult;
+    int *axes_mult = new int[n_dim];
     /// the distance between neighbor supporting points for each axis
-    std::array<double, n_dim> axes_step;
-    std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
-    std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex; ///< a standard simplex
+    double *axes_step = new double[n_dim];
+    double *axes_step_inv = new double[n_dim];                        ///< inverse of step (to avoid division)
+    double *standard_simplex; ///< a standard simplex
+    int *axes_points_new = new int[n_dim];  // copying the axes_points array to normal c++ array
+    double *axes_min_new = new double[n_dim];  // copying the axes_min array to normal c++ array
+    double *axes_max_new = new double[n_dim];  // copying the axes_max array to normal c++ array
     /**
      * This function transfers index of supporting point to its indices along axes.
      *
@@ -99,14 +103,14 @@ private:
      */
     void find_simplex(const int *hypercube, const double *scaled_point,
                       std::array<int, n_dim> &tri_order, // order of coordinate in standard triangulation
-                      int **simplex);
+                      int *simplex);
     /**
      * Get the real function value of the given supporting point.
      *
      * @param vertex The index of the given supporting point along axes
      * @return The real function value of the point
      */
-    double get_value(const int *vertex);
+    double get_value(const int *vertex, int index_i);
 };
 
 #endif //DCSE2020_PiecewiseLinearInterpolatorCuda_H

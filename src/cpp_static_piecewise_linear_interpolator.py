@@ -7,7 +7,7 @@ import importlib
 # try to import C++ python extension
 # (engines.so in Linux and engines.pyd in Windows)
 try:
-    from src.engines.engines import operator_set_evaluator_iface, value_vector, index_vector
+    from engines.engines import operator_set_evaluator_iface, value_vector, index_vector
     engines_available = 1
 except ImportError:
     engines_available = 0
@@ -31,7 +31,7 @@ class CppPiecewiseLinearInterpolator:
             self.n_dim = len(axes_points)
 
             # Use importlib mechanism to import interpolator class:
-            m = importlib.import_module('src.engines.engines')
+            m = importlib.import_module('engines.engines')
 
             # for every dimensionality a separate class exists in darts - here we evaluate its name
             # and get the class from engines, will raise AttributeError if class cannot be found

@@ -29,8 +29,7 @@ OBJ =  operator_set_interpolator_static.o \
 
 OBJ_GPU =  	operator_set_interpolator_gpu.cu.o \
 			py_operator_set_interpolator_gpu.o \
-			py_piecewise_linear_interpolator_static_gpu.o \
-			PiecewiseLinearInterpolatorCuda.cu.o
+			py_piecewise_linear_interpolator_static_gpu.cu.o
 
 
 OBJ_D = $(patsubst %,$(BUILD_DIR)/%,$(OBJ))
