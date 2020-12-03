@@ -6,7 +6,6 @@
 #include <thrust/device_vector.h>
 #include <thrust/inner_product.h>
 #include <thrust/zip_function.h>
-#include <chrono>
 
 typedef thrust::device_vector<double>::iterator ElementIterator;
 typedef thrust::device_vector<int>::iterator    IndexIterator;

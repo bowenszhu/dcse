@@ -24,19 +24,19 @@ int main()
 {
 //    const int n_dim = 3;
 //    std::array<int, n_dim> axes_points {3, 4, 5};
-//    std::array<double, n_dim> axes_min {-1.1, -1.2, -1.3};
-//    std::array<double, n_dim> axes_max {1.1, 1.2, 1.3};
+//    std::array<double, n_dim> d_axes_min {-1.1, -1.2, -1.3};
+//    std::array<double, n_dim> d_axes_max {1.1, 1.2, 1.3};
 
     op face = op();
 
-//    PiecewiseLinearInterpolator_static_thrust<n_dim> interpolator (&face, axes_points, axes_min, axes_max);
+//    PiecewiseLinearInterpolator_static_thrust<n_dim> interpolator (&face, axes_points, d_axes_min, d_axes_max);
 ////    interpolator.evaluate_with_derivatives(points, block_idx, interp_values, derivatives);
 //    for (int i = 0; i < n_dim; i++) {
 //        std::cout << "axes_points[" << i << "] = " << interpolator.axes_points[i] << std::endl;
-//        std::cout << "axes_min[" << i << "] = " << interpolator.axes_min[i] << std::endl;
-//        std::cout << "axes_max[" << i << "] = " << interpolator.axes_max[i] << std::endl;
-//        std::cout << "axes_step[" << i << "] = " << interpolator.axes_step[i] << std::endl;
-//        std::cout << "axes_mult[" << i << "] = " << interpolator.axes_mult[i] << std::endl;
+//        std::cout << "d_axes_min[" << i << "] = " << interpolator.d_axes_min[i] << std::endl;
+//        std::cout << "d_axes_max[" << i << "] = " << interpolator.d_axes_max[i] << std::endl;
+//        std::cout << "d_axes_step[" << i << "] = " << interpolator.d_axes_step[i] << std::endl;
+//        std::cout << "d_axes_mult[" << i << "] = " << interpolator.d_axes_mult[i] << std::endl;
 //    }
 //    thrust::device_vector<double> points (n_dim * 10, 0.1);
 //    int point_i = 5;
