@@ -3,11 +3,13 @@
 
 
 #include <array>
+#include <vector>
+#include <iostream>
 
-__global__ void compute_step(int *axes_points, double *axes_min, double *axes_max,
+__global__ void compute_step(const int *axes_points, const double *axes_min, const double *axes_max,
                              double *axes_step, double *axes_step_inv);
 
-__global__ void compute_mult(int *axes_points, int *axes_mult);
+__global__ void compute_mult(const int *axes_points, int *axes_mult);
 
 template <int n_dim>
 class PiecewiseLinearInterpolatorBase_cuda {
@@ -17,11 +19,16 @@ public:
 
     virtual ~PiecewiseLinearInterpolatorBase_cuda();
 
+    void get_point_state(int point_i, std::vector<double> &state);
+
 public:
     int* h_axes_point;   ///< number of supporting points along each axis
     double* h_axes_min;  ///< minimum at each axis
     double* h_axes_max;  ///< maximum of each axis
-
+    /// the distance between neighbor supporting points for each axis
+    double* h_axes_step;
+    /// multiplication factor used for transferring supporting point to point index
+    int* h_axes_mult;
 
     int* d_axes_point;   ///< number of supporting points along each axis
     double* d_axes_min;  ///< minimum at each axis
@@ -40,17 +47,20 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
 {
     size_t size_int = n_dim * sizeof(int);
     size_t size_double = n_dim * sizeof(double);
+    size_t size_axes_mult = size_int + sizeof(int);
 
     cudaMallocHost(&h_axes_point, size_int);
     cudaMallocHost(&h_axes_min, size_double);
     cudaMallocHost(&h_axes_max, size_double);
+    cudaMallocHost(&h_axes_step, size_double);
+    cudaMallocHost(&h_axes_mult, size_axes_mult);
 
     cudaMalloc(&d_axes_point, size_int);
     cudaMalloc(&d_axes_min, size_double);
     cudaMalloc(&d_axes_max, size_double);
     cudaMalloc(&d_axes_step, size_double);
     cudaMalloc(&d_axes_step_inv, size_double);
-    cudaMalloc(&d_axes_mult, size_int);
+    cudaMalloc(&d_axes_mult, size_axes_mult);
 
     for (int i = 0; i < n_dim; i++)
         h_axes_point[i] = axesPoints[i];
@@ -76,11 +86,14 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
     cudaStreamCreate(&stream_step);
     compute_step<<<1, n_dim, 0, stream_step>>>(d_axes_point, d_axes_min, d_axes_max,
                                                d_axes_step, d_axes_step_inv);
+    cudaMemcpyAsync(h_axes_step, d_axes_step, size_double, cudaMemcpyDeviceToHost, stream_step);
 
     cudaStream_t stream_mult;
     cudaStreamCreate(&stream_mult);
-    compute_mult<<<1, n_dim, 0, stream_mult>>>(d_axes_point, d_axes_mult);
+    compute_mult<<<1, n_dim + 1, 0, stream_mult>>>(d_axes_point, d_axes_mult);
+    cudaMemcpyAsync(h_axes_mult, d_axes_mult, size_axes_mult, cudaMemcpyDeviceToHost, stream_mult);
 
+    cudaDeviceSynchronize();
 }
 
 template<int n_dim>
@@ -88,6 +101,8 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::~PiecewiseLinearInterpolatorBase_cu
     cudaFree(h_axes_point);
     cudaFree(h_axes_min);
     cudaFree(h_axes_max);
+    cudaFree(h_axes_step);
+    cudaFree(h_axes_mult);
 
     cudaFree(d_axes_point);
     cudaFree(d_axes_min);
@@ -95,6 +110,16 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::~PiecewiseLinearInterpolatorBase_cu
     cudaFree(d_axes_mult);
     cudaFree(d_axes_step);
     cudaFree(d_axes_step_inv);
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase_cuda<n_dim>::get_point_state(int point_idx, std::vector<double> &state)
+{
+    for (int i = 0; i < n_dim; i++)
+    {
+        state[i] = point_idx / h_axes_mult[i + 1] * h_axes_step[i] + h_axes_min[i];
+        point_idx %= h_axes_mult[i + 1];
+    }
 }
 
 
