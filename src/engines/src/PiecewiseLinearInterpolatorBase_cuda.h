@@ -66,7 +66,7 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
         h_axes_point[i] = axesPoints[i];
     cudaStream_t stream_point;
     cudaStreamCreate(&stream_point);
-    cudaMemcpyAsync(d_axes_point, h_axes_point, size_int, cudaMemcpyHostToDevice, stream_point);
+    cudaMemcpyAsync(d_axes_point, axesPoints.data(), size_int, cudaMemcpyHostToDevice, stream_point);
 
     for (int i = 0; i < n_dim; i++)
         h_axes_min[i] = axesMin[i];

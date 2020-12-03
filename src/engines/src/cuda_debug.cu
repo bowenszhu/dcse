@@ -27,7 +27,16 @@ int main()
     std::array<double, n_dim> axesMin {-1.1, -1.2, -1.3};
     std::array<double, n_dim> axesMax {1.1, 1.2, 1.3};
 
+    int n_point = 4;
+    std::vector<double> points {-1.0, -0.9, -0.8, -0.7, -0.6, -0.5, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7};
+    std::vector<int> block_idx (n_point);
+    std::iota(block_idx.begin(), block_idx.end(), 0);
+    std::vector<double> interp_values (n_point);
+    std::vector<double> derivatives (n_point * n_dim);
+
     PiecewiseLinearInterpolator_static_cuda<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
+
+    interpolator.evaluate_with_derivatives(points, block_idx, interp_values, derivatives);
 
     size_t size_int = n_dim * sizeof(int);
     size_t size_double = n_dim * sizeof(double);

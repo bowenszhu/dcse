@@ -15,6 +15,9 @@ public:
 
     virtual ~PiecewiseLinearInterpolator_static_cuda();
 
+    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
+                                   std::vector<double> &interp_values, std::vector<double> &derivatives);
+
 public:
     double* h_point_data;
 
@@ -42,6 +45,29 @@ template<int n_dim>
 PiecewiseLinearInterpolator_static_cuda<n_dim>::~PiecewiseLinearInterpolator_static_cuda()
 {
     cudaFree(h_point_data);
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+        const std::vector<int> &block_idx, std::vector<double> &interp_values, std::vector<double> &derivatives)
+{
+    double* h_points;
+    cudaMallocHost(&h_points, points.size() * sizeof(double));
+    cudaMemcpy(h_points, points.data(), points.size() * sizeof(double), cudaMemcpyHostToHost);
+
+    for (int i = 0; i < points.size(); i++) {
+        std::cout << "  point_i = "  << i
+                  << "  h_points = " << *(h_points + i)
+                  << std::endl;
+    }
+
+//    for (int i = 0; i < block_idx.size(); i++)
+//    {
+//        cudaStream_t cudaStream;
+//        cudaStreamCreate(&cudaStream);
+//    }
+
+    cudaFree(h_points);
 }
 
 
