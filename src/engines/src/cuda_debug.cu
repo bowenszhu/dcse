@@ -45,7 +45,7 @@ int main()
     double* r_axes_max = (double*) malloc(size_double);
     double* r_axes_step = (double*) malloc(size_double);
     double* r_axes_step_inv = (double*) malloc(size_double);
-    int* r_axes_mult = (int*) malloc(size_int);
+    int* r_axes_mult = (int*) malloc(size_int + sizeof(int));
 
     cudaMemcpy(r_axes_point, interpolator.d_axes_point, size_int, cudaMemcpyDeviceToHost);
     cudaMemcpy(r_axes_min, interpolator.d_axes_min, size_double, cudaMemcpyDeviceToHost);

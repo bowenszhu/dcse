@@ -5,6 +5,14 @@
 #include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
 
+__global__ void evaluate(const double *point_data, const double *points, const int n_point,
+                         double *interp_values, double *derivatives);
+
+__global__ void find_hypercube(const double *point, const double *axes_min, const double *axes_step_inv,
+                               int *hypercube, double *scaled_point);
+
+__global__ void find_simplex(const int *hypercube, const double *scaled_point, int *tri_order, int *simplex);
+
 template <int n_dim>
 class PiecewiseLinearInterpolator_static_cuda : public PiecewiseLinearInterpolatorBase_cuda<n_dim> {
 public:
@@ -60,12 +68,6 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
                   << "  h_points = " << *(h_points + i)
                   << std::endl;
     }
-
-//    for (int i = 0; i < block_idx.size(); i++)
-//    {
-//        cudaStream_t cudaStream;
-//        cudaStreamCreate(&cudaStream);
-//    }
 
     cudaFree(h_points);
 }
