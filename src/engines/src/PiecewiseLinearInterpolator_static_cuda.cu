@@ -95,7 +95,7 @@ __global__ void radix_sort_double(double *double_values, int *orders)
 __global__ void get_index_from_vertex(const int *axes_mult, const int *vertex, int *point_idx)
 {
     int idx = vertex[threadIdx.x] * axes_mult[threadIdx.x + 1];
-    for (int offset = 1; offset < blockDim.x; offset << 1)
+    for (int offset = 1; offset < blockDim.x; offset *= 2)
     {
         int temp = __shfl_down_sync(0xffffffff, idx, offset);
         if (threadIdx.x < blockDim.x - offset)
@@ -114,7 +114,7 @@ __global__ void compute_interp_deriv(const double *simplex_vertex_values, const 
     derivatives[tri_order[threadIdx.x]] = - gap * axes_step_inv[tri_order[threadIdx.x]];
 
     double interp = (1 - scaled_point[threadIdx.x]) * gap;
-    for (int offset = 1; offset < blockDim.x; offset << 1)
+    for (int offset = 1; offset < blockDim.x; offset *= 2)
     {
         double temp = __shfl_down_sync(0xffffffff, interp, offset);
         if (threadIdx.x < blockDim.x - offset)
