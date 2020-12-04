@@ -4,6 +4,7 @@ import importlib
 
 # try to import C++ python extension
 # (engines.so in Linux and engines.pyd in Windows)
+from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
 try:
     from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
 
