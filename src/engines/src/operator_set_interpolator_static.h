@@ -68,8 +68,12 @@ public:
   // get state correpondent to for given point index
   void inline get_point_state(interp_index_t point_idx, state_t &state);
 
-  // calculate body index for given state
-  interp_index_t inline get_body_index(state_t &state);
+
+  // compute the index of interpolation body (hypercube)
+  interp_index_t get_body_idx (value_t *axis_values);              
+
+  // compute the axis index for given value and dimension
+  unsigned int get_axis_idx (value_t axis_value, int dim_idx);   
 
   // calculate point indexes for given body
   void inline get_body_points(interp_index_t body_idx, body_data_points_t &body_points);

@@ -122,6 +122,9 @@ public:
     return 0;
   };
 
+  idx_type get_body_idx (value_t *axis_values);              // compute the index of interpolation body (hypercube)
+  unsigned int get_axis_idx (value_t axis_value, int dim_idx);   // compute the axis index for given value and dimension
+
 
 public:
   std::array<index_t, N_DIMS>   axis_points;        // [n_dim] number of points along each interpolation axis
@@ -201,11 +204,52 @@ operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::operator_set_inter
 }
 
 template <typename idx_type, typename val_type, uint8_t N_DIMS, uint8_t N_OPS>
+inline unsigned int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::get_axis_idx(value_t axis_value, int dim_idx)
+{
+    int axis_idx = int((axis_value - axis_min[dim_idx]) * axis_step_inv[dim_idx]);
+
+    // check that axis_idx is within interpolation interval: valid axis_idx is between [0; axis_points[dim_idx] - 2],
+    // since there are axis_points[dim_idx]-1 intervals along the axis
+    if (axis_idx < 0)
+    {
+      axis_idx = 0;
+      if (axis_value < axis_min[dim_idx])
+        {
+          printf("Interpolation warning: axis %d is out of limits (%lf; %lf) with value %lf, extrapolation is applied\n", dim_idx, axis_min[dim_idx], axis_max[dim_idx], axis_value);
+        }
+    }
+    else if (axis_idx > (axis_points[dim_idx] - 2))
+    {
+      axis_idx = axis_points[dim_idx] - 2;
+      if (axis_value > axis_max[dim_idx])
+        {
+          printf("Interpolation warning: axis %d is out of limits (%lf; %lf) with value %lf, extrapolation is applied\n", dim_idx, axis_min[dim_idx], axis_max[dim_idx], axis_value);
+        }
+    }
+  return axis_idx;
+}
+
+
+template <typename idx_type, typename val_type, uint8_t N_DIMS, uint8_t N_OPS>
+inline idx_type operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::get_body_idx(value_t *axis_values)
+{
+   idx_type body_idx = 0;
+    for (int i = 0; i < N_DIMS; ++i)
+    {
+      body_idx += get_axis_idx(axis_values[i], i) * axis_body_mult[i];
+    }
+  
+  return body_idx;
+}
+
+
+template <typename idx_type, typename val_type, uint8_t N_DIMS, uint8_t N_OPS>
 typename operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::body_data_it_t
 operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::add_body_from_points(value_t *axis_values, idx_type body_idx)
 {
   //return add_body_from_OBLG (axis_values, body_idx);
   body_data_it_t new_body_it, point_it;
+
 
   int pwr = (1 << N_DIMS);
   idx_type body_vertex_indices[(1 << N_DIMS)];
@@ -217,7 +261,7 @@ operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::add_body_from_poin
 
   for (int i = 0; i < N_DIMS; ++i)
   {
-    int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
+    int axis_idx = get_axis_idx(axis_values[i], i);
 
     pwr /= 2;
 
@@ -250,6 +294,18 @@ operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::add_body_from_poin
       if (timer)
         timer->node["body generation"].node["point generation"].start();
       base_points_generator->evaluate(body_vertex_axes_values[i], new_ops_values);
+      for (int op = 0; op < N_OPS; op++)
+      {
+        if (isnan(new_ops_values[op]))
+        {
+          printf ("OBL generation warning: nan operator detected! Operator %d for point (", op);
+          for (int a = 0; a < N_DIMS; a++)
+          {
+             printf ("%lf, ", body_vertex_axes_values[i][a]);
+          }
+          printf (") is %lf\n", new_ops_values[op]);
+        }
+      }
       if (timer)
         timer->node["body generation"].node["point generation"].stop();
 
@@ -270,6 +326,7 @@ operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::add_body_from_poin
       point_it = point_data.insert(std::make_pair(body_vertex_indices[i], new_ops_values_interp)).first;
     }
     std::vector<val_type> &ops = point_it->second;
+
     for (int j = 0; j < N_OPS; ++j)
     {
       body[i * N_OPS + j] = ops[j];
@@ -277,6 +334,7 @@ operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::add_body_from_poin
   }
   return new_body_it;
 }
+
 
 template <typename idx_type, typename val_type, uint8_t N_DIMS, uint8_t N_OPS>
 int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_derivatives(std::vector<value_t> &state, std::vector<index_t> &block_idx, std::vector<value_t> &values, std::vector<value_t> &derivatives)
@@ -287,42 +345,18 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_
   value_t *axis_values = &state[0];
   value_t *interp_values = &values[0];
   value_t *interp_derivs = &derivatives[0];
-  int n_fixed_obl_limits = 0;
 
 #ifdef _OPENMP
 
-  // 1. Generate all data in advance
+  // Generate all data in advance by a single threads to prevent race conditions on insertion of data to map
   if (timer)
     timer->node["body generation"].start();
   //#pragma omp parallel for
   for (index_t i = 0; i < block_idx.size(); i++)
   {
     index_t i_cell = block_idx[i];
-    // workspace for interpolation:
-    // (1 << (N_DIMS)) - number of vertices times
-    // (N_DIMS + 1) - N_DIMS for derivatives + 1 for value times
-    // N_OPS - number of operators
 
-    idx_type body_idx = 0;
-
-    for (int i = 0; i < N_DIMS; ++i)
-    {
-      // hard fix for obl limits
-      if (axis_values[i_cell * N_DIMS + i] < axis_min[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_min[i];
-        n_fixed_obl_limits++;
-      }
-      else if (axis_values[i_cell * N_DIMS + i] > axis_max[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_max[i];
-        n_fixed_obl_limits++;
-      }
-
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
-
-      body_idx += axis_idx * axis_body_mult[i];
-    }
+    idx_type body_idx = get_body_idx(axis_values + i_cell * N_DIMS);
 
     body_data_it_t it = body_data.find(body_idx);
 
@@ -344,7 +378,7 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_
     timer->node["body generation"].stop();
 #endif
 
-  // 2. Generation is done, now inly interpolation
+  
 #pragma omp parallel for
   for (index_t i = 0; i < block_idx.size(); i++)
   {
@@ -355,40 +389,13 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_
     // N_OPS - number of operators
 
     val_type workspace[(1 << (N_DIMS)) * (N_DIMS + 1) * N_OPS];
-    idx_type body_idx = 0;
-#ifdef _OPENMP
-    // simply get correspondent body, all generation is already done
-
-    for (int i = 0; i < N_DIMS; ++i)
-    {
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
-      body_idx += axis_idx * axis_body_mult[i];
-    }
-
-    body_data_it_t it = body_data.find(body_idx);
-#else
-    // generate body in place, since no parallelism is required
-    for (int i = 0; i < N_DIMS; ++i)
-    {
-      // hard fix for obl limits
-      if (axis_values[i_cell * N_DIMS + i] < axis_min[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_min[i];
-        n_fixed_obl_limits++;
-      }
-      else if (axis_values[i_cell * N_DIMS + i] > axis_max[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_max[i];
-        n_fixed_obl_limits++;
-      }
-
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
-
-      body_idx += axis_idx * axis_body_mult[i];
-    }
-
+    idx_type body_idx = get_body_idx(axis_values + i_cell * N_DIMS);
     body_data_it_t it = body_data.find(body_idx);
 
+    // the body will be always found in case of OpenMP, but not for sequential code
+#ifndef _OPENMP
+
+    // generate body in place if not found, since no parallelism is required
     if (it == body_data.end())
     {
       if (timer)
@@ -421,7 +428,7 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_
     int pwr = (1 << N_DIMS) / 2; // distance between high and low values
     for (int i = 0; i < N_DIMS; ++i)
     {
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
+      int axis_idx = get_axis_idx(axis_values[i_cell * N_DIMS + i], i);
       val_type axis_low = axis_idx * axis_step[i] + axis_min[i];
       val_type mult = val_type(axis_values[i_cell * N_DIMS + i] - axis_low) * axis_step_inv[i];
       for (int j = 0; j < pwr; ++j)
@@ -463,11 +470,6 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate_with_
   if (timer)
     timer->stop();
 
-  if (n_fixed_obl_limits)
-  {
-    cout << "OBL limits fix applied " << n_fixed_obl_limits << " time(s) \n";
-  }
-
   return 0;
 }
 
@@ -483,17 +485,7 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate(std::
 
   val_type workspace[(1 << (N_DIMS)) * (N_DIMS + 1) * N_OPS];
 
-  idx_type body_idx = 0;
-  idx_type body_idx_mult = 1;
-
-  for (int i = 0; i < N_DIMS; ++i)
-  {
-    int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
-
-    body_idx += axis_idx * body_idx_mult;
-    body_idx_mult *= (axis_points[i] - 1);
-  }
-
+  idx_type body_idx = get_body_idx(axis_values);
   body_data_it_t it = body_data.find(body_idx);
 
   if (it == body_data.end())
@@ -509,22 +501,21 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate(std::
     for (int j = 0; j < N_OPS; ++j)
     {
       workspace[i * N_OPS + j] = body[i * N_OPS + j];
-      //std::cout << body[i * N_OPS + j] << " ";
     }
-    //std::cout << std::endl;
   }
 
   int pwr = (1 << N_DIMS) / 2; // distance between high and low values
 
   for (int i = 0; i < N_DIMS; ++i)
   {
-    int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
+    int axis_idx = get_axis_idx(axis_values[i], i);
+
     val_type axis_low = axis_idx * axis_step[i] + axis_min[i];
+
     for (int j = 0; j < pwr; ++j)
     {
       for (int op = 0; op < N_OPS; ++op)
       {
-        // update own derivative
         val_type mult = (workspace[(j + pwr) * N_OPS + op] - workspace[j * N_OPS + op]) * axis_step_inv[i];
         workspace[j * N_OPS + op] = workspace[j * N_OPS + op] + val_type(axis_values[i] - axis_low) * mult;
       }
@@ -536,7 +527,6 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::evaluate(std::
   {
     interp_values[op] = workspace[op];
   }
-
   n_interpolations += N_OPS;
   return 0;
 }
@@ -632,7 +622,7 @@ int operator_set_interpolator<idx_type, val_type, N_DIMS, N_OPS>::benchmark(inde
     for (int j = 0; j < NC; ++j)
     {
 
-      idx_type axis_idx = idx_reminder / axis_body_mult[j];
+      int axis_idx = idx_reminder / axis_body_mult[j];
       idx_reminder = idx_reminder - axis_idx * axis_body_mult[j];
 
       val_type mult = GET_RAND_F((axis_idx + 0.01), (axis_idx + 0.99));

@@ -140,20 +140,45 @@ void operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::get_point_
 }
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
-typename operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::interp_index_t
-operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::get_body_index(state_t &state)
+unsigned int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::get_axis_idx(value_t axis_value, int dim_idx)
 {
-  interp_index_t body_idx = 0;
-  interp_index_t body_idx_mult = 1;
+    int axis_idx = int((axis_value - axis_min[dim_idx]) * axis_step_inv[dim_idx]);
 
-  for (auto i = 0; i < N_DIMS; ++i)
-  {
-    interp_index_t axis_idx = interp_index_t((state[i] - axis_min[i]) * axis_step_inv[i]);
-    body_idx += axis_idx * body_idx_mult;
-    body_idx_mult *= (axis_points[i] - 1);
-  }
+    // check that axis_idx is within interpolation interval: valid axis_idx is between [0; axis_points[dim_idx] - 2],
+    // since there are axis_points[dim_idx]-1 intervals along the axis
+    if (axis_idx < 0)
+    {
+      axis_idx = 0;
+      if (axis_value < axis_min[dim_idx])
+        {
+          printf("Interpolation warning: axis %d is out of limits (%lf; %lf) with value %lf, extrapolation is applied\n", dim_idx, axis_min[dim_idx], axis_max[dim_idx], axis_value);
+        }
+    }
+    else if (axis_idx > (axis_points[dim_idx] - 2))
+    {
+      axis_idx = axis_points[dim_idx] - 2;
+      if (axis_value > axis_max[dim_idx])
+        {
+          printf("Interpolation warning: axis %d is out of limits (%lf; %lf) with value %lf, extrapolation is applied\n", dim_idx, axis_min[dim_idx], axis_max[dim_idx], axis_value);
+        }
+    }
+  return axis_idx;
+}
+
+
+template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
+typename operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::interp_index_t
+operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::get_body_idx(value_t *axis_values)
+{
+   interp_index_t body_idx = 0;
+    for (int i = 0; i < N_DIMS; ++i)
+    {
+      body_idx += get_axis_idx(axis_values[i], i) * axis_body_mult[i];
+    }
+  
   return body_idx;
 }
+
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
 void operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::get_body_points(interp_index_t body_idx, body_data_points_t &body_points)
@@ -187,11 +212,9 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate_wi
   value_t *axis_values = &state[0];
   value_t *interp_values = &values[0];
   value_t *interp_derivs = &derivatives[0];
-  int n_fixed_obl_limits = 0;
 
   // 1. No generation is needed, all data was initialized statically
-#pragma omp parallel for reduction(+ \
-                                   : n_fixed_obl_limits)
+#pragma omp parallel for
   for (index_t i = 0; i < block_idx.size(); i++)
   {
 
@@ -203,27 +226,7 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate_wi
 
     std::array<interp_value_t, N_VERTS *(N_DIMS + 1) * N_OPS> workspace;
 
-    interp_index_t body_idx = 0;
-
-    // apply hard fix for obl limits
-    for (int i = 0; i < N_DIMS; ++i)
-    {
-
-      if (axis_values[i_cell * N_DIMS + i] < axis_min[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_min[i];
-        n_fixed_obl_limits++;
-      }
-      else if (axis_values[i_cell * N_DIMS + i] > axis_max[i])
-      {
-        axis_values[i_cell * N_DIMS + i] = axis_max[i];
-        n_fixed_obl_limits++;
-      }
-
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
-
-      body_idx += axis_idx * axis_body_mult[i];
-    }
+    interp_index_t body_idx = get_body_idx(axis_values + i_cell * N_DIMS);
 
     // copy operator values for all vertices
     std::copy_n(body_data[body_idx].begin(), N_VERTS * N_OPS, workspace.begin());
@@ -231,7 +234,7 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate_wi
     int pwr = N_VERTS / 2; // distance between high and low values
     for (int i = 0; i < N_DIMS; ++i)
     {
-      int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min[i]) * axis_step_inv[i]);
+      int axis_idx = get_axis_idx (axis_values[i_cell * N_DIMS + i], i);
       interp_value_t axis_low = axis_idx * axis_step[i] + axis_min[i];
       interp_value_t mult = (axis_values[i_cell * N_DIMS + i] - axis_low) * axis_step_inv[i];
       for (int j = 0; j < pwr; ++j)
@@ -273,11 +276,6 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate_wi
   if (timer)
     timer->stop();
 
-  if (n_fixed_obl_limits)
-  {
-    cout << "OBL limits fix applied " << n_fixed_obl_limits << " time(s) \n";
-  }
-  //exit(0);
   return 0;
 }
 
@@ -293,15 +291,7 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate(st
 
   std::array<interp_value_t, N_VERTS *(N_DIMS + 1) * N_OPS> workspace;
 
-  interp_index_t body_idx = 0;
-  //interp_index_t body_idx_mult = 1;
-
-  for (int i = 0; i < N_DIMS; ++i)
-  {
-    int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
-
-    body_idx += axis_idx * axis_body_mult[i];
-  }
+  interp_index_t body_idx = get_body_idx(axis_values);
 
   // copy operator values for all vertices
   std::copy_n(body_data[body_idx].begin(), N_VERTS * N_OPS, workspace.begin());
@@ -310,7 +300,7 @@ int operator_set_interpolator_static<interp_value_t, N_DIMS, N_OPS>::evaluate(st
 
   for (int i = 0; i < N_DIMS; ++i)
   {
-    int axis_idx = int((axis_values[i] - axis_min[i]) * axis_step_inv[i]);
+    int axis_idx = get_axis_idx(axis_values[i], i);
     interp_value_t axis_low = axis_idx * axis_step[i] + axis_min[i];
     for (int j = 0; j < pwr; ++j)
     {
