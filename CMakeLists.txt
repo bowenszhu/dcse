@@ -153,7 +153,7 @@ add_executable(Darts
         src/engines/src/py_piecewise_linear_interpolator_static_thrust.cu
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
         src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h src/engines/src/py_piecewise_linear_interpolator_static_cuda.cu)
 
 set_target_properties(Darts
         PROPERTIES

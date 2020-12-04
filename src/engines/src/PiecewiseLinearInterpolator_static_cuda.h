@@ -19,8 +19,8 @@ __global__ void radix_sort_double(double *double_values, int *orders);
 
 __global__ void get_index_from_vertex(const int *axes_mult, const int *vertex, int *point_idx);
 
-__global__ void compute_interp_deriv(const double *simplex_vertex_values, const double *scaled_point, const int *tri_order,
-                                     const double *axes_step_inv, double *interp_values, double *derivatives);
+__global__ void compute_interp_deriv(const double *simplex_vertex_values, const double *scaled_point,
+                const int *tri_order, const double *axes_step_inv, double *interp_values, double *derivatives);
 
 template <int n_dim>
 class PiecewiseLinearInterpolator_static_cuda : public PiecewiseLinearInterpolatorBase_cuda<n_dim> {
