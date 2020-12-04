@@ -83,7 +83,7 @@ class CppPiecewiseLinearInterpolator:
             self.interpolation_time += time.process_time() - interpolation_start_time
 
             values = np.array(values, copy=False).reshape(result_shape)
-            derivatives = np.array(derivatives, copy=False).reshape(gradient_shape)
+            derivatives = np.moveaxis(np.array(derivatives, copy=False).reshape(gradient_shape), -1, 0)
             return values, derivatives
         else:
             print("Engines are not available")
