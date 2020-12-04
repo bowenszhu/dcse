@@ -5,13 +5,22 @@
 #include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
 
-__global__ void evaluate(const double *point_data, const double *points, const int n_point,
-                         double *interp_values, double *derivatives);
+__global__ void evaluate(const double *point_data, const double *points, const double *axes_min,
+                         const double *axes_step_inv, int *axes_mult, const int n_point, double *interp_values,
+                         double *derivatives, int n_dim);
 
 __global__ void find_hypercube(const double *point, const double *axes_min, const double *axes_step_inv,
                                int *hypercube, double *scaled_point);
 
-__global__ void find_simplex(const int *hypercube, const double *scaled_point, int *tri_order, int *simplex);
+__global__ void compute_simplex_vertex_value(const int *hypercube, const int *tri_order, const int *axes_mult,
+                                             const double *point_data, double *vertex_values);
+
+__global__ void radix_sort_double(double *double_values, int *orders);
+
+__global__ void get_index_from_vertex(const int *axes_mult, const int *vertex, int *point_idx);
+
+__global__ void compute_interp_deriv(const double *simplex_vertex_values, const double *scaled_point, const int *tri_order,
+                                     const double *axes_step_inv, double *interp_values, double *derivatives);
 
 template <int n_dim>
 class PiecewiseLinearInterpolator_static_cuda : public PiecewiseLinearInterpolatorBase_cuda<n_dim> {
@@ -26,7 +35,7 @@ public:
     void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
-public:
+private:
     double* h_point_data;
 
 };
@@ -59,17 +68,39 @@ template<int n_dim>
 void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
         const std::vector<int> &block_idx, std::vector<double> &interp_values, std::vector<double> &derivatives)
 {
+    int numPoint = block_idx.size();
+
     double* h_points;
-    cudaMallocHost(&h_points, points.size() * sizeof(double));
+    size_t size_point_deriv = numPoint * n_dim * sizeof(double);
+    cudaMallocHost(&h_points, size_point_deriv);
     cudaMemcpy(h_points, points.data(), points.size() * sizeof(double), cudaMemcpyHostToHost);
 
-    for (int i = 0; i < points.size(); i++) {
-        std::cout << "  point_i = "  << i
-                  << "  h_points = " << *(h_points + i)
-                  << std::endl;
-    }
+    double* h_interp_values;
+    size_t size_interp = numPoint * sizeof(double);
+    cudaMallocHost(&h_interp_values, size_interp);
+
+    double* h_derivatives;
+    cudaMallocHost(&h_derivatives, size_point_deriv);
+
+    int threadsPerBlock = 1024;
+    int numBlocks = (numPoint + threadsPerBlock - 1) / threadsPerBlock;
+    evaluate<<<numBlocks, threadsPerBlock>>>(h_point_data, h_points, this->d_axes_min,
+                                             this->d_axes_step_inv, this->d_axes_mult, numPoint,
+                                             h_interp_values, h_derivatives, n_dim);
+
+    cudaDeviceSynchronize();
+
+    cudaStream_t stream_interp;
+    cudaStreamCreate(&stream_interp);
+    cudaMemcpyAsync(interp_values.data(), h_interp_values, size_interp, cudaMemcpyHostToHost, stream_interp);
+
+    cudaStream_t stream_deriv;
+    cudaStreamCreate(&stream_deriv);
+    cudaMemcpyAsync(derivatives.data(), h_derivatives, size_point_deriv, cudaMemcpyHostToHost, stream_deriv);
 
     cudaFree(h_points);
+    cudaFree(h_interp_values);
+    cudaFree(h_derivatives);
 }
 
 

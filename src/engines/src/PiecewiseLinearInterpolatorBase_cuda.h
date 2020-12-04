@@ -21,7 +21,7 @@ public:
 
     void get_point_state(int point_i, std::vector<double> &state);
 
-public:
+protected:
     const int* h_axes_point;   ///< number of supporting points along each axis
     const double* h_axes_min;  ///< minimum at each axis
     const double* h_axes_max;  ///< maximum of each axis

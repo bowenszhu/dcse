@@ -11,9 +11,8 @@ __global__ void compute_step(const int *axes_points, const double *axes_min, con
 __global__ void compute_mult(const int *axes_points, int *axes_mult)
 {
     int value = threadIdx.x < blockDim.x - 1 ? axes_points[threadIdx.x] : 1;
-    int temp;
     for (int offset = 1; offset <= blockDim.x; offset *= 2) {
-        temp = __shfl_down_sync(0xffffffff, value, offset);
+        int temp = __shfl_down_sync(0xffffffff, value, offset);
         if (threadIdx.x < blockDim.x - offset)
             value *= temp;
     }

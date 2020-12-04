@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.18)
 project(dcse2020 C CXX CUDA)
 
 # OpenMP
@@ -12,12 +12,27 @@ include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
-add_executable(PLI_cuda src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h src/engines/src/cuda_debug.cu src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+add_executable(PLI_cuda
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
+        src/engines/src/cuda_debug.cu
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+
+set_target_properties(PLI_cuda
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 61)
 
 add_executable(PLI_thrust
         src/engines/src/thrust_debug.cu
         src/engines/src/PiecewiseLinearInterpolatorBase_thrust.cu
         src/engines/src/PiecewiseLinearInterpolator_static_thrust.cu)
+
+set_target_properties(PLI_thrust
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 61)
 
 add_executable(PLI_cpp
         src/engines/src/thrust_debug.cu
@@ -27,6 +42,11 @@ add_executable(PLI_cpp
         src/engines/src/PiecewiseLinearInterpolator_static.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h)
+
+set_target_properties(PLI_cpp
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 61)
 
 add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_static.inl
@@ -128,4 +148,14 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h
         src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
-        src/engines/src/PiecewiseLinearInterpolatorBase_thrust.cu src/engines/src/PiecewiseLinearInterpolator_static_thrust.cu src/engines/src/py_piecewise_linear_interpolator_static_thrust.cu src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+        src/engines/src/PiecewiseLinearInterpolatorBase_thrust.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_thrust.cu
+        src/engines/src/py_piecewise_linear_interpolator_static_thrust.cu
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+
+set_target_properties(Darts
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 61)
