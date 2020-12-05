@@ -18,44 +18,56 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
 /**
  * Radix sort for up to 32 floating-point numbers in the range [0, 1).
  *
- * In the piecewise linear interpolation, for each input point, after its scaled coordinate in the hypercube where the
- * point is located is computed, the step of finding simplex requires sorting the scaled coordinate to determine which
- * simplex contains the point.
+ * In the piecewise linear interpolation, for each input point, after its
+ * scaled coordinate in the hypercube where the point is located is computed,
+ * the step of finding simplex requires sorting the scaled coordinate to
+ * determine which simplex contains the point.
  *
- * As the scaled coordinate is composed of n_dim values in the range [0, 1), the algorithm transfers these scaled
- * coefficients to unsigned integers by multiplying them by 0xFFFFFFFF which is the maximum of the type unsigned int.
+ * As the scaled coordinate is composed of n_dim values in the range [0, 1),
+ * the algorithm transfers these scaled coefficients to unsigned integers by
+ * multiplying them by 0xFFFFFFFF which is the maximum of the type unsigned int.
  *
- * The algorithm can only differentiate numbers up to the highest 32 bits. That is, if the difference of two double-type
- * numbers are less than 2^(-32), they will be regarded as equal, which occurs only if the point is perfectly located
- * at or extremely close to the boundary of some neighboring simplexes. In this case, it is safe in principle to use
- * any of these simplexes for interpolation.
+ * The algorithm can only differentiate numbers up to the highest 32 bits. That
+ * is, if the difference of two double-type numbers are less than 2^(-32), they
+ * will be regarded as equal, which occurs only if the point is perfectly
+ * located at or extremely close to the boundary of some neighboring simplexes.
+ * In this case, it is safe in principle to use any of these simplexes for
+ * interpolation.
  *
- * General radix sort runs in O(n + k) time where n is the number of elements and k is the length of their bit level
- * representation. As n_dim is assumed to be less than 32, the parallel algorithm facilitated by warp-level primitives
- * helps get rid of n, so this function runs in O(k) parallel time. In the current implementation,
- * k = bit size of unsigned = 32.
+ * General radix sort runs in O(n + k) time where n is the number of elements
+ * and k is the length of their bit level representation. As n_dim is assumed
+ * to be less than 32, the parallel algorithm facilitated by warp-level
+ * primitives helps get rid of n, so this function runs in O(k) parallel time.
+ * In the current implementation, k = bit size of unsigned = 32.
  *
- * If higher precision is required, it is possible to change the 32-bit unsigned int to the 64-bit unsigned long int.
- * If one desires even higher performance and accepts tiny error, the type can be changed to 16-bit unsigned short int.
- * Besides the above mentioned built-in types, a custom bit length is also doable.
+ * If higher precision is required, it is possible to change the 32-bit
+ * unsigned int to the 64-bit unsigned long int. If one desires even higher
+ * performance and accepts tiny error, the type can be changed to 16-bit
+ * unsigned short int. Besides the above mentioned built-in types, a custom bit
+ * length is also doable.
  *
- * As for the detail of the implementation, the temporary values of unsigned values and orders are stored in shared
- * memory, because on-chip shared memory has much higher bandwidth and lower latency than global memory. Once the
+ * As for the detail of the implementation, the temporary values of unsigned
+ * values and orders are stored in shared memory, because on-chip shared memory
+ * has much higher bandwidth and lower latency than global memory. Once the
  * sorting stage is finished, the results are stored to global memory.
  *
- * @note Differentiation between stable or unstable sort is not applicable, as the function aims at sorting
- * floating-point numbers instead of integers.
+ * @note Differentiation between stable or unstable sort is not applicable, as
+ * the function aims at sorting floating-point numbers instead of integers.
  *
- * @param[in,out] g_double_values : An array of double-type values that need to be sorted in ascending order
- *      All values in the array must be in the range [0, 1), otherwise it will results in undefined behavior.
+ * @param[in,out] g_double_values : An array of double-type values that need to
+ * be sorted in ascending order
+ *      All values in the array must be in the range [0, 1), otherwise it will
+ *      results in undefined behavior.
  * @param[out] g_orders : Output orders
- *      @note The input to this argument does not need to be formatted like [0, 1, 2, ..., n - 1].
+ *      @note The input to this argument does not need to be formatted like
+ *      [0, 1, 2, ..., n - 1].
  *
  * @example
  * 2 <= n <= 32
- * values is an array of n double-type numbers. orders is an array of n integers with arbitrary numbers.
+ * values is an array of n double-type numbers. orders is an array of n
+ * integers with arbitrary numbers.
  * To sort the values and get their order, use
- *      radix_sort_double<<<1, n, n * sizeof(unsigned), stream>>>(values, orders);
+ *    radix_sort_double<<<1, n, n * sizeof(unsigned), stream>>>(values, orders);
  *
  * @author Bowen Zhu
  * @date December 5, 2020
