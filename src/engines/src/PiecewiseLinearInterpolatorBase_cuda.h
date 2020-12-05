@@ -20,9 +20,7 @@ public:
     virtual ~PiecewiseLinearInterpolatorBase_cuda();
 
 protected:
-    const int* h_axes_point;   ///< number of supporting points along each axis
     const double* h_axes_min;  ///< minimum at each axis
-    const double* h_axes_max;  ///< maximum of each axis
     /// the distance between neighbor supporting points for each axis
     double* h_axes_step = (double*) malloc(sizeof(double) * n_dim);
     /// multiplication factor used for transferring supporting point to point index
@@ -43,8 +41,7 @@ protected:
 template<int n_dim>
 PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cuda(
         const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
-        const std::array<double, n_dim> &axesMax)
-        : h_axes_point(axesPoints.data()), h_axes_min(axesMin.data()), h_axes_max(axesMax.data())
+        const std::array<double, n_dim> &axesMax) : h_axes_min(axesMin.data())
 {
     size_t size_int = n_dim * sizeof(int);
     size_t size_double = n_dim * sizeof(double);
@@ -68,13 +65,11 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
     cudaDeviceSynchronize();
 
     compute_step<<<1, n_dim, 0, stream[0]>>>(d_axes_point, d_axes_min, d_axes_max,
-                                               d_axes_step, d_axes_step_inv);
+                                             d_axes_step, d_axes_step_inv);
     cudaMemcpyAsync(h_axes_step, d_axes_step, size_double, cudaMemcpyDeviceToHost, stream[0]);
 
     compute_mult<<<1, n_dim + 1, 0, stream[1]>>>(d_axes_point, d_axes_mult);
     cudaMemcpyAsync(h_axes_mult, d_axes_mult, size_axes_mult, cudaMemcpyDeviceToHost, stream[1]);
-
-    cudaDeviceSynchronize();
 }
 
 template<int n_dim>
