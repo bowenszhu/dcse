@@ -19,8 +19,6 @@ public:
 
     virtual ~PiecewiseLinearInterpolatorBase_cuda();
 
-    void get_point_state(int point_i, std::vector<double> &state);
-
 protected:
     const int* h_axes_point;   ///< number of supporting points along each axis
     const double* h_axes_min;  ///< minimum at each axis
@@ -38,6 +36,8 @@ protected:
     /// the distance between neighbor supporting points for each axis
     double* d_axes_step;
     double* d_axes_step_inv; ///< inverse of step (to avoid division)
+
+    void get_point_state(int point_i, std::vector<double> &state);
 };
 
 template<int n_dim>
@@ -57,30 +57,22 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
     cudaMalloc(&d_axes_step_inv, size_double);
     cudaMalloc(&d_axes_mult, size_axes_mult);
 
-    cudaStream_t stream_point;
-    cudaStreamCreate(&stream_point);
-    cudaMemcpyAsync(d_axes_point, axesPoints.data(), size_int, cudaMemcpyHostToDevice, stream_point);
+    cudaStream_t stream[3];
+    for (int i = 0; i < 3; ++i)
+        cudaStreamCreate(&stream[i]);
 
-    cudaStream_t stream_min;
-    cudaStreamCreate(&stream_min);
-    cudaMemcpyAsync(d_axes_min, axesMin.data(), size_double, cudaMemcpyHostToDevice, stream_min);
-
-    cudaStream_t stream_max;
-    cudaStreamCreate(&stream_max);
-    cudaMemcpyAsync(d_axes_max, axesMax.data(), size_double, cudaMemcpyHostToDevice, stream_max);
+    cudaMemcpyAsync(d_axes_point, axesPoints.data(), size_int, cudaMemcpyHostToDevice, stream[0]);
+    cudaMemcpyAsync(d_axes_min, axesMin.data(), size_double, cudaMemcpyHostToDevice, stream[1]);
+    cudaMemcpyAsync(d_axes_max, axesMax.data(), size_double, cudaMemcpyHostToDevice, stream[2]);
 
     cudaDeviceSynchronize();
 
-    cudaStream_t stream_step;
-    cudaStreamCreate(&stream_step);
-    compute_step<<<1, n_dim, 0, stream_step>>>(d_axes_point, d_axes_min, d_axes_max,
+    compute_step<<<1, n_dim, 0, stream[0]>>>(d_axes_point, d_axes_min, d_axes_max,
                                                d_axes_step, d_axes_step_inv);
-    cudaMemcpyAsync(h_axes_step, d_axes_step, size_double, cudaMemcpyDeviceToHost, stream_step);
+    cudaMemcpyAsync(h_axes_step, d_axes_step, size_double, cudaMemcpyDeviceToHost, stream[0]);
 
-    cudaStream_t stream_mult;
-    cudaStreamCreate(&stream_mult);
-    compute_mult<<<1, n_dim + 1, 0, stream_mult>>>(d_axes_point, d_axes_mult);
-    cudaMemcpyAsync(h_axes_mult, d_axes_mult, size_axes_mult, cudaMemcpyDeviceToHost, stream_mult);
+    compute_mult<<<1, n_dim + 1, 0, stream[1]>>>(d_axes_point, d_axes_mult);
+    cudaMemcpyAsync(h_axes_mult, d_axes_mult, size_axes_mult, cudaMemcpyDeviceToHost, stream[1]);
 
     cudaDeviceSynchronize();
 }
