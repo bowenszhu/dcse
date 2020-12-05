@@ -15,7 +15,7 @@ __global__ void evaluate(const double *point_data, double *points_deriv, const d
         cudaMalloc(&tri_order, sizeof(int) * n_dim);
 
         find_hypercube<<<1, n_dim>>>(points_deriv + point_i * n_dim, axes_min, axes_step_inv, hypercube, scaled_point);
-        radix_sort_double<<<1, n_dim>>>(scaled_point, tri_order);
+        radix_sort_double<<<1, n_dim, n_dim * sizeof(double), 0>>>(scaled_point, tri_order);
 
         compute_simplex_vertex_value<<<1, n_dim + 1>>>(hypercube, tri_order, axes_mult, point_data,
                                                        vertex_values + sizeof(double) * (n_dim + 1) * point_i);
@@ -73,9 +73,9 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
 
 __global__ void radix_sort_double(double *g_double_values, int *g_orders)
 {
-    __shared__ double s_double_values[0x20];
-    __shared__ unsigned s_unsigned_values[0x20];
-    __shared__ int s_orders[0x20];
+    extern __shared__ double s_double_values[];
+    extern __shared__ unsigned s_unsigned_values[];
+    extern __shared__ int s_orders[];
     s_double_values[threadIdx.x] = g_double_values[threadIdx.x];
     s_unsigned_values[threadIdx.x] = s_double_values[threadIdx.x] * 0xffffffff;
     s_orders[threadIdx.x] = threadIdx.x;
