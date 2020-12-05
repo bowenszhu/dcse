@@ -79,8 +79,8 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
         print()
-        performance_itor_cpp(CudaStaticPiecewiseLinearInterpolator)
-        print()
+        # performance_itor_cpp(CudaStaticPiecewiseLinearInterpolator)
+        # print()
 
 
 def scipy_delaunay_performance():
