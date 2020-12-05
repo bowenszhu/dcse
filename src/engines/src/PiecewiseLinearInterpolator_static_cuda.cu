@@ -2,7 +2,7 @@
 
 __global__ void evaluate(const double *point_data, double *points_deriv, const double *axes_min,
                          const double *axes_step_inv, int *axes_mult, const int n_point,
-                         double *interp_values, int n_dim, double *vertex_values)
+                         double *interp_values, int n_dim, double *vertex_values, int *vertices)
 {
     int point_i = blockIdx.x * blockDim.x + threadIdx.x;
     if (point_i < n_point)
@@ -18,7 +18,8 @@ __global__ void evaluate(const double *point_data, double *points_deriv, const d
         radix_sort_double<<<1, n_dim, n_dim * sizeof(unsigned), 0>>>(scaled_point, tri_order);
 
         compute_simplex_vertex_value<<<1, n_dim + 1>>>(hypercube, tri_order, axes_mult, point_data,
-                                                       vertex_values + sizeof(double) * (n_dim + 1) * point_i);
+                                                       vertex_values + sizeof(double) * (n_dim + 1) * point_i,
+                                                       vertices + sizeof(int) * (n_dim + 1) * n_dim * point_i);
 
         cudaDeviceSynchronize();
         cudaFree(hypercube);
@@ -43,32 +44,28 @@ __global__ void find_hypercube(const double *point, const double *axes_min, cons
 }
 
 __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tri_order, const int *axes_mult,
-                                             const double *point_data, double *vertex_values)
+                                             const double *point_data, double *vertex_values, int *vertices)
 {
     int n_dim = blockDim.x - 1;
 
-    int *vertex;
-    cudaMalloc(&vertex, sizeof(int) * n_dim);
-
     for (int dim_i = 0; dim_i < n_dim; dim_i++)
-        vertex[dim_i] = hypercube[dim_i];
+        vertices[n_dim * threadIdx.x + dim_i] = hypercube[dim_i];
 
     for (int dim_i = 0; dim_i < n_dim; dim_i++)
     {
         if (threadIdx.x <= dim_i)
-            vertex[tri_order[dim_i]]++;
+            vertices[n_dim * threadIdx.x + tri_order[dim_i]]++;
     }
 
     int *point_idx;
     cudaMalloc(&point_idx, sizeof(int));
-    get_index_from_vertex<<<1, n_dim>>>(axes_mult, vertex, point_idx);
+    get_index_from_vertex<<<1, n_dim>>>(axes_mult, vertices + n_dim * threadIdx.x, point_idx);
 
     cudaDeviceSynchronize();
 
     vertex_values[threadIdx.x] = point_data[*point_idx];
 
     cudaFree(point_idx);
-    cudaFree(vertex);
 }
 
 __global__ void radix_sort_double(double *g_double_values, int *g_orders)

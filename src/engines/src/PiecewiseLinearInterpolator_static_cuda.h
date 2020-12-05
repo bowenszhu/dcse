@@ -7,13 +7,13 @@
 
 __global__ void evaluate(const double *point_data, double *points_deriv, const double *axes_min,
                          const double *axes_step_inv, int *axes_mult, const int n_point,
-                         double *interp_values, int n_dim, double *vertex_values);
+                         double *interp_values, int n_dim, double *vertex_values, int *vertices);
 
 __global__ void find_hypercube(const double *point, const double *axes_min, const double *axes_step_inv,
                                int *hypercube, double *scaled_point);
 
 __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tri_order, const int *axes_mult,
-                                             const double *point_data, double *vertex_values);
+                                             const double *point_data, double *vertex_values, int *vertices);
 
 __global__ void radix_sort_double(double *double_values, int *orders);
 
@@ -80,14 +80,17 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
     size_t size_interp = numPoint * sizeof(double);
     cudaMalloc(&d_interp_values, size_interp);
 
-    double *d_vertex_values;
+    int* d_vertices;
+    cudaMalloc(&d_vertices, sizeof(int) * (n_dim + 1) * n_dim * numPoint);
+
+    double* d_vertex_values;
     cudaMalloc(&d_vertex_values, sizeof(double) * (n_dim + 1) * numPoint);
 
     int threadsPerBlock = 1024;
     int numBlocks = (numPoint + threadsPerBlock - 1) / threadsPerBlock;
     evaluate<<<numBlocks, threadsPerBlock>>>(d_point_data, d_points_deriv, this->d_axes_min,
                                              this->d_axes_step_inv, this->d_axes_mult, numPoint,
-                                             d_interp_values, n_dim, d_vertex_values);
+                                             d_interp_values, n_dim, d_vertex_values, d_vertices);
 
     cudaDeviceSynchronize();
 
@@ -101,6 +104,7 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
 
     cudaFree(d_interp_values);
     cudaFree(d_points_deriv);
+    cudaFree(d_vertices);
     cudaFree(d_vertex_values);
 }
 
