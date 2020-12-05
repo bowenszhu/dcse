@@ -27,13 +27,12 @@ int main()
     std::array<int, n_dim> axesPoints {3, 4, 5};
     std::array<double, n_dim> axesMin {-1.1, -1.2, -1.3};
     std::array<double, n_dim> axesMax {1.1, 1.2, 1.3};
-//    std::array<int, n_dim> axesPoints {3, 4};
-//    std::array<double, n_dim> axesMin {-1.1, -1.2};
-//    std::array<double, n_dim> axesMax {1.1, 1.2};
 
-    const int n_point = 2;
-    std::vector<double> points {-0.1, -0.2, -0.3, 0.1, 0.2, 0.3};
-//    std::vector<double> points {0.1, 0.2};
+    const int n_point = 4;
+    std::vector<double> points {-0.1, -0.2, -0.3,
+                                0.1, 0.2, 0.3,
+                                -0.7, -0.6, -0.5,
+                                -0.1, 0.0, 0.1};
     std::vector<int> block_idx (n_point);
     std::iota(block_idx.begin(), block_idx.end(), 0);
     std::vector<double> interp (n_point);
