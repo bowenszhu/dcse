@@ -1,8 +1,8 @@
 #include "PiecewiseLinearInterpolator_static_cuda.h"
 
-__global__ void evaluate(const double *point_data, const double *points, const double *axes_min,
-                         const double *axes_step_inv, int *axes_mult, const int n_point, double *interp_values,
-                         double *derivatives, int n_dim)
+__global__ void evaluate(const double *point_data, double *points_deriv, const double *axes_min,
+                         const double *axes_step_inv, int *axes_mult, const int n_point,
+                         double *interp_values, int n_dim)
 {
     int point_i = blockIdx.x * blockDim.x + threadIdx.x;
     if (point_i < n_point)
@@ -14,7 +14,7 @@ __global__ void evaluate(const double *point_data, const double *points, const d
         int *tri_order;
         cudaMalloc(&tri_order, sizeof(int) * n_dim);
 
-        find_hypercube<<<1, n_dim>>>(points + point_i * n_dim, axes_min, axes_step_inv, hypercube, scaled_point);
+        find_hypercube<<<1, n_dim>>>(points_deriv + point_i * n_dim, axes_min, axes_step_inv, hypercube, scaled_point);
         radix_sort_double<<<1, n_dim>>>(scaled_point, tri_order);
 
         double *vertex_values;
@@ -26,7 +26,7 @@ __global__ void evaluate(const double *point_data, const double *points, const d
         cudaFree(hypercube);
 
         compute_interp_deriv<<<1, n_dim>>>(vertex_values, scaled_point, tri_order, axes_step_inv,
-                                           interp_values + point_i, derivatives + point_i * n_dim);
+                                           interp_values + point_i, points_deriv + point_i * n_dim);
 
         cudaFree(scaled_point);
         cudaFree(tri_order);

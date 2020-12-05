@@ -5,9 +5,9 @@
 #include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
 
-__global__ void evaluate(const double *point_data, const double *points, const double *axes_min,
-                         const double *axes_step_inv, int *axes_mult, const int n_point, double *interp_values,
-                         double *derivatives, int n_dim);
+__global__ void evaluate(const double *point_data, double *points_deriv, const double *axes_min,
+                         const double *axes_step_inv, int *axes_mult, const int n_point,
+                         double *interp_values, int n_dim);
 
 __global__ void find_hypercube(const double *point, const double *axes_min, const double *axes_step_inv,
                                int *hypercube, double *scaled_point);
@@ -71,23 +71,20 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
 {
     int numPoint = block_idx.size();
 
-    double* d_points;
+    double* d_points_deriv;
     size_t size_point_deriv = numPoint * n_dim * sizeof(double);
-    cudaMalloc(&d_points, size_point_deriv);
-    cudaMemcpy(d_points, points.data(), size_point_deriv, cudaMemcpyHostToHost);
+    cudaMalloc(&d_points_deriv, size_point_deriv);
+    cudaMemcpy(d_points_deriv, points.data(), size_point_deriv, cudaMemcpyHostToHost);
 
     double* d_interp_values;
     size_t size_interp = numPoint * sizeof(double);
     cudaMalloc(&d_interp_values, size_interp);
 
-    double* d_derivatives;
-    cudaMalloc(&d_derivatives, size_point_deriv);
-
     int threadsPerBlock = 1024;
     int numBlocks = (numPoint + threadsPerBlock - 1) / threadsPerBlock;
-    evaluate<<<numBlocks, threadsPerBlock>>>(d_point_data, d_points, this->d_axes_min,
+    evaluate<<<numBlocks, threadsPerBlock>>>(d_point_data, d_points_deriv, this->d_axes_min,
                                              this->d_axes_step_inv, this->d_axes_mult, numPoint,
-                                             d_interp_values, d_derivatives, n_dim);
+                                             d_interp_values, n_dim);
 
     cudaDeviceSynchronize();
 
@@ -97,11 +94,10 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
 
     cudaStream_t stream_deriv;
     cudaStreamCreate(&stream_deriv);
-    cudaMemcpyAsync(derivatives.data(), d_derivatives, size_point_deriv, cudaMemcpyHostToHost, stream_deriv);
+    cudaMemcpyAsync(derivatives.data(), d_points_deriv, size_point_deriv, cudaMemcpyHostToHost, stream_deriv);
 
-    cudaFree(d_points);
     cudaFree(d_interp_values);
-    cudaFree(d_derivatives);
+    cudaFree(d_points_deriv);
 }
 
 
