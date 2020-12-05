@@ -17,13 +17,15 @@ __global__ void evaluate(const double *point_data, double *points_deriv, const d
         find_hypercube<<<1, n_dim>>>(points_deriv + point_i * n_dim, axes_min, axes_step_inv, hypercube, scaled_point);
         radix_sort_double<<<1, n_dim>>>(scaled_point, tri_order);
 
-        compute_simplex_vertex_value<<<1, n_dim + 1>>>(hypercube, tri_order, axes_mult, point_data, vertex_values + sizeof(double) * (n_dim + 1) * point_i);
+        compute_simplex_vertex_value<<<1, n_dim + 1>>>(hypercube, tri_order, axes_mult, point_data,
+                                                       vertex_values + sizeof(double) * (n_dim + 1) * point_i);
 
         cudaDeviceSynchronize();
         cudaFree(hypercube);
 
-        compute_interp_deriv<<<1, n_dim>>>(vertex_values + sizeof(double) * (n_dim + 1) * point_i, scaled_point, tri_order, axes_step_inv,
-                                           interp_values + point_i, points_deriv + point_i * n_dim);
+        compute_interp_deriv<<<1, n_dim>>>(vertex_values + sizeof(double) * (n_dim + 1) * point_i, scaled_point,
+                                           tri_order, axes_step_inv, interp_values + point_i,
+                                           points_deriv + point_i * n_dim);
 
         cudaFree(scaled_point);
         cudaFree(tri_order);
