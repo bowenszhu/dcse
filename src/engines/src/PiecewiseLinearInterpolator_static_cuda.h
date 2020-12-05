@@ -36,7 +36,7 @@ public:
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
 private:
-    double* h_point_data;
+    double* d_point_data;
 
 };
 
@@ -47,21 +47,23 @@ PiecewiseLinearInterpolator_static_cuda<n_dim>::PiecewiseLinearInterpolator_stat
         : PiecewiseLinearInterpolatorBase_cuda<n_dim>(axesPoints, axesMin, axesMax)
 {
     int n_point = *(this->h_axes_mult);
-    cudaMallocHost(&h_point_data, n_point * sizeof(double));
+    cudaMalloc(&d_point_data, n_point * sizeof(double));
 
     std::vector<double> state (n_dim);
-    std::vector<double> operator_value (1);
     for (int i = 0; i < n_point; i++) {
+        std::vector<double> operator_value (1);
         this->get_point_state(i, state);
         base_points_generator->evaluate(state, operator_value);
-        h_point_data[i] = operator_value[0];
+        cudaStream_t stream;
+        cudaStreamCreate(&stream);
+        cudaMemcpyAsync(d_point_data + i, operator_value.data(), sizeof(double), cudaMemcpyHostToDevice, stream);
     }
 }
 
 template<int n_dim>
 PiecewiseLinearInterpolator_static_cuda<n_dim>::~PiecewiseLinearInterpolator_static_cuda()
 {
-    cudaFree(h_point_data);
+    cudaFree(d_point_data);
 }
 
 template<int n_dim>
@@ -84,7 +86,7 @@ void PiecewiseLinearInterpolator_static_cuda<n_dim>::evaluate_with_derivatives(c
 
     int threadsPerBlock = 1024;
     int numBlocks = (numPoint + threadsPerBlock - 1) / threadsPerBlock;
-    evaluate<<<numBlocks, threadsPerBlock>>>(h_point_data, h_points, this->d_axes_min,
+    evaluate<<<numBlocks, threadsPerBlock>>>(d_point_data, h_points, this->d_axes_min,
                                              this->d_axes_step_inv, this->d_axes_mult, numPoint,
                                              h_interp_values, h_derivatives, n_dim);
 
