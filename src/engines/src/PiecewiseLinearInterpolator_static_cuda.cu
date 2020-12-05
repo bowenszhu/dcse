@@ -71,24 +71,28 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
     cudaFree(vertex);
 }
 
-__global__ void radix_sort_double(double *double_values, int *orders)
+__global__ void radix_sort_double(double *g_double_values, int *g_orders)
 {
-    __shared__ unsigned unsigned_values[0x20];
-    unsigned_values[threadIdx.x] = double_values[threadIdx.x] * 0xffffffff;
-    orders[threadIdx.x] = threadIdx.x;
+    __shared__ double s_double_values[0x20];
+    __shared__ unsigned s_unsigned_values[0x20];
+    __shared__ int s_orders[0x20];
+    s_double_values[threadIdx.x] = g_double_values[threadIdx.x];
+    s_unsigned_values[threadIdx.x] = s_double_values[threadIdx.x] * 0xffffffff;
+    s_orders[threadIdx.x] = threadIdx.x;
     unsigned thread_mask = 0xffffffff >> 0x1f - threadIdx.x;
     unsigned range_mask = __shfl_sync(0xffffffff, thread_mask, blockDim.x - 1);
     for (int i = 0; i < 0x20; i++)
     {
-        int order = orders[threadIdx.x];
-        unsigned value = unsigned_values[order];
+        int order = s_orders[threadIdx.x];
+        unsigned value = s_unsigned_values[order];
         unsigned bit = value & (1 << i);
         unsigned ones = __ballot_sync(0xffffffff, bit);
         unsigned zeros = ~ones & range_mask;
         int position = bit ? __popc(zeros) + __popc(ones & thread_mask) - 1 : __popc(zeros & thread_mask) - 1;
-        orders[position] = order;
+        s_orders[position] = order;
     }
-    double_values[threadIdx.x] = __shfl_sync(0xffffffff, double_values[threadIdx.x], orders[threadIdx.x]);
+    g_double_values[threadIdx.x] = __shfl_sync(0xffffffff, s_double_values[threadIdx.x], s_orders[threadIdx.x]);
+    g_orders[threadIdx.x] = s_orders[threadIdx.x];
 }
 
 __global__ void get_index_from_vertex(const int *axes_mult, const int *vertex, int *point_idx)
