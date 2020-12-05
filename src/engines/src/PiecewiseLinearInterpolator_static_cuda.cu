@@ -67,7 +67,7 @@ __global__ void radix_sort_double(double *g_double_values, int *g_orders)
     s_unsigned_values[threadIdx.x] = double_value * 0xffffffff;
     s_orders[threadIdx.x] = threadIdx.x;
     unsigned thread_mask = 0xffffffff >> 0x1f - threadIdx.x;
-    unsigned range_mask = __shfl_sync(0xffffffff, thread_mask, blockDim.x - 1);
+    unsigned range_mask = __activemask();
     for (int i = 0; i < 0x20; i++)
     {
         int order = s_orders[threadIdx.x];
