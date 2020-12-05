@@ -37,8 +37,9 @@ __global__ void find_hypercube(const double *point, const double *axes_min, cons
                                int *hypercube, double *scaled_point)
 {
     double temp = (point[threadIdx.x] - axes_min[threadIdx.x]) * axes_step_inv[threadIdx.x];
-    hypercube[threadIdx.x] = (int) temp;
-    scaled_point[threadIdx.x] = temp - hypercube[threadIdx.x];
+    int int_temp = (int) temp;
+    hypercube[threadIdx.x] = int_temp;
+    scaled_point[threadIdx.x] = temp - int_temp;
 }
 
 __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tri_order, const int *axes_mult,
