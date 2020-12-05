@@ -73,11 +73,10 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
 
 __global__ void radix_sort_double(double *g_double_values, int *g_orders)
 {
-    __shared__ double s_double_values[0x20];
     __shared__ unsigned s_unsigned_values[0x20];
     __shared__ int s_orders[0x20];
-    s_double_values[threadIdx.x] = g_double_values[threadIdx.x];
-    s_unsigned_values[threadIdx.x] = s_double_values[threadIdx.x] * 0xffffffff;
+    double double_value = g_double_values[threadIdx.x];
+    s_unsigned_values[threadIdx.x] = double_value * 0xffffffff;
     s_orders[threadIdx.x] = threadIdx.x;
     unsigned thread_mask = 0xffffffff >> 0x1f - threadIdx.x;
     unsigned range_mask = __shfl_sync(0xffffffff, thread_mask, blockDim.x - 1);
@@ -91,7 +90,7 @@ __global__ void radix_sort_double(double *g_double_values, int *g_orders)
         int position = bit ? __popc(zeros) + __popc(ones & thread_mask) - 1 : __popc(zeros & thread_mask) - 1;
         s_orders[position] = order;
     }
-    g_double_values[threadIdx.x] = __shfl_sync(0xffffffff, s_double_values[threadIdx.x], s_orders[threadIdx.x]);
+    g_double_values[threadIdx.x] = __shfl_sync(0xffffffff, double_value, s_orders[threadIdx.x]);
     g_orders[threadIdx.x] = s_orders[threadIdx.x];
 }
 
