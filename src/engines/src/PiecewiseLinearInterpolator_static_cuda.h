@@ -16,63 +16,71 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
                                              const double *point_data, double *vertex_values);
 
 /**
- * Radix sort for up to 32 floating-point numbers in the range [0.0, 1.0].
+ * Constant time radix sort for up to 32 floating-point numbers in the range
+ * [0.0, 1.0].
  *
  * In the piecewise linear interpolation, for each input point, after its
- * scaled coordinate in the hypercube where the point is located is computed,
- * the step of finding simplex requires sorting the scaled coordinate to
- * determine which simplex contains the point.
+ * scaled coordinate in its residing hypercube is computed, the step of finding
+ * simplex requires sorting the scaled coordinate to determine which simplex
+ * contains the point.
  *
  * As the scaled coordinate is composed of n_dim values in the range [0.0, 1.0),
  * the algorithm transfers these scaled coefficients to unsigned integers by
  * multiplying them by 0xFFFFFFFF which is the maximum of the type unsigned int.
  *
- * The algorithm can only differentiate numbers up to the highest 32 bits. That
- * is, if the difference of two double-type numbers are less than 2^(-32), they
- * will be regarded as equal, which occurs only if the point is perfectly
- * located at or extremely close to the boundary of some neighboring simplexes.
- * In this case, it is safe in principle to use any of these simplexes for
- * interpolation.
+ * @note The algorithm can only differentiate numbers up to the highest 32
+ * bits. That is, if the difference of two double-type numbers are less than
+ * 2^(-32), they will be regarded as equal, which occurs only if the point is
+ * perfectly located at or extremely close to the boundary of some neighboring
+ * simplexes. In this case, it is safe in principle to use any of these
+ * simplexes for interpolation.
  *
- * General radix sort runs in O(n + k) time where n is the number of elements
- * and k is the length of their bit level representation. As n_dim is assumed
- * to be less than 32, the parallel algorithm facilitated by warp-level
+ * @note General radix sort runs in O(n + k) time where n is the number of
+ * elements and k is the length of their bit level representation. As n_dim is
+ * assumed to be less than 32, the parallel algorithm facilitated by warp-level
  * primitives helps get rid of n, so this function runs in O(k) parallel time.
- * In the current implementation, k = bit size of unsigned = 32.
+ * In the current implementation, k = bit size of unsigned int = 32.
  *
- * If higher precision is required, it is possible to change the 32-bit
+ * @note If higher precision is required, it is possible to change the 32-bit
  * unsigned int to the 64-bit unsigned long int. If one desires even higher
  * performance and accepts tiny error, the type can be changed to 16-bit
  * unsigned short int. Besides the above mentioned built-in types, a custom bit
- * length is also doable.
+ * length can also be made available.
  *
- * As for the detail of the implementation, the temporary values of unsigned
- * values and orders are stored in shared memory, because on-chip shared memory
- * has much higher bandwidth and lower latency than global memory. Once the
- * sorting stage is finished, the results are stored to global memory.
+ * @note As for the details of the implementation, to avoid repeatedly reading
+ * data from device global memory, the temporary values of unsigned values and
+ * orders are read from global memory only once and then stored in shared
+ * memory, because on-chip shared memory has much higher bandwidth and lower
+ * latency than global memory. Once the sorting stage is finished, the results
+ * are stored to global memory.
  *
  * @note Differentiation between stable or unstable sort is not applicable, as
  * the function aims at sorting floating-point numbers instead of integers.
  *
- * @param[in,out] g_double_values : An array of double-type values that need to
- * be sorted in ascending order
- *      All values in the array must be in the range [0.0, 1.0], otherwise it will
- *      results in undefined behavior.
+ * @remark The function outperforms thrust::sort_by_key. However, as the
+ * algorithm is specially designed for the piecewise linear interpolation, we
+ * should be aware about its limitation. Namely, the algorithm only supports
+ * sorting floating-point numbers in the range [0.0, 1.0].
+ *
+ * @param[in,out] g_double_values : An array of floating-point numbers that
+ * need to be sorted in ascending order
+ *      All values in the array must be in the range [0.0, 1.0], otherwise it
+ *      will results in undefined behavior.
  * @param[out] g_orders : Output orders
- *      @note The input to this argument does not need to be formatted like
- *      [0, 1, 2, ..., n - 1].
+ *      @note The input to this argument does NOT need to be formatted like
+ *      [0, 1, 2, ..., n - 1]. It is fine to input arbitrary values.
  *
  * @example
  * 2 <= n <= 32
  * values is an array of n double-type numbers. orders is an array of n
  * integers with arbitrary numbers.
  * To sort the values and get their order, use
- *    radix_sort_double<<<1, n>>>(values, orders);
+ *      radix_sort_double<<<1, n>>>(values, orders);
  *
  * @author Bowen Zhu
- * @date December 5, 2020
+ * @date December 6, 2020
  */
-__global__ void radix_sort_double(double *double_values, int *orders);
+__global__ void radix_sort_double(double *g_double_values, int *g_orders);
 
 __global__ void get_index_from_vertex(const int *axes_mult, const int *hypercube, const int *tri_order,
                                       const int vertex_idx, int *point_idx);

@@ -24,6 +24,16 @@ set_target_properties(PLI_cuda
         CUDA_SEPARABLE_COMPILATION ON
         CUDA_ARCHITECTURES 61)
 
+add_executable(compare_sort
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h
+        src/engines/src/compare_sort.cu)
+
+set_target_properties(compare_sort
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 61)
+
 add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_static.inl
         src/engines/pybind11/include/pybind11/detail/class.h
