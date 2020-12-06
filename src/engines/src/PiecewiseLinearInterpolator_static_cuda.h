@@ -67,7 +67,7 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
  * values is an array of n double-type numbers. orders is an array of n
  * integers with arbitrary numbers.
  * To sort the values and get their order, use
- *    radix_sort_double<<<1, n, n * sizeof(unsigned), stream>>>(values, orders);
+ *    radix_sort_double<<<1, n>>>(values, orders);
  *
  * @author Bowen Zhu
  * @date December 5, 2020
