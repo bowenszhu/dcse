@@ -60,7 +60,7 @@ __global__ void compute_simplex_vertex_value(const int *hypercube, const int *tr
  * @remark The function outperforms thrust::sort_by_key. However, as the
  * algorithm is specially designed for the piecewise linear interpolation, we
  * should be aware about its limitation. Namely, the algorithm only supports
- * sorting floating-point numbers in the range [0.0, 1.0].
+ * sorting up to 32 floating-point numbers in the range [0.0, 1.0].
  *
  * @param[in,out] g_double_values : An array of floating-point numbers that
  * need to be sorted in ascending order
