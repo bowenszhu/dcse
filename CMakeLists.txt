@@ -12,9 +12,19 @@ include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
+add_executable(PLI_warp
+        src/engines/src/cuda_debug.cu
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_warp.h)
+
+set_target_properties(PLI_warp
+        PROPERTIES
+        CUDA_ARCHITECTURES 61)
+
 add_executable(PLI_cuda
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
-        src/engines/src/cuda_debug.cu
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
         src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
         src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
@@ -136,7 +146,7 @@ add_executable(Darts
         src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
         src/engines/src/PiecewiseLinearInterpolator_static_cuda.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h)
+        src/engines/src/PiecewiseLinearInterpolator_static_cuda.h src/engines/src/PiecewiseLinearInterpolator_static_warp.cu src/engines/src/PiecewiseLinearInterpolator_static_warp.h)
 
 set_target_properties(Darts
         PROPERTIES

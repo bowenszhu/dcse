@@ -8,8 +8,8 @@
 #include <numeric>
 #include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
-#include "PiecewiseLinearInterpolator_static_cuda.h"
 #include "PiecewiseLinearInterpolator_static.h"
+#include "PiecewiseLinearInterpolator_static_warp.h"
 
 class op : public operator_set_evaluator_iface {
 public:
@@ -38,7 +38,7 @@ int main()
     std::vector<double> interp (n_point);
     std::vector<double> derivatives (n_point * n_dim);
 
-    PiecewiseLinearInterpolator_static_cuda<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
+    PiecewiseLinearInterpolator_static_warp<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
     interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
     for (int i = 0; i < n_point; i++)
