@@ -12,12 +12,12 @@ __global__ void compute_step(const int *axes_points, const double *axes_min, con
 __global__ void compute_mult(const int *axes_points, int *axes_mult);
 
 template <int n_dim>
-class PiecewiseLinearInterpolatorBase_cuda {
+class PiecewiseLinearInterpolatorBase_warp {
 public:
-    PiecewiseLinearInterpolatorBase_cuda(const std::array<int, n_dim> &axesPoints,
-            const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolatorBase_warp(const std::array<int, n_dim> &axesPoints,
+                                         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax);
 
-    virtual ~PiecewiseLinearInterpolatorBase_cuda();
+    virtual ~PiecewiseLinearInterpolatorBase_warp();
 
 protected:
     const double* h_axes_min;  ///< minimum at each axis
@@ -39,7 +39,7 @@ protected:
 };
 
 template<int n_dim>
-PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cuda(
+PiecewiseLinearInterpolatorBase_warp<n_dim>::PiecewiseLinearInterpolatorBase_warp(
         const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
         const std::array<double, n_dim> &axesMax) : h_axes_min(axesMin.data())
 {
@@ -73,7 +73,7 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cud
 }
 
 template<int n_dim>
-PiecewiseLinearInterpolatorBase_cuda<n_dim>::~PiecewiseLinearInterpolatorBase_cuda()
+PiecewiseLinearInterpolatorBase_warp<n_dim>::~PiecewiseLinearInterpolatorBase_warp()
 {
     free(h_axes_step);
     free(h_axes_mult);
@@ -87,7 +87,7 @@ PiecewiseLinearInterpolatorBase_cuda<n_dim>::~PiecewiseLinearInterpolatorBase_cu
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase_cuda<n_dim>::get_point_state(int point_idx, std::vector<double> &state)
+void PiecewiseLinearInterpolatorBase_warp<n_dim>::get_point_state(int point_idx, std::vector<double> &state)
 {
     for (int i = 0; i < n_dim; i++)
     {

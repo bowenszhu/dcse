@@ -2,7 +2,7 @@
 #define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_CUDA_H
 
 
-#include "PiecewiseLinearInterpolatorBase_cuda.h"
+#include "PiecewiseLinearInterpolatorBase_warp.h"
 #include "evaluator_iface.h"
 
 __global__ void evaluate(const double *point_data, double *points_deriv, const double *axes_min,
@@ -89,7 +89,7 @@ __global__ void compute_interp_deriv(const double *simplex_vertex_values, const 
                 const int *tri_order, const double *axes_step_inv, double *interp_values, double *derivatives);
 
 template <int n_dim>
-class PiecewiseLinearInterpolator_static_cuda : public PiecewiseLinearInterpolatorBase_cuda<n_dim> {
+class PiecewiseLinearInterpolator_static_cuda : public PiecewiseLinearInterpolatorBase_warp<n_dim> {
 public:
     PiecewiseLinearInterpolator_static_cuda(operator_set_evaluator_iface *base_points_generator,
                                             const std::array<int, n_dim> &axesPoints,
@@ -109,7 +109,7 @@ template<int n_dim>
 PiecewiseLinearInterpolator_static_cuda<n_dim>::PiecewiseLinearInterpolator_static_cuda(
         operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
-        : PiecewiseLinearInterpolatorBase_cuda<n_dim>(axesPoints, axesMin, axesMax)
+        : PiecewiseLinearInterpolatorBase_warp<n_dim>(axesPoints, axesMin, axesMax)
 {
     int n_point = *(this->h_axes_mult);
     cudaMalloc(&d_point_data, n_point * sizeof(double));

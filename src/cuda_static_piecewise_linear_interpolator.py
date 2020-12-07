@@ -93,4 +93,4 @@ class CudaStaticPiecewiseLinearInterpolator:
             return self.interpolation_time
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'static', 'GPU')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'CUDA', 'static', 'GPU')

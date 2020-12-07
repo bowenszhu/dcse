@@ -1,4 +1,4 @@
-#include "PiecewiseLinearInterpolatorBase_cuda.h"
+#include "PiecewiseLinearInterpolatorBase_warp.h"
 
 __global__ void compute_step(const int *axes_points, const double *axes_min, const double *axes_max,
                              double *axes_step, double *axes_step_inv)

@@ -1,7 +1,7 @@
 #ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_WARP_H
 #define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_WARP_H
 
-#include "PiecewiseLinearInterpolatorBase_cuda.h"
+#include "PiecewiseLinearInterpolatorBase_warp.h"
 #include "evaluator_iface.h"
 
 __global__ void evaluate(const double *g_point_data, const double *g_axes_min, const double *g_axes_step_inv,
@@ -31,7 +31,7 @@ __device__ void compute_interp_deriv(const double s_simplex_vertices_values[33],
                                      const int dim_idx, const unsigned point_mask, int point_idx_in_warp);
 
 template <int n_dim>
-class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_cuda<n_dim>
+class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_warp<n_dim>
 {
 public:
     PiecewiseLinearInterpolator_static_warp(operator_set_evaluator_iface *base_points_generator,
@@ -52,20 +52,20 @@ template<int n_dim>
 PiecewiseLinearInterpolator_static_warp<n_dim>::PiecewiseLinearInterpolator_static_warp(
         operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
-        : PiecewiseLinearInterpolatorBase_cuda<n_dim>(axesPoints, axesMin, axesMax)
+        : PiecewiseLinearInterpolatorBase_warp<n_dim>(axesPoints, axesMin, axesMax)
 {
     int n_point = *(this->h_axes_mult);
     cudaMalloc(&d_point_data, n_point * sizeof(double));
+    double h_point_data[n_point];
 
     std::vector<double> state (n_dim);
     for (int i = 0; i < n_point; i++) {
         std::vector<double> operator_value (1);
         this->get_point_state(i, state);
         base_points_generator->evaluate(state, operator_value);
-        cudaStream_t stream;
-        cudaStreamCreate(&stream);
-        cudaMemcpyAsync(d_point_data + i, operator_value.data(), sizeof(double), cudaMemcpyHostToDevice, stream);
+        h_point_data[i] = operator_value[0];
     }
+    cudaMemcpy(d_point_data, h_point_data, n_point * sizeof(double), cudaMemcpyHostToDevice);
 }
 
 template<int n_dim>

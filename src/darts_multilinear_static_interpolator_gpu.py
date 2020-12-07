@@ -105,4 +105,4 @@ class DartsMultilinearStaticInterpolatorGPU:
             pass
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('DARTS_multilinear', 'C++', 'static', 'GPU')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('DARTS_multilinear', 'CUDA', 'static', 'GPU')
