@@ -4,19 +4,13 @@ import time
 
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly
-import plotly.graph_objs as go
-from scipy.spatial.qhull import Delaunay
 
 from src.cpp_adaptive_piecewise_linear_interpolator import CppAdaptivePiecewiseLinearInterpolator
 from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
 from src.cuda_static_piecewise_linear_interpolator import CudaStaticPiecewiseLinearInterpolator
-from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
-from src.piecewise_linear_interpolator import PiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
-from src.scipy_regular_grid_linear_interpolator import ScipyRegularGridLinearInterpolator
 
 
 def func_2d(var1, var2):
@@ -83,16 +77,6 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         print()
 
 
-def scipy_delaunay_performance():
-    print('\n\nSciPy Delaunay triangulation for unit hypercube:')
-    for n_dim in range(2, 10):
-        print('dimension:', n_dim, end='  ')
-        start_time = time.process_time()
-        unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * n_dim)).T.reshape(-1, n_dim)
-        tri = Delaunay(unit_hypercube)
-        print('time:', time.process_time() - start_time, 's')
-
-
 def compare_execution_time():
     time_per_point = dict()
 
@@ -104,9 +88,9 @@ def compare_execution_time():
     grid_min = [-0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1]
     grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
     for n_dim in range(2, 10):
-        grid_shape = [int(n_supporting_pints ** (1/n_dim))] * n_dim
+        grid_shape = [int(n_supporting_pints ** (1 / n_dim))] * n_dim
         interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
-        axes_points = [int(n_interp_points ** (1/n_dim))] * n_dim
+        axes_points = [int(n_interp_points ** (1 / n_dim))] * n_dim
         measure_performance(n_dim, func, axes_points, grid_shape, interp_grid, time_per_point)
 
     plt.figure(figsize=(19, 12))
@@ -123,5 +107,63 @@ def compare_execution_time():
     plt.show()
 
 
+def mearure_performance_cuda_static_piecewise_lnear_interpolator(max_dim=10):
+    def func(*vars):
+        return sum([var * var for var in vars])
+
+    time_per_point = list()
+    n_supporting_pints = 3000000
+    n_interp_points = 10000
+    grid_min = [-0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1, -0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1]
+    grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0, 0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
+    for n_dim in range(2, max_dim + 1):
+        grid_shape = [int(n_supporting_pints ** (1 / n_dim))] * n_dim
+        interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
+        axes_points = [int(n_interp_points ** (1 / n_dim))] * n_dim
+
+        test_grid = np.array(np.meshgrid(*interp_grid, indexing='ij'))
+        axes_min = [-1.1] * n_dim
+        axes_max = [1.1] * n_dim
+        print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
+
+        itor = CudaStaticPiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max)
+        itor.interpolate_array(test_grid)
+        interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
+        print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
+              (itor.get_init_time(), itor.get_interpolation_time(), interpolation_time_per_point))
+        time_per_point.append(interpolation_time_per_point)
+
+    plt.figure(figsize=(19, 12))
+    plt.plot(list(range(2, max_dim + 1)), time_per_point, 'o-', label=str(itor))
+    plt.yscale('log')
+    plt.xlabel('dimension', fontsize=20)
+    plt.ylabel('log interpolation time per point', fontsize=20)
+    plt.legend(fontsize=18)
+    plt.savefig('CUDA_static_PLI_interpolation_time_per_point.eps')
+    plt.savefig('CUDA_static_PLI_interpolation_time_per_point.png')
+    plt.show()
+
+
+def compute_warp_occupancy(max_dim=32):
+    relative_time = list()
+    WARP_SIZE = 32
+    for n_dim in range(2, max_dim + 1):
+        active_threads_per_warp = WARP_SIZE - WARP_SIZE % n_dim
+        active_ratio = active_threads_per_warp / WARP_SIZE
+        print('dimension: %2d' % n_dim, ' active threads per warp = ', active_threads_per_warp)
+        relative_time.append(1 / active_ratio)
+
+    plt.figure(figsize=(19, 12))
+    plt.plot(list(range(2, max_dim + 1)), relative_time, 'o-')
+    plt.xlabel('dimension', fontsize=20)
+    plt.ylabel('numberof active threads per warp', fontsize=20)
+    plt.title('expected relative interpolation time per point', fontsize=20)
+    plt.savefig('CUDA_static_PLI_warp_occupancy.eps')
+    plt.savefig('CUDA_static_PLI_warp_occupancy.png')
+    plt.show()
+
+
 if __name__ == '__main__':
     compare_execution_time()
+    mearure_performance_cuda_static_piecewise_lnear_interpolator(13)
+    compute_warp_occupancy()

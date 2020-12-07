@@ -41,4 +41,7 @@ void pybind_piecewise_linear_interpolator_static_warp(py::module &m)
     piecewise_linear_interpolator_static_warp_exposer<8> e8; e8.expose(m);
     piecewise_linear_interpolator_static_warp_exposer<9> e9; e9.expose(m);
     piecewise_linear_interpolator_static_warp_exposer<10> e10; e10.expose(m);
+    piecewise_linear_interpolator_static_warp_exposer<11> e11; e11.expose(m);
+    piecewise_linear_interpolator_static_warp_exposer<12> e12; e12.expose(m);
+    piecewise_linear_interpolator_static_warp_exposer<13> e13; e13.expose(m);
 }

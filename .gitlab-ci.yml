@@ -55,3 +55,7 @@ test_linux:
     paths:
       - interpolation_time_per_point.png
       - interpolation_time_per_point.eps
+      - CUDA_static_PLI_interpolation_time_per_point.eps
+      - CUDA_static_PLI_interpolation_time_per_point.png
+      - CUDA_static_PLI_warp_occupancy.eps
+      - CUDA_static_PLI_warp_occupancy.png
