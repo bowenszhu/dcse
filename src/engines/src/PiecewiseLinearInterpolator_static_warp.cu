@@ -7,33 +7,31 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
     __shared__ double s_axes_min[32];
     __shared__ double s_axes_step_inv[32];
     __shared__ int s_axes_mult[32];
-    __shared__ double s_points_deriv[16][32];
     __shared__ int s_hypercube[16][32];
     __shared__ double s_scaled_point[16][32];
     __shared__ int s_tri_order[16][32];
     __shared__ unsigned s_unsigned_values[16][32];
     __shared__ int s_simplex_vertex[16][32];
     __shared__ double s_simplex_vertices_values[16][33];
-    if (threadIdx.x < n_dim)
-    {
-        s_axes_min[threadIdx.x] = g_axes_min[threadIdx.x];
-        s_axes_step_inv[threadIdx.x] = g_axes_step_inv[threadIdx.x];
-        s_axes_mult[threadIdx.x] = g_axes_mult[threadIdx.x + 1];
-    }
-    __syncwarp();
     int point_idx_in_warp = threadIdx.x / n_dim;
     int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
     int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
-    int dim_idx = threadIdx.x % n_dim;
-    int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
-    const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
     if (point_idx_in_input_points < n_input_point)
     {
+        if (threadIdx.x < n_dim)
+        {
+            s_axes_min[threadIdx.x] = g_axes_min[threadIdx.x];
+            s_axes_step_inv[threadIdx.x] = g_axes_step_inv[threadIdx.x];
+            s_axes_mult[threadIdx.x] = g_axes_mult[threadIdx.x + 1];
+        }
+        __syncwarp();
+        int dim_idx = threadIdx.x % n_dim;
+        int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
+        const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
         int first_dim_in_input_points = point_idx_in_input_points * n_dim;
-        s_points_deriv[point_idx_in_warp][dim_idx] = g_points_deriv[first_dim_in_input_points + dim_idx];
 
-        find_hypercube(s_points_deriv[point_idx_in_warp], s_axes_min, s_axes_step_inv, s_hypercube[point_idx_in_warp],
-                       s_scaled_point[point_idx_in_warp], dim_idx);
+        find_hypercube(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
+                       s_hypercube[point_idx_in_warp], s_scaled_point[point_idx_in_warp], dim_idx);
 
         radix_sort_double(s_scaled_point[point_idx_in_warp], s_tri_order[point_idx_in_warp], n_dim, dim_idx,
                           point_idx_in_warp, s_unsigned_values[point_idx_in_warp], point_mask);
