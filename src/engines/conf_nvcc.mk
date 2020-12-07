@@ -19,8 +19,8 @@ GENCODE_FLAGS += -gencode arch=compute_$(HIGHEST_SM),code=compute_$(HIGHEST_SM)
 endif
 endif
 
-NVCCFLAGS   		= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS)" -O3 --ptxas-options=-v -rdc=true
-NVCCFLAGS_DEBUG   	= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS_DEBUG)" -G -rdc=true
-NVCCFLAGS_PROFILE  	= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS_DEBUG)" -O3 -lineinfo) -rdc=true
+NVCCFLAGS   		= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS)" -O3 --ptxas-options=-v
+NVCCFLAGS_DEBUG   	= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS_DEBUG)" -G
+NVCCFLAGS_PROFILE  	= -ccbin=$(CXX) --compiler-options="$(CXXFLAGS_DEBUG)" -O3 -lineinfo)
 
 

@@ -29,8 +29,8 @@ OBJ =  operator_set_interpolator_static.o \
 
 OBJ_GPU =  	operator_set_interpolator_gpu.cu.o \
 			py_operator_set_interpolator_gpu.o \
-			PiecewiseLinearInterpolator_static_cuda.cu.o \
-            py_piecewise_linear_interpolator_static_cuda.cu.o \
+			PiecewiseLinearInterpolator_static_warp.cu.o \
+            py_piecewise_linear_interpolator_static_warp.cu.o \
             PiecewiseLinearInterpolatorBase_cuda.cu.o
 
 

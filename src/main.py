@@ -72,15 +72,15 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
     #         time_per_point[str(itor)] = [interpolation_time_per_point]
 
     if n_dim <= 10:
-        performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU)
+        # performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU)
         performance_itor_cpp(DartsMultilinearStaticInterpolator)
         performance_itor_cpp(DartsMultilinearAdaptiveInterpolator)
         print()
         performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
         print()
-        # performance_itor_cpp(CudaStaticPiecewiseLinearInterpolator)
-        # print()
+        performance_itor_cpp(CudaStaticPiecewiseLinearInterpolator)
+        print()
 
 
 def scipy_delaunay_performance():

@@ -14,7 +14,8 @@
 class op : public operator_set_evaluator_iface {
 public:
     int evaluate(std::vector<value_t> &state, std::vector<value_t> &values) override {
-        values[0] = std::accumulate(state.begin(), state.end(), 0.0) + state[0] * state[0];
+        values[0] = std::accumulate(state.begin(), state.end(), 0.0)
+                + state[0] * state[0] + state[1] * state[1] * state[1];
         return 0;
     }
 };
@@ -23,16 +24,27 @@ int main()
 {
     op face = op();
 
-    const int n_dim = 3;
-    std::array<int, n_dim> axesPoints {3, 4, 5};
-    std::array<double, n_dim> axesMin {-1.1, -1.2, -1.3};
-    std::array<double, n_dim> axesMax {1.1, 1.2, 1.3};
+    const int n_dim = 5;
+    const int pointsPerDim = 3;
+    std::array<int, n_dim> axesPoints;
+    axesPoints.fill(pointsPerDim);
+    std::array<double, n_dim> axesMin; /// {-1.1, -1.2, -1.3, ...}
+    std::array<double, n_dim> axesMax; /// { 1.1,  1.2,  1.3, ...}
+    for (int i = 0; i < n_dim; i++)
+    {
+        double max = 1.1 + 0.1 * i;
+        double min = - max;
+        axesMin[i] = min;
+        axesMax[i] = max;
+    }
 
-    const int n_point = 4;
-    std::vector<double> points {-0.1, -0.2, -0.3,
-                                0.1, 0.2, 0.3,
-                                -0.7, -0.6, -0.5,
-                                -0.1, 0.0, 0.1};
+    const int n_point = 7;
+    std::vector<double> points (n_point * n_point);
+    for (int i = 0; i < points.size(); i++)
+    {
+        double random = (double) rand() /  RAND_MAX; /// random value in [ 0.0, 1.0]
+        points[i] = random * 2.0 - 1.0;              /// random value in [-1.0, 1.0]
+    }
     std::vector<int> block_idx (n_point);
     std::iota(block_idx.begin(), block_idx.end(), 0);
     std::vector<double> interp (n_point);
@@ -41,6 +53,7 @@ int main()
     PiecewiseLinearInterpolator_static_warp<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
     interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
+    printf("\n*********************** CUDA C Interpolator\n");
     for (int i = 0; i < n_point; i++)
     {
         std::cout << "\n---------- point " << i << std::endl;
@@ -55,6 +68,7 @@ int main()
     PiecewiseLinearInterpolator_static<n_dim> cpp_interpolator (&face, axesPoints, axesMin, axesMax);
     cpp_interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
+    printf("\n*********************** C++ Interpolator\n");
     for (int i = 0; i < n_point; i++)
     {
         std::cout << "\n---------- point " << i << std::endl;

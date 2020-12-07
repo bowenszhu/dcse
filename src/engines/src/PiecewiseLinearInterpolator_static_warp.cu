@@ -1,11 +1,9 @@
 #include "PiecewiseLinearInterpolator_static_warp.h"
 
-__global__ void
-evaluate(const double *g_point_data, const double *g_axes_min, const double *g_axes_step_inv,
-         const int *g_axes_mult, double *g_points_deriv, double *g_interp_values, const int n_dim,
-         const int points_per_warp, const int n_input_point)
+__global__ void evaluate(const double *g_point_data, const double *g_axes_min, const double *g_axes_step_inv,
+                         const int *g_axes_mult, double *g_points_deriv, double *g_interp_values, const int n_dim,
+                         const int points_per_warp, const int n_input_point)
 {
-    printf("thread %d points %f\n", threadIdx.x, g_points_deriv[threadIdx.x]);
     __shared__ double s_axes_min[32];
     __shared__ double s_axes_step_inv[32];
     __shared__ int s_axes_mult[32];
@@ -24,28 +22,18 @@ evaluate(const double *g_point_data, const double *g_axes_min, const double *g_a
     }
     __syncwarp();
     int point_idx_in_warp = threadIdx.x / n_dim;
-    int point_idx_in_input_points = blockIdx.x * points_per_warp + point_idx_in_warp;
+    int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
+    int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
     int dim_idx = threadIdx.x % n_dim;
     int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
     const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
     if (point_idx_in_input_points < n_input_point)
     {
         int first_dim_in_input_points = point_idx_in_input_points * n_dim;
-//        for (int i = 0; i < n_dim; i++)
         s_points_deriv[point_idx_in_warp][dim_idx] = g_points_deriv[first_dim_in_input_points + dim_idx];
 
         find_hypercube(s_points_deriv[point_idx_in_warp], s_axes_min, s_axes_step_inv, s_hypercube[point_idx_in_warp],
-                       s_scaled_point[point_idx_in_warp], n_dim);
-
-//        printf("thread %d point_idx_in_warp %d point_idx_in_input_points %d dim_idx %d first_dim_idx_in_warp %d "
-//               "first_dim_in_input_points %d point_mask %u\n",
-//               threadIdx.x, point_idx_in_warp, point_idx_in_input_points, dim_idx, first_dim_idx_in_warp,
-//               first_dim_in_input_points, point_mask);
-
-        printf("thread %d point_idx %d s_hypercube[%d][%d] = %d\n",
-               threadIdx.x, point_idx_in_warp, point_idx_in_warp, dim_idx, s_hypercube[point_idx_in_warp][dim_idx]);
-
-
+                       s_scaled_point[point_idx_in_warp], dim_idx);
 
         radix_sort_double(s_scaled_point[point_idx_in_warp], s_tri_order[point_idx_in_warp], n_dim, dim_idx,
                           point_idx_in_warp, s_unsigned_values[point_idx_in_warp], point_mask);
@@ -56,7 +44,7 @@ evaluate(const double *g_point_data, const double *g_axes_min, const double *g_a
 
         compute_interp_deriv(s_simplex_vertices_values[point_idx_in_warp], s_scaled_point[point_idx_in_warp],
                              s_tri_order[point_idx_in_warp], s_axes_step_inv,
-                             g_interp_values + point_idx_in_input_points,
+                             g_interp_values + first_point_idx_in_input_points,
                              g_points_deriv + first_dim_in_input_points,
                              n_dim, dim_idx, point_mask, point_idx_in_warp);
     }
@@ -65,12 +53,12 @@ evaluate(const double *g_point_data, const double *g_axes_min, const double *g_a
 __device__ void find_hypercube(const double s_point[32], const double s_axes_min[32], const double s_axes_step_inv[32],
                                int s_hypercube[32], double s_scaled_point[32], const int dim_idx)
 {
-    printf("thread %d points[%d] = %f\n", threadIdx.x, dim_idx, s_point[dim_idx]);
     double temp = (s_point[dim_idx] - s_axes_min[dim_idx]) * s_axes_step_inv[dim_idx];
     int int_temp = (int) temp;
     s_hypercube[dim_idx] = int_temp;
     s_scaled_point[dim_idx] = temp - int_temp;
 }
+
 
 __device__ void radix_sort_double(double s_scaled_point[32], int s_tri_order[32], const int n_dim, const int dim_idx,
                                   const int point_idx_in_warp, unsigned s_unsigned_values[32],
@@ -107,6 +95,7 @@ __device__ void compute_simplex_vertex_values(const int s_hypercube[32], const i
         if (vertex_i <= dim_idx)
             s_simplex_vertex[s_tri_order[dim_idx]]++;
         __syncwarp(point_mask);
+
         get_vertex_value(s_axes_mult, s_simplex_vertex, dim_idx, point_mask,
                          vertex_i, n_dim, g_point_data, s_vertex_values);
     }
@@ -120,11 +109,12 @@ __device__ void get_vertex_value(const int s_axes_mult[32], const int s_vertex[3
     for (int offset = 1; offset < n_dim; offset <<= 1)
     {
         int temp = __shfl_down_sync(point_mask, idx, offset);
-        if (threadIdx.x < n_dim - offset)
+        if (dim_idx < n_dim - offset)
             idx += temp;
     }
-    if (dim_idx == 0)
+    if (dim_idx == 0) {
         s_vertex_values[vertex_idx] = g_point_data[idx];
+    }
 }
 
 __device__ void

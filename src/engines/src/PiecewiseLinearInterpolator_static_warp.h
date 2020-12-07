@@ -8,7 +8,7 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
                          const int *g_axes_mult, double *g_points_deriv, double *g_interp_values, const int n_dim,
                          const int points_per_warp, const int n_input_point);
 
-__device__ void find_hypercube(const double s_point[32], const double s_axes_min[32], const double s_axes_step_inv[32],
+__device__ void find_hypercube(const double s_point[32], const double *s_axes_min, const double s_axes_step_inv[32],
                                int s_hypercube[32], double s_scaled_point[32], const int dim_idx);
 
 __device__ void radix_sort_double(double s_scaled_point[32], int s_tri_order[32], const int n_dim, const int dim_idx,
