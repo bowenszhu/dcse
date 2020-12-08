@@ -9,9 +9,9 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
     __shared__ double s_axes_step_inv[n_dim];
     __shared__ int s_axes_mult[n_dim];
     __shared__ int s_tri_order[32 / n_dim][n_dim];
-    int point_idx_in_warp = threadIdx.x / n_dim;
-    int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
-    int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
+    const int point_idx_in_warp = threadIdx.x / n_dim;
+    const int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
+    const int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
     if (point_idx_in_input_points < n_input_point)
     {
         if (threadIdx.x < n_dim)
@@ -21,10 +21,10 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
             s_axes_mult[threadIdx.x] = g_axes_mult[threadIdx.x + 1];
         }
         __syncwarp();
-        int dim_idx = threadIdx.x % n_dim;
-        int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
+        const int dim_idx = threadIdx.x % n_dim;
+        const int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
         const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
-        int first_dim_in_input_points = point_idx_in_input_points * n_dim;
+        const int first_dim_in_input_points = point_idx_in_input_points * n_dim;
 
         int hypercube_dim;
         double scaled_point_dim;
@@ -35,8 +35,8 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
         find_hypercube<n_dim>(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
                               hypercube_dim, scaled_point_dim, dim_idx);
 
-        radix_sort_double<n_dim>(scaled_point_dim, s_tri_order[point_idx_in_warp], dim_idx,
-                                 point_idx_in_warp, point_mask, tri_order_dim, ti_order_inv_dim);
+        radix_sort_double<n_dim>(scaled_point_dim, s_tri_order[point_idx_in_warp], dim_idx, point_mask,
+                                 tri_order_dim, ti_order_inv_dim, first_dim_idx_in_warp);
 
         compute_simplex_vertex_values<n_dim>(hypercube_dim, s_axes_mult, g_point_data, dim_idx, point_mask,
                                              ti_order_inv_dim, simplex_vertex_value, simplex_next_vertex_value,
@@ -62,12 +62,11 @@ __device__ void find_hypercube(const double s_point[n_dim], const double s_axes_
 
 template<int n_dim>
 __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[n_dim], const int dim_idx,
-                                  const int point_idx_in_warp, const unsigned point_mask, int &tri_order_dim,
-                                  int &ti_order_inv_dim)
+                                  const unsigned point_mask, int &tri_order_dim,
+                                  int &ti_order_inv_dim, const int first_dim_idx_in_warp)
 {
-    unsigned unsiged_value = scaled_point_dim * 0xffffffff;
+    const unsigned unsiged_value = scaled_point_dim * 0xffffffff;
     s_tri_order[dim_idx] = dim_idx;
-    int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
     const unsigned dim_mask = (0xffffffff >> 31 - dim_idx) << first_dim_idx_in_warp;
     for (int i = 0; i < 32; i++)
     {
@@ -117,7 +116,7 @@ template<int n_dim>
 __device__ void
 compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, const double s_axes_step_inv[n_dim],
                      double g_interp_values[32 / n_dim], double g_derivatives[n_dim], const int dim_idx,
-                     const unsigned point_mask, int point_idx_in_warp,
+                     const unsigned point_mask, const int point_idx_in_warp,
                      const double simplex_vertex_value, const double simplex_next_vertex_value)
 {
     double gap = simplex_next_vertex_value - simplex_vertex_value;

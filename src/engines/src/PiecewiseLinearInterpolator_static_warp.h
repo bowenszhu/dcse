@@ -16,8 +16,8 @@ __device__ void find_hypercube(const double s_point[n_dim], const double s_axes_
 
 template<int n_dim>
 __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[n_dim], const int dim_idx,
-                                  const int point_idx_in_warp, const unsigned point_mask, int &tri_order_dim,
-                                  int &ti_order_inv_dim);
+                                  const unsigned point_mask, int &tri_order_dim,
+                                  int &ti_order_inv_dim, const int first_dim_idx_in_warp);
 
 template<int n_dim>
 __device__ void compute_simplex_vertex_values(const int hypercube_dim,  const int s_axes_mult[n_dim],
@@ -30,7 +30,7 @@ template<int n_dim>
 __device__ void
 compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, const double s_axes_step_inv[n_dim],
                      double g_interp_values[32 / n_dim], double g_derivatives[n_dim], const int dim_idx,
-                     const unsigned point_mask, int point_idx_in_warp,
+                     const unsigned point_mask, const int point_idx_in_warp,
                      const double simplex_vertex_value, const double simplex_next_vertex_value);
 
 template <int n_dim>
