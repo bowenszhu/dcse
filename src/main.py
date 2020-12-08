@@ -83,14 +83,14 @@ def compare_execution_time():
     def func(*vars):
         return sum([var * var for var in vars])
 
-    n_supporting_pints = 3000000
-    n_interp_points = 10000
+    n_supporting_pints = 100000
+    n_interp_points = 10000000
     grid_min = [-0.1, 0, -0.2, 0.1, 0.3, -0.5, -0.4, 0, -0.1]
     grid_max = [0, 0.1, -0.1, 0.2, 0.4, -0.4, -0.3, 0.1, 0]
     for n_dim in range(2, 10):
-        grid_shape = [int(n_supporting_pints ** (1 / n_dim))] * n_dim
+        grid_shape = [int(n_interp_points ** (1 / n_dim))] * n_dim
         interp_grid = [np.linspace(grid_min[i], grid_max[i], grid_shape[i]) for i in range(n_dim)]
-        axes_points = [int(n_interp_points ** (1 / n_dim))] * n_dim
+        axes_points = [int(n_supporting_pints ** (1 / n_dim))] * n_dim
         measure_performance(n_dim, func, axes_points, grid_shape, interp_grid, time_per_point)
 
     plt.figure(figsize=(19, 12))
