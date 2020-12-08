@@ -1,14 +1,15 @@
 #include "PiecewiseLinearInterpolator_static_warp.h"
 
-__global__ void evaluate(const double *g_point_data, const double *g_axes_min, const double *g_axes_step_inv,
-                         const int *g_axes_mult, double *g_points_deriv, double *g_interp_values, const int n_dim,
-                         const int points_per_warp, const int n_input_point)
+template<int n_dim>
+__global__ void evaluate(const double g_point_data[], const double g_axes_min[n_dim],
+                         const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim], double g_points_deriv[],
+                         double g_interp_values[], const int points_per_warp, const int n_input_point)
 {
-    __shared__ double s_axes_min[16];
-    __shared__ double s_axes_step_inv[16];
-    __shared__ int s_axes_mult[16];
-    __shared__ int s_tri_order[16][16];
-    __shared__ double s_simplex_vertices_values[16][17];
+    __shared__ double s_axes_min[n_dim];
+    __shared__ double s_axes_step_inv[n_dim];
+    __shared__ int s_axes_mult[n_dim];
+    __shared__ int s_tri_order[32 / n_dim][n_dim];
+    __shared__ double s_simplex_vertices_values[32 / n_dim][n_dim + 1];
     int point_idx_in_warp = threadIdx.x / n_dim;
     int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
     int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
@@ -30,26 +31,28 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
         double scaled_point_dim;
         int tri_order_dim;
         int ti_order_inv_dim;
-        find_hypercube(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
-                       hypercube_dim, scaled_point_dim, dim_idx);
+        find_hypercube<n_dim>(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
+                              hypercube_dim, scaled_point_dim, dim_idx);
 
-        radix_sort_double(scaled_point_dim, s_tri_order[point_idx_in_warp], n_dim, dim_idx,
-                          point_idx_in_warp, point_mask, tri_order_dim, ti_order_inv_dim);
+        radix_sort_double<n_dim>(scaled_point_dim, s_tri_order[point_idx_in_warp], dim_idx,
+                                 point_idx_in_warp, point_mask, tri_order_dim, ti_order_inv_dim);
 
-        compute_simplex_vertex_values(hypercube_dim, s_axes_mult, g_point_data,
-                                      s_simplex_vertices_values[point_idx_in_warp], n_dim,
-                                      dim_idx, point_mask, ti_order_inv_dim);
+        compute_simplex_vertex_values<n_dim>(hypercube_dim, s_axes_mult, g_point_data,
+                                             s_simplex_vertices_values[point_idx_in_warp],
+                                             dim_idx, point_mask, ti_order_inv_dim);
 
-        compute_interp_deriv(s_simplex_vertices_values[point_idx_in_warp], scaled_point_dim,
-                             tri_order_dim, s_axes_step_inv,
-                             g_interp_values + first_point_idx_in_input_points,
-                             g_points_deriv + first_dim_in_input_points,
-                             n_dim, dim_idx, point_mask, point_idx_in_warp);
+        compute_interp_deriv<n_dim>(s_simplex_vertices_values[point_idx_in_warp], scaled_point_dim,
+                                    tri_order_dim, s_axes_step_inv,
+                                    g_interp_values + first_point_idx_in_input_points,
+                                    g_points_deriv + first_dim_in_input_points,
+                                    dim_idx, point_mask, point_idx_in_warp);
     }
 }
 
-__device__ void find_hypercube(const double s_point[32], const double s_axes_min[32], const double s_axes_step_inv[32],
-                               int &hypercube_dim, double &scaled_point_dim, const int dim_idx)
+template <int n_dim>
+__device__ void find_hypercube(const double s_point[n_dim], const double s_axes_min[n_dim],
+                               const double s_axes_step_inv[n_dim], int &hypercube_dim,
+                               double &scaled_point_dim, const int dim_idx)
 {
     double temp = (s_point[dim_idx] - s_axes_min[dim_idx]) * s_axes_step_inv[dim_idx];
     int int_temp = (int) temp;
@@ -57,8 +60,8 @@ __device__ void find_hypercube(const double s_point[32], const double s_axes_min
     scaled_point_dim = temp - int_temp;
 }
 
-
-__device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[32], const int n_dim, const int dim_idx,
+template<int n_dim>
+__device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[n_dim], const int dim_idx,
                                   const int point_idx_in_warp, const unsigned point_mask, int &tri_order_dim,
                                   int &ti_order_inv_dim)
 {
@@ -84,8 +87,9 @@ __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[32],
     ti_order_inv_dim = s_tri_order[dim_idx];
 }
 
-__device__ void compute_simplex_vertex_values(const int &hypercube_dim,  const int s_axes_mult[32],
-                                              const double *g_point_data, double s_vertex_values[33], const int n_dim,
+template<int n_dim>
+__device__ void compute_simplex_vertex_values(const int hypercube_dim,  const int s_axes_mult[n_dim],
+                                              const double g_point_data[], double s_vertex_values[n_dim],
                                               const int dim_idx, const unsigned point_mask, const int ti_order_inv_dim)
 {
     for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
@@ -104,11 +108,11 @@ __device__ void compute_simplex_vertex_values(const int &hypercube_dim,  const i
     }
 }
 
+template<int n_dim>
 __device__ void
-compute_interp_deriv(const double s_simplex_vertices_values[33], const double &scaled_point_dim,
-                     const int tri_order_dim, const double s_axes_step_inv[32], double g_interp_values[16],
-                     double g_derivatives[32], const int n_dim, const int dim_idx, const unsigned point_mask,
-                     int point_idx_in_warp)
+compute_interp_deriv(const double s_simplex_vertices_values[n_dim + 1], const double &scaled_point_dim,
+                     const int tri_order_dim, const double s_axes_step_inv[n_dim], double g_interp_values[32 / n_dim],
+                     double g_derivatives[n_dim], const int dim_idx, const unsigned point_mask, int point_idx_in_warp)
 {
     double gap = s_simplex_vertices_values[dim_idx + 1] - s_simplex_vertices_values[dim_idx];
     g_derivatives[tri_order_dim] = - gap * s_axes_step_inv[tri_order_dim];
@@ -123,3 +127,83 @@ compute_interp_deriv(const double s_simplex_vertices_values[33], const double &s
     if (dim_idx == 0)
         g_interp_values[point_idx_in_warp] = interp + s_simplex_vertices_values[0];
 }
+
+template<int n_dim>
+PiecewiseLinearInterpolator_static_warp<n_dim>::PiecewiseLinearInterpolator_static_warp(
+        operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
+        const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
+        : PiecewiseLinearInterpolatorBase_warp<n_dim>(axesPoints, axesMin, axesMax)
+{
+    int n_point = *(this->h_axes_mult);
+    cudaMalloc(&d_point_data, n_point * sizeof(double));
+    double h_point_data[n_point];
+
+    std::vector<double> state (n_dim);
+    for (int i = 0; i < n_point; i++) {
+        std::vector<double> operator_value (1);
+        this->get_point_state(i, state);
+        base_points_generator->evaluate(state, operator_value);
+        h_point_data[i] = operator_value[0];
+    }
+    cudaMemcpy(d_point_data, h_point_data, n_point * sizeof(double), cudaMemcpyHostToDevice);
+}
+
+template<int n_dim>
+PiecewiseLinearInterpolator_static_warp<n_dim>::~PiecewiseLinearInterpolator_static_warp()
+{
+    cudaFree(d_point_data);
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+        const std::vector<int> &block_idx, std::vector<double> &interp_values, std::vector<double> &derivatives)
+{
+    int numPoint = block_idx.size();
+
+    double* d_points_deriv;
+    size_t size_point_deriv = numPoint * n_dim * sizeof(double);
+    cudaMalloc(&d_points_deriv, size_point_deriv);
+    cudaMemcpy(d_points_deriv, points.data(), size_point_deriv, cudaMemcpyHostToHost);
+
+    double* d_interp_values;
+    size_t size_interp = numPoint * sizeof(double);
+    cudaMalloc(&d_interp_values, size_interp);
+
+    const int warpSize = 32;
+    int threadsPerBlock = warpSize - warpSize % n_dim;
+    int pointsPerWarp = warpSize / n_dim;
+    int numBlocks = (numPoint + pointsPerWarp - 1) / pointsPerWarp;
+
+    evaluate<n_dim><<<numBlocks, threadsPerBlock>>>(d_point_data, this->d_axes_min,
+                                                    this->d_axes_step_inv, this->d_axes_mult,
+                                                    d_points_deriv, d_interp_values, pointsPerWarp, numPoint);
+
+    cudaDeviceSynchronize();
+
+    cudaStream_t stream_interp;
+    cudaStreamCreate(&stream_interp);
+    cudaMemcpyAsync(interp_values.data(), d_interp_values, size_interp, cudaMemcpyHostToHost, stream_interp);
+
+    cudaStream_t stream_deriv;
+    cudaStreamCreate(&stream_deriv);
+    cudaMemcpyAsync(derivatives.data(), d_points_deriv, size_point_deriv, cudaMemcpyHostToHost, stream_deriv);
+
+    cudaFree(d_interp_values);
+    cudaFree(d_points_deriv);
+}
+
+template class PiecewiseLinearInterpolator_static_warp<2>;
+template class PiecewiseLinearInterpolator_static_warp<3>;
+template class PiecewiseLinearInterpolator_static_warp<4>;
+template class PiecewiseLinearInterpolator_static_warp<5>;
+template class PiecewiseLinearInterpolator_static_warp<6>;
+template class PiecewiseLinearInterpolator_static_warp<7>;
+template class PiecewiseLinearInterpolator_static_warp<8>;
+template class PiecewiseLinearInterpolator_static_warp<9>;
+template class PiecewiseLinearInterpolator_static_warp<10>;
+template class PiecewiseLinearInterpolator_static_warp<11>;
+template class PiecewiseLinearInterpolator_static_warp<12>;
+template class PiecewiseLinearInterpolator_static_warp<13>;
+template class PiecewiseLinearInterpolator_static_warp<14>;
+template class PiecewiseLinearInterpolator_static_warp<15>;
+template class PiecewiseLinearInterpolator_static_warp<16>;
