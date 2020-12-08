@@ -4,15 +4,15 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
                          const int *g_axes_mult, double *g_points_deriv, double *g_interp_values, const int n_dim,
                          const int points_per_warp, const int n_input_point)
 {
-    __shared__ double s_axes_min[32];
-    __shared__ double s_axes_step_inv[32];
-    __shared__ int s_axes_mult[32];
-    __shared__ int s_hypercube[16][32];
-    __shared__ double s_scaled_point[16][32];
-    __shared__ int s_tri_order[16][32];
-    __shared__ unsigned s_unsigned_values[16][32];
-    __shared__ int s_simplex_vertex[16][32];
-    __shared__ double s_simplex_vertices_values[16][33];
+    __shared__ double s_axes_min[16];
+    __shared__ double s_axes_step_inv[16];
+    __shared__ int s_axes_mult[16];
+    __shared__ int s_hypercube[16][16];
+    __shared__ double s_scaled_point[16][16];
+    __shared__ int s_tri_order[16][16];
+    __shared__ unsigned s_unsigned_values[16][16];
+    __shared__ int s_simplex_vertex[16][16];
+    __shared__ double s_simplex_vertices_values[16][17];
     int point_idx_in_warp = threadIdx.x / n_dim;
     int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
     int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
