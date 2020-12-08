@@ -12,20 +12,15 @@ __device__ void find_hypercube(const double s_point[32], const double *s_axes_mi
                                int &hypercube_dim, double &scaled_point_dim, const int dim_idx);
 
 __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[32], const int n_dim, const int dim_idx,
-                                  const int point_idx_in_warp, const unsigned point_mask);
+                                  const int point_idx_in_warp, const unsigned point_mask, int &tri_order_dim,
+                                  int &ti_order_inv_dim);
 
-__device__ void compute_simplex_vertex_values(const int &hypercube_dim, const int s_tri_order[32],
-                                              const int s_axes_mult[32], const double *g_point_data,
-                                              double s_vertex_values[33], const int n_dim,
-                                              int s_simplex_vertex[32], const int dim_idx,
-                                              const unsigned point_mask);
-
-__device__ void get_vertex_value(const int s_axes_mult[32], const int s_vertex[32], const int dim_idx,
-                                 const unsigned point_mask, const int vertex_idx, const int n_dim,
-                                 const double *g_point_data, double s_vertex_values[33]);
+__device__ void compute_simplex_vertex_values(const int &hypercube_dim,  const int s_axes_mult[32],
+                                              const double *g_point_data, double s_vertex_values[33], const int n_dim,
+                                              const int dim_idx, const unsigned point_mask, const int ti_order_inv_dim);
 
 __device__ void compute_interp_deriv(const double s_simplex_vertices_values[33], const double &scaled_point_dim,
-                                     const int s_tri_order[32], const double s_axes_step_inv[32],
+                                     const int tri_order_dim, const double s_axes_step_inv[32],
                                      double g_interp_values[16], double g_derivatives[32], const int n_dim,
                                      const int dim_idx, const unsigned point_mask, int point_idx_in_warp);
 

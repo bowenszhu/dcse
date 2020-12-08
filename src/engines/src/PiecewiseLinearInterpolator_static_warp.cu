@@ -8,7 +8,6 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
     __shared__ double s_axes_step_inv[16];
     __shared__ int s_axes_mult[16];
     __shared__ int s_tri_order[16][16];
-    __shared__ int s_simplex_vertex[16][16];
     __shared__ double s_simplex_vertices_values[16][17];
     int point_idx_in_warp = threadIdx.x / n_dim;
     int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
@@ -29,18 +28,20 @@ __global__ void evaluate(const double *g_point_data, const double *g_axes_min, c
 
         int hypercube_dim;
         double scaled_point_dim;
+        int tri_order_dim;
+        int ti_order_inv_dim;
         find_hypercube(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
                        hypercube_dim, scaled_point_dim, dim_idx);
 
         radix_sort_double(scaled_point_dim, s_tri_order[point_idx_in_warp], n_dim, dim_idx,
-                          point_idx_in_warp, point_mask);
+                          point_idx_in_warp, point_mask, tri_order_dim, ti_order_inv_dim);
 
-        compute_simplex_vertex_values(hypercube_dim, s_tri_order[point_idx_in_warp], s_axes_mult,
-                                      g_point_data, s_simplex_vertices_values[point_idx_in_warp], n_dim,
-                                      s_simplex_vertex[point_idx_in_warp], dim_idx, point_mask);
+        compute_simplex_vertex_values(hypercube_dim, s_axes_mult, g_point_data,
+                                      s_simplex_vertices_values[point_idx_in_warp], n_dim,
+                                      dim_idx, point_mask, ti_order_inv_dim);
 
         compute_interp_deriv(s_simplex_vertices_values[point_idx_in_warp], scaled_point_dim,
-                             s_tri_order[point_idx_in_warp], s_axes_step_inv,
+                             tri_order_dim, s_axes_step_inv,
                              g_interp_values + first_point_idx_in_input_points,
                              g_points_deriv + first_dim_in_input_points,
                              n_dim, dim_idx, point_mask, point_idx_in_warp);
@@ -58,7 +59,8 @@ __device__ void find_hypercube(const double s_point[32], const double s_axes_min
 
 
 __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[32], const int n_dim, const int dim_idx,
-                                  const int point_idx_in_warp, const unsigned point_mask)
+                                  const int point_idx_in_warp, const unsigned point_mask, int &tri_order_dim,
+                                  int &ti_order_inv_dim)
 {
     unsigned unsiged_value = scaled_point_dim * 0xffffffff;
     s_tri_order[dim_idx] = dim_idx;
@@ -74,54 +76,42 @@ __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[32],
         int position = bit ? __popc(zeros) + __popc(ones & dim_mask) - 1 : __popc(zeros & dim_mask) - 1;
         s_tri_order[position] = order;
     }
+    tri_order_dim = s_tri_order[dim_idx];
     scaled_point_dim = __shfl_sync(0xffffffff, scaled_point_dim,
-                                   first_dim_idx_in_warp + s_tri_order[dim_idx]);
+                                   first_dim_idx_in_warp + tri_order_dim);
+    s_tri_order[tri_order_dim] = dim_idx;  /// compute inverse mapping of order
+    __syncwarp(point_mask);
+    ti_order_inv_dim = s_tri_order[dim_idx];
 }
 
-__device__ void compute_simplex_vertex_values(const int &hypercube_dim, const int s_tri_order[32],
-                                              const int s_axes_mult[32], const double *g_point_data,
-                                              double s_vertex_values[33], const int n_dim,
-                                              int s_simplex_vertex[32], const int dim_idx,
-                                              const unsigned point_mask)
+__device__ void compute_simplex_vertex_values(const int &hypercube_dim,  const int s_axes_mult[32],
+                                              const double *g_point_data, double s_vertex_values[33], const int n_dim,
+                                              const int dim_idx, const unsigned point_mask, const int ti_order_inv_dim)
 {
     for (int vertex_i = 0; vertex_i <= n_dim; vertex_i++)
     {
-        s_simplex_vertex[dim_idx] = hypercube_dim;
-        __syncwarp(point_mask);
-        if (vertex_i <= dim_idx)
-            s_simplex_vertex[s_tri_order[dim_idx]]++;
-        __syncwarp(point_mask);
-
-        get_vertex_value(s_axes_mult, s_simplex_vertex, dim_idx, point_mask,
-                         vertex_i, n_dim, g_point_data, s_vertex_values);
-    }
-}
-
-__device__ void get_vertex_value(const int s_axes_mult[32], const int s_vertex[32], const int dim_idx,
-                                 const unsigned point_mask, const int vertex_idx, const int n_dim,
-                                 const double *g_point_data, double s_vertex_values[33])
-{
-    int idx = s_vertex[dim_idx] * s_axes_mult[dim_idx];
-    for (int offset = 1; offset < n_dim; offset <<= 1)
-    {
-        int temp = __shfl_down_sync(point_mask, idx, offset);
-        if (dim_idx < n_dim - offset)
-            idx += temp;
-    }
-    if (dim_idx == 0) {
-        s_vertex_values[vertex_idx] = g_point_data[idx];
+        int simplex_vertex_dim = vertex_i <= ti_order_inv_dim ? hypercube_dim + 1 : hypercube_dim;
+        int idx = simplex_vertex_dim * s_axes_mult[dim_idx];
+        for (int offset = 1; offset < n_dim; offset <<= 1)
+        {
+            int temp = __shfl_down_sync(point_mask, idx, offset);
+            if (dim_idx < n_dim - offset)
+                idx += temp;
+        }
+        if (dim_idx == 0) {
+            s_vertex_values[vertex_i] = g_point_data[idx];
+        }
     }
 }
 
 __device__ void
 compute_interp_deriv(const double s_simplex_vertices_values[33], const double &scaled_point_dim,
-                     const int s_tri_order[32], const double s_axes_step_inv[32], double g_interp_values[16],
+                     const int tri_order_dim, const double s_axes_step_inv[32], double g_interp_values[16],
                      double g_derivatives[32], const int n_dim, const int dim_idx, const unsigned point_mask,
                      int point_idx_in_warp)
 {
     double gap = s_simplex_vertices_values[dim_idx + 1] - s_simplex_vertices_values[dim_idx];
-    int position = s_tri_order[dim_idx];
-    g_derivatives[position] = - gap * s_axes_step_inv[position];
+    g_derivatives[tri_order_dim] = - gap * s_axes_step_inv[tri_order_dim];
 
     double interp = (1 - scaled_point_dim) * gap;
     for (int offset = 1; offset < n_dim; offset <<= 1)
