@@ -174,7 +174,7 @@ void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(c
     double* d_points_deriv;
     size_t size_point_deriv = numPoint * n_dim * sizeof(double);
     cudaMalloc(&d_points_deriv, size_point_deriv);
-    cudaMemcpy(d_points_deriv, points.data(), size_point_deriv, cudaMemcpyHostToHost);
+    cudaMemcpy(d_points_deriv, points.data(), size_point_deriv, cudaMemcpyHostToDevice);
 
     double* d_interp_values;
     size_t size_interp = numPoint * sizeof(double);
