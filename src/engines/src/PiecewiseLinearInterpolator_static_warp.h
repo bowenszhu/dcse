@@ -6,7 +6,7 @@
 
 template<int n_dim>
 __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_dim],
-                         const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim], double g_points_deriv[],
+                         const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim + 1], double g_points_deriv[],
                          double g_interp_values[], const int points_per_warp, const int points_per_block,
                          const int n_input_point, const int activeThreadsPerWarp);
 
