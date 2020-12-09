@@ -3,16 +3,22 @@
 template<int n_dim>
 __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_dim],
                          const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim], double g_points_deriv[],
-                         double g_interp_values[], const int points_per_warp, const int n_input_point)
+                         double g_interp_values[], const int points_per_warp, const int points_per_block,
+                         const int n_input_point, const int activeThreadsPerWarp)
 {
     __shared__ double s_axes_min[n_dim];
     __shared__ double s_axes_step_inv[n_dim];
     __shared__ int s_axes_mult[n_dim];
     __shared__ int s_tri_order[32 / n_dim][n_dim];
-    const int point_idx_in_warp = threadIdx.x / n_dim;
-    const int first_point_idx_in_input_points = blockIdx.x * points_per_warp;
-    const int point_idx_in_input_points = first_point_idx_in_input_points + point_idx_in_warp;
-    if (point_idx_in_input_points < n_input_point)
+
+    const int warp_idx = threadIdx.x >> 5; /// warp size 32
+    const int lane_id = threadIdx.x & 0x1f;
+    const int point_idx_in_warp = lane_id / n_dim;
+    const int per_warp_first_point_idx_in_block = warp_idx * points_per_warp;
+    const int point_idx_in_block = per_warp_first_point_idx_in_block + point_idx_in_warp;
+    const int point_idx_in_input_points = blockIdx.x * points_per_block + point_idx_in_block;
+
+    if (lane_id < activeThreadsPerWarp && point_idx_in_input_points < n_input_point)
     {
         if (threadIdx.x < n_dim)
         {
@@ -20,11 +26,13 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
             s_axes_step_inv[threadIdx.x] = g_axes_step_inv[threadIdx.x];
             s_axes_mult[threadIdx.x] = g_axes_mult[threadIdx.x + 1];
         }
-        __syncwarp();
-        const int dim_idx = threadIdx.x % n_dim;
+        __syncthreads();
+        const int dim_idx = lane_id % n_dim;
         const int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
         const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
         const int first_dim_in_input_points = point_idx_in_input_points * n_dim;
+        const int per_warp_first_point_idx_in_input_point =
+                blockIdx.x * points_per_block + per_warp_first_point_idx_in_block;
 
         int hypercube_dim;
         double scaled_point_dim;
@@ -43,7 +51,7 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
                                              first_dim_idx_in_warp);
 
         compute_interp_deriv<n_dim>(scaled_point_dim, tri_order_dim, s_axes_step_inv,
-                                    g_interp_values + first_point_idx_in_input_points,
+                                    g_interp_values + per_warp_first_point_idx_in_input_point,
                                     g_points_deriv + first_dim_in_input_points, dim_idx, point_mask,
                                     point_idx_in_warp, simplex_vertex_value, simplex_next_vertex_value);
     }
@@ -81,7 +89,7 @@ __device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[n_di
     tri_order_dim = s_tri_order[dim_idx];
     scaled_point_dim = __shfl_sync(0xffffffff, scaled_point_dim,
                                    first_dim_idx_in_warp + tri_order_dim);
-    s_tri_order[tri_order_dim] = dim_idx;  /// compute inverse mapping of order
+    s_tri_order[tri_order_dim] = dim_idx;  /// compute inverse mapping of standard triangulation order
     __syncwarp(point_mask);
     ti_order_inv_dim = s_tri_order[dim_idx];
 }
@@ -163,7 +171,7 @@ template<int n_dim>
 void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
         const std::vector<int> &block_idx, std::vector<double> &interp_values, std::vector<double> &derivatives)
 {
-    int numPoint = block_idx.size();
+    const int numPoint = block_idx.size();
 
     double* d_points_deriv;
     size_t size_point_deriv = numPoint * n_dim * sizeof(double);
@@ -174,14 +182,19 @@ void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(c
     size_t size_interp = numPoint * sizeof(double);
     cudaMalloc(&d_interp_values, size_interp);
 
+    const int maxThreadsPerBlock = 1024;
     const int warpSize = 32;
-    int threadsPerBlock = warpSize - warpSize % n_dim;
-    int pointsPerWarp = warpSize / n_dim;
-    int numBlocks = (numPoint + pointsPerWarp - 1) / pointsPerWarp;
+    const int maxWarpsPerBlock = maxThreadsPerBlock / warpSize;
+    const int pointsPerWarp = warpSize / n_dim;
+    const int activeThreadsPerWarp = pointsPerWarp * n_dim;
+    const int pointsPerBlock = pointsPerWarp * maxWarpsPerBlock;
+    const int threadsPerBlock = maxThreadsPerBlock;
+    const int numBlocks = (numPoint + pointsPerBlock - 1) / pointsPerBlock;
 
     evaluate<n_dim><<<numBlocks, threadsPerBlock>>>(d_point_data, this->d_axes_min,
-                                                    this->d_axes_step_inv, this->d_axes_mult,
-                                                    d_points_deriv, d_interp_values, pointsPerWarp, numPoint);
+                                                    this->d_axes_step_inv, this->d_axes_mult, d_points_deriv,
+                                                    d_interp_values, pointsPerWarp, pointsPerBlock, numPoint,
+                                                    activeThreadsPerWarp);
 
     cudaDeviceSynchronize();
 
