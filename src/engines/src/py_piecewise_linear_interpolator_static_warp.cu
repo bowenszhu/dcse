@@ -21,7 +21,9 @@ struct piecewise_linear_interpolator_static_warp_exposer
                             std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
                     .def("evaluate_with_derivatives",
                          &PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives,
-                         "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a);
+                         "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a)
+                    .def("init_timer_node", &PiecewiseLinearInterpolator_static_warp<n_dim>::init_timer_node,
+                         "Initialize timer", "timer_node"_a);
         }
         catch (...) {
             // exceptions are expected - due to template-based exposure some n_dims-n_ops pairs can overlap

@@ -189,12 +189,24 @@ void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(c
     const int threadsPerBlock = maxThreadsPerBlock;
     const int numBlocks = (numPoint + pointsPerBlock - 1) / pointsPerBlock;
 
+
+    if (this->timer)
+    {
+        this->timer->start();
+        this->timer->node["gpu interpolation"].start();
+    }
+
     evaluate<n_dim><<<numBlocks, threadsPerBlock>>>(d_point_data, this->d_axes_min,
                                                     this->d_axes_step_inv, this->d_axes_mult, d_points_deriv,
                                                     d_interp_values, pointsPerWarp, pointsPerBlock, numPoint,
                                                     activeThreadsPerWarp);
-
     cudaDeviceSynchronize();
+
+    if (this->timer)
+    {
+        this->timer->node["gpu interpolation"].stop();
+        this->timer->stop();
+    }
 
     cudaStream_t stream_interp;
     cudaStreamCreate(&stream_interp);

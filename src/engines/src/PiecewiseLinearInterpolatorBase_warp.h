@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include "timer_node.h"
 
 __global__ void compute_step(const int *axes_points, const double *axes_min, const double *axes_max,
                              double *axes_step, double *axes_step_inv);
@@ -18,6 +19,8 @@ public:
                                          const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax);
 
     virtual ~PiecewiseLinearInterpolatorBase_warp();
+
+    void init_timer_node(timer_node *timer_);
 
 protected:
     const double* h_axes_min;  ///< minimum at each axis
@@ -35,6 +38,8 @@ protected:
     double* d_axes_step;
     double* d_axes_step_inv; ///< inverse of step (to avoid division)
 
+    timer_node *timer;
+
     void get_point_state(int point_i, std::vector<double> &state);
 };
 
@@ -43,6 +48,8 @@ PiecewiseLinearInterpolatorBase_warp<n_dim>::PiecewiseLinearInterpolatorBase_war
         const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
         const std::array<double, n_dim> &axesMax) : h_axes_min(axesMin.data())
 {
+    timer = 0;
+
     size_t size_int = n_dim * sizeof(int);
     size_t size_double = n_dim * sizeof(double);
     size_t size_axes_mult = size_int + sizeof(int);
@@ -96,5 +103,10 @@ void PiecewiseLinearInterpolatorBase_warp<n_dim>::get_point_state(int point_idx,
     }
 }
 
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase_warp<n_dim>::init_timer_node(timer_node *timer_)
+{
+    timer = timer_;
+}
 
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_CUDA_CU

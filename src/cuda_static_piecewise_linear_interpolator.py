@@ -7,7 +7,7 @@ import importlib
 # try to import C++ python extension
 # (engines.so in Linux and engines.pyd in Windows)
 try:
-    from src.engines.engines import operator_set_evaluator_iface, value_vector, index_vector
+    from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
     engines_available = 1
 except ImportError:
     engines_available = 0
@@ -30,6 +30,10 @@ class CudaStaticPiecewiseLinearInterpolator:
             self.evaluator = custom_evaluator(func)
             self.n_dim = len(axes_points)
 
+            # create darts timer to measure time
+            self.timer = timer_node()
+            self.timer.node['init'] = timer_node()
+
             # Use importlib mechanism to import interpolator class:
             m = importlib.import_module('src.engines.engines')
 
@@ -40,11 +44,14 @@ class CudaStaticPiecewiseLinearInterpolator:
             # create the instance of interpolator
             # point calculation happens here, so measure it
 
-            initialization_start_time = time.process_time()
+            # initialization_start_time = time.process_time()
+            self.timer.node['init'].start()
             self.interpolator = itor_name(self.evaluator, index_vector(axes_points), value_vector(axes_min),
                                           value_vector(axes_max))
-            self.initialization_time = time.process_time() - initialization_start_time
-            self.interpolation_time = 0
+            self.timer.node['init'].stop()
+            # self.initialization_time = time.process_time() - initialization_start_time
+            # self.interpolation_time = 0
+            self.interpolator.init_timer_node(self.timer)
         else:
             print("Engines are not available")
 
@@ -75,9 +82,9 @@ class CudaStaticPiecewiseLinearInterpolator:
             derivatives = value_vector([0] * len(states))
 
             # interpolate and shape the result
-            interpolation_start_time = time.process_time()
+            # interpolation_start_time = time.process_time()
             self.interpolator.evaluate_with_derivatives(points, block_idx, values, derivatives)
-            self.interpolation_time += time.process_time() - interpolation_start_time
+            # self.interpolation_time += time.process_time() - interpolation_start_time
 
             result = np.array(values, copy=False)
             return result.reshape(result_shape)
@@ -86,11 +93,15 @@ class CudaStaticPiecewiseLinearInterpolator:
 
     def get_init_time(self):
         if engines_available:
-            return self.initialization_time
+            return self.timer.node['init'].get_timer()
+        # if engines_available:
+        #     return self.initialization_time
 
     def get_interpolation_time(self):
         if engines_available:
-            return self.interpolation_time
+            return self.timer.node['gpu interpolation'].get_timer()
+        # if engines_available:
+        #     return self.interpolation_time
 
     def __str__(self):
         return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'CUDA', 'static', 'GPU')
