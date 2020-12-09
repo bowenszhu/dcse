@@ -31,8 +31,6 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
         const int first_dim_idx_in_warp = point_idx_in_warp * n_dim;
         const unsigned point_mask = (0xffffffff >> 32 - n_dim) << first_dim_idx_in_warp;
         const int first_dim_in_input_points = point_idx_in_input_points * n_dim;
-        const int per_warp_first_point_idx_in_input_point =
-                blockIdx.x * points_per_block + per_warp_first_point_idx_in_block;
 
         int hypercube_dim;
         double scaled_point_dim;
@@ -51,9 +49,9 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
                                              first_dim_idx_in_warp);
 
         compute_interp_deriv<n_dim>(scaled_point_dim, tri_order_dim, s_axes_step_inv,
-                                    g_interp_values + per_warp_first_point_idx_in_input_point,
+                                    *(g_interp_values + point_idx_in_input_points),
                                     g_points_deriv + first_dim_in_input_points, dim_idx, point_mask,
-                                    point_idx_in_warp, simplex_vertex_value, simplex_next_vertex_value);
+                                    simplex_vertex_value, simplex_next_vertex_value);
     }
 }
 
@@ -123,9 +121,9 @@ __device__ void compute_simplex_vertex_values(const int hypercube_dim,  const in
 template<int n_dim>
 __device__ void
 compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, const double s_axes_step_inv[n_dim],
-                     double g_interp_values[32 / n_dim], double g_derivatives[n_dim], const int dim_idx,
-                     const unsigned point_mask, const int point_idx_in_warp,
-                     const double simplex_vertex_value, const double simplex_next_vertex_value)
+                     double &g_interp_values_point, double g_derivatives[n_dim], const int dim_idx,
+                     const unsigned point_mask,  const double simplex_vertex_value,
+                     const double simplex_next_vertex_value)
 {
     double gap = simplex_next_vertex_value - simplex_vertex_value;
     g_derivatives[tri_order_dim] = - gap * s_axes_step_inv[tri_order_dim];
@@ -138,7 +136,7 @@ compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, co
             interp += temp;
     }
     if (dim_idx == 0)
-        g_interp_values[point_idx_in_warp] = interp + simplex_vertex_value;
+        g_interp_values_point = interp + simplex_vertex_value;
 }
 
 template<int n_dim>

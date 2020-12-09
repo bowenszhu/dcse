@@ -30,9 +30,9 @@ __device__ void compute_simplex_vertex_values(const int hypercube_dim,  const in
 template<int n_dim>
 __device__ void
 compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, const double s_axes_step_inv[n_dim],
-                     double g_interp_values[32 / n_dim], double g_derivatives[n_dim], const int dim_idx,
-                     const unsigned point_mask, const int point_idx_in_warp,
-                     const double simplex_vertex_value, const double simplex_next_vertex_value);
+                     double &g_interp_values_point, double g_derivatives[n_dim], const int dim_idx,
+                     const unsigned point_mask, const double simplex_vertex_value,
+                     const double simplex_next_vertex_value);
 
 template <int n_dim>
 class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_warp<n_dim>
