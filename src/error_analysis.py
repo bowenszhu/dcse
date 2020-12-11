@@ -129,7 +129,7 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     # Plot error grid for Delaunay
     if plot2d:
         if n_dim == 2:
-            test = np.abs(exact_derivs[0] - darts_derivs[0])
+            test = piecewise_derivs[0]
             fig = go.Figure(data=[go.Surface(z=test, x=np.linspace(axis_min, axis_max, n_checking_points),
                                              y=np.linspace(axis_min, axis_max, n_checking_points))])
             fig.show()
@@ -139,12 +139,12 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
             plt.title("Error heatmap")
             plt.xlabel('x')
             plt.ylabel('y')
-            plt.show()
+            # plt.show()
 
     return val_error_arr, deriv_error_arr
 
 
-def plot_interp_error(supp_grids):
+def plot_interp_error(n_dim, supp_grids):
     """
     Plots log-log plots of interpolator errors vs grid sizes.
 
@@ -164,7 +164,7 @@ def plot_interp_error(supp_grids):
     darts_mean_dererr = []
 
     for i in range(len(supp_grids)):
-        val_err, deriv_err = find_interp_errors(2, supp_grids[i], supp_grids[i] * 20, -1.0, 1.0, True)
+        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 20, -1.0, 1.0, True)
         del_mean_valerr.append(np.mean(val_err[0]))
         del_mean_dererr.append(np.mean(deriv_err[0]))
         piece_mean_valerr.append(np.mean(val_err[1]))
@@ -172,24 +172,25 @@ def plot_interp_error(supp_grids):
         darts_mean_valerr.append(np.mean(val_err[2]))
         darts_mean_dererr.append(np.mean(deriv_err[2]))
 
-    plt.figure(1)
-    plt.loglog(supp_grids, del_mean_valerr, label="Delaunay")
-    plt.loglog(supp_grids, piece_mean_valerr, label="Piecewise Linear")
-    plt.loglog(supp_grids, darts_mean_valerr, label="Darts multilinear")
-    plt.legend()
-    plt.title("Function error")
-    plt.xlabel("# of supporting points")
-    plt.ylabel("Mean error")
+    if len(supp_grids) > 1:
+        plt.figure(1)
+        plt.loglog(supp_grids, del_mean_valerr, label="Delaunay")
+        plt.loglog(supp_grids, piece_mean_valerr, label="Piecewise Linear")
+        plt.loglog(supp_grids, darts_mean_valerr, label="Darts multilinear")
+        plt.legend()
+        plt.title("Function error")
+        plt.xlabel("# of supporting points")
+        plt.ylabel("Mean error")
 
-    plt.figure(2)
-    plt.loglog(supp_grids, del_mean_dererr, label="Delaunay")
-    plt.loglog(supp_grids, piece_mean_dererr, label="Piecewise Linear")
-    plt.loglog(supp_grids, darts_mean_dererr, label="Darts multilinear")
-    plt.legend()
-    plt.title("Derivative error")
-    plt.xlabel("# of supporting points")
-    plt.ylabel("Mean error")
+        plt.figure(2)
+        plt.loglog(supp_grids, del_mean_dererr, label="Delaunay")
+        plt.loglog(supp_grids, piece_mean_dererr, label="Piecewise Linear")
+        plt.loglog(supp_grids, darts_mean_dererr, label="Darts multilinear")
+        plt.legend()
+        plt.title("Derivative error")
+        plt.xlabel("# of supporting points")
+        plt.ylabel("Mean error")
 
-    plt.suptitle("Interpolator errors for n_dim=2")
-    plt.tight_layout()
-    # plt.show()
+        plt.suptitle("Interpolator errors for n_dim=2")
+        plt.tight_layout()
+        plt.show()
