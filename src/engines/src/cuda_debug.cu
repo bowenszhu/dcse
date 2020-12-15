@@ -51,7 +51,7 @@ int main()
     std::vector<double> interp (n_point);
     std::vector<double> derivatives (n_point * n_dim);
 
-    PiecewiseLinearInterpolator_static_thread<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
+    PiecewiseLinearInterpolator_static_warp<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
     interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
     printf("\n*********************** CUDA C Interpolator\n");

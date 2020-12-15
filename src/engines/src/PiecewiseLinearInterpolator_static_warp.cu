@@ -9,7 +9,7 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
     __shared__ double s_axes_min[n_dim];
     __shared__ double s_axes_step_inv[n_dim];
     __shared__ int s_axes_mult[n_dim];
-    __shared__ int s_tri_order[32 / n_dim][n_dim];
+    __shared__ volatile int s_tri_order[32 / n_dim * 32][n_dim];
 
     const int warp_idx = threadIdx.x >> 5; /// warp size 32
     const int lane_id = threadIdx.x & 0x1f;
@@ -41,7 +41,7 @@ __global__ void evaluate(const double g_point_data[], const double g_axes_min[n_
         find_hypercube<n_dim>(g_points_deriv + first_dim_in_input_points, s_axes_min, s_axes_step_inv,
                               hypercube_dim, scaled_point_dim, dim_idx);
 
-        radix_sort_double<n_dim>(scaled_point_dim, s_tri_order[point_idx_in_warp], dim_idx, point_mask,
+        radix_sort_double<n_dim>(scaled_point_dim, s_tri_order[point_idx_in_block], dim_idx, point_mask,
                                  tri_order_dim, ti_order_inv_dim, first_dim_idx_in_warp);
 
         compute_simplex_vertex_values<n_dim>(hypercube_dim, s_axes_mult, g_point_data, dim_idx, point_mask,
@@ -67,7 +67,7 @@ __device__ void find_hypercube(const double s_point[n_dim], const double s_axes_
 }
 
 template<int n_dim>
-__device__ void radix_sort_double(double &scaled_point_dim, int s_tri_order[n_dim], const int dim_idx,
+__device__ void radix_sort_double(double &scaled_point_dim, volatile int s_tri_order[n_dim], const int dim_idx,
                                   const unsigned point_mask, int &tri_order_dim,
                                   int &ti_order_inv_dim, const int first_dim_idx_in_warp)
 {
