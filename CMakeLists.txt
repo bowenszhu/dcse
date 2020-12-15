@@ -17,7 +17,9 @@ add_executable(PLI_warp
         src/engines/src/PiecewiseLinearInterpolatorBase_warp.h
         src/engines/src/PiecewiseLinearInterpolatorBase_warp.cu
         src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_warp.h)
+        src/engines/src/PiecewiseLinearInterpolator_static_warp.h
+        src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_thread.h)
 
 set_target_properties(PLI_warp
         PROPERTIES
@@ -124,7 +126,11 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h
         src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
         src/engines/src/PiecewiseLinearInterpolatorBase_warp.h
-        src/engines/src/PiecewiseLinearInterpolator_static_warp.cu src/engines/src/PiecewiseLinearInterpolator_static_warp.h)
+        src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_warp.h
+        src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
+        src/engines/src/PiecewiseLinearInterpolator_static_thread.h
+        src/engines/src/py_piecewise_linear_interpolator_static_thread.cu)
 
 set_target_properties(Darts
         PROPERTIES

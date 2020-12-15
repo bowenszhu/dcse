@@ -31,6 +31,7 @@ void pybind_operator_set_interpolator_static(py::module &);
 void pybind_piecewise_linear_interpolator_static(py::module &);
 void pybind_piecewise_linear_interpolator_adaptive(py::module &);
 void pybind_piecewise_linear_interpolator_static_warp(py::module &);
+void pybind_piecewise_linear_interpolator_static_thread(py::module &);
 class operator_set_gradient_evaluator_iface;
 
 PYBIND11_MODULE(engines, m) {
@@ -69,5 +70,6 @@ PYBIND11_MODULE(engines, m) {
   #ifdef WITH_GPU
   pybind_operator_set_interpolator_gpu(m);
   pybind_piecewise_linear_interpolator_static_warp(m);
+  pybind_piecewise_linear_interpolator_static_thread(m);
   #endif
 }

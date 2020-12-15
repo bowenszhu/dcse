@@ -109,12 +109,14 @@ __device__ void compute_simplex_vertex_values(const int hypercube_dim,  const in
             if (dim_idx < n_dim - offset)
                 idx += temp;
         }
-        idx = __shfl_sync(0xffffffff, idx, first_dim_idx_in_warp);
-        double vertex_values = g_point_data[idx];
+        double vertex_value;
+        if (dim_idx == 0)
+            vertex_value = g_point_data[idx];
+        vertex_value = __shfl_sync(point_mask, vertex_value, first_dim_idx_in_warp);
         if (vertex_i == dim_idx)
-            simplex_vertex_value = vertex_values;
+            simplex_vertex_value = vertex_value;
         if (vertex_i == dim_idx + 1)
-            simplex_next_vertex_value = vertex_values;
+            simplex_next_vertex_value = vertex_value;
     }
 }
 
@@ -210,11 +212,11 @@ void PiecewiseLinearInterpolator_static_warp<n_dim>::evaluate_with_derivatives(c
 
     cudaStream_t stream_interp;
     cudaStreamCreate(&stream_interp);
-    cudaMemcpyAsync(interp_values.data(), d_interp_values, size_interp, cudaMemcpyHostToHost, stream_interp);
+    cudaMemcpyAsync(interp_values.data(), d_interp_values, size_interp, cudaMemcpyDeviceToHost, stream_interp);
 
     cudaStream_t stream_deriv;
     cudaStreamCreate(&stream_deriv);
-    cudaMemcpyAsync(derivatives.data(), d_points_deriv, size_point_deriv, cudaMemcpyHostToHost, stream_deriv);
+    cudaMemcpyAsync(derivatives.data(), d_points_deriv, size_point_deriv, cudaMemcpyDeviceToHost, stream_deriv);
 
     cudaFree(d_interp_values);
     cudaFree(d_points_deriv);

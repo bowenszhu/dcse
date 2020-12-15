@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 from src.cpp_adaptive_piecewise_linear_interpolator import CppAdaptivePiecewiseLinearInterpolator
 from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
-from src.cuda_static_piecewise_linear_interpolator import CudaStaticPiecewiseLinearInterpolator
+from src.cuda_static_piecewise_linear_interpolator import CudaWarpStaticPiecewiseLinearInterpolator
+from src.cuda_thread_static_piecewise_linear_interpolator import CudaThreadStaticPiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
@@ -73,7 +74,8 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
         print()
-        performance_itor_cpp(CudaStaticPiecewiseLinearInterpolator)
+        performance_itor_cpp(CudaWarpStaticPiecewiseLinearInterpolator)
+        performance_itor_cpp(CudaThreadStaticPiecewiseLinearInterpolator)
         print()
 
 
@@ -126,7 +128,7 @@ def mearure_performance_cuda_static_piecewise_lnear_interpolator(max_dim=10):
         axes_max = [1.1] * n_dim
         print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
-        itor = CudaStaticPiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max)
+        itor = CudaWarpStaticPiecewiseLinearInterpolator(func, axes_points, axes_min, axes_max)
         itor.interpolate_array(test_grid)
         interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
         print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
@@ -165,5 +167,3 @@ def compute_warp_occupancy(max_dim=32):
 
 if __name__ == '__main__':
     compare_execution_time()
-    mearure_performance_cuda_static_piecewise_lnear_interpolator(13)
-    compute_warp_occupancy()

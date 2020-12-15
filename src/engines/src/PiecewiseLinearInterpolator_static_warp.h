@@ -34,6 +34,14 @@ compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, co
                      const unsigned point_mask, const double simplex_vertex_value,
                      const double simplex_next_vertex_value);
 
+/**
+ * For each input point, the class launches n_dim threads which cooperate together to compute interpolation.
+ *
+ * Parallel algorithms enabled by intra-warp thread-level data exchange help reduce the complexity of reduction
+ * operations and radix sort.
+ *
+ * @tparam n_dim The number of dimension
+ */
 template <int n_dim>
 class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_warp<n_dim>
 {
@@ -48,7 +56,7 @@ public:
     void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
                                    std::vector<double> &interp_values, std::vector<double> &derivatives);
 
-private:
+protected:
     double* d_point_data;
 };
 

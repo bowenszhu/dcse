@@ -13,7 +13,7 @@ except ImportError:
     engines_available = 0
 
 
-class CudaStaticPiecewiseLinearInterpolator:
+class CudaWarpStaticPiecewiseLinearInterpolator:
     def __init__(self, func, axes_points, axes_min, axes_max):
         if engines_available:
             # create a darts wrapper for function
@@ -104,4 +104,4 @@ class CudaStaticPiecewiseLinearInterpolator:
         #     return self.interpolation_time
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'CUDA', 'static', 'GPU')
+        return '{:<19}{:<5}{:<9}{:<4}'.format('warp linear', 'CUDA', 'static', 'GPU')

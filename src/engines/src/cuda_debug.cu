@@ -10,6 +10,7 @@
 #include "evaluator_iface.h"
 #include "PiecewiseLinearInterpolator_static.h"
 #include "PiecewiseLinearInterpolator_static_warp.h"
+#include "PiecewiseLinearInterpolator_static_thread.h"
 
 class op : public operator_set_evaluator_iface {
 public:
@@ -39,7 +40,7 @@ int main()
     }
 
     const int n_point = 7;
-    std::vector<double> points (n_point * n_point);
+    std::vector<double> points (n_point * n_dim);
     for (int i = 0; i < points.size(); i++)
     {
         double random = (double) rand() /  RAND_MAX; /// random value in [ 0.0, 1.0]
@@ -50,7 +51,7 @@ int main()
     std::vector<double> interp (n_point);
     std::vector<double> derivatives (n_point * n_dim);
 
-    PiecewiseLinearInterpolator_static_warp<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
+    PiecewiseLinearInterpolator_static_thread<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
     interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
     printf("\n*********************** CUDA C Interpolator\n");
