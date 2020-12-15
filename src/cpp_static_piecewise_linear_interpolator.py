@@ -62,10 +62,10 @@ class CppPiecewiseLinearInterpolator:
             result_shape = grid.shape[1:]
 
             # move the first axis to the last place
-            # flatten all axes
             states = np.moveaxis(grid, 0, -1)
             gradient_shape = states.shape
 
+            # flatten all axes
             states = states.flatten()
             points = value_vector(states)
 
@@ -76,7 +76,6 @@ class CppPiecewiseLinearInterpolator:
 
             # derivatives should fit self.n_dim values per point
             derivatives = value_vector([0] * len(states))
-
             # interpolate and shape the result
             interpolation_start_time = time.process_time()
             self.interpolator.evaluate_with_derivatives(points, block_idx, values, derivatives)

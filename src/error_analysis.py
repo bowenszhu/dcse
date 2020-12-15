@@ -35,19 +35,22 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     Returns
     ------------
+    val_error_arr, deriv_error_arr
+
     val_error_arr : shape (n_dim, n_checking_points, ..., n_checking_points) array with:
         val_error_arr[0] : n_dim-dimensional array containing Delaunay function value error
         val_error_arr[1] : n_dim-dimensional array containing Piecewise Linear function value error
         val_error_arr[2] : n_dim-dimensional array containing DARTS Multilinear function value error
 
-    #### WIP ####
     deriv_error_arr : shape () array with:
-        deriv_error_arr[0]
-            : ()-dimensional array containing Delaunay function derivative errors
-        deriv_error_arr[1]
-            : ()-dimensional array containing Piecewise Linear function derivative errors
-        deriv_error_arr[2]
-            : ()-dimensional array containing DARTS Multilinear function derivative errors
+        deriv_error_arr[0] : Array containing Delaunay function derivative errors with:
+            deriv_error_arr[0][0] : Array of Delaunay derivatives in 1st dimension
+            deriv_error_arr[0][1] : Array of Delaunay derivatives in 2nd dimension
+                    ...
+            deriv_error_arr[0][n_dim-1] : Array of Delaunay derivatices in n_dim'th dimension
+
+        deriv_error_arr[1] : Array containing Piecewise Linear function derivative errors, similar to previous
+        deriv_error_arr[2] : Array containing DARTS Multilinear function derivative errors, similar to previous
 
     Parameters
     -------------
@@ -121,7 +124,7 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     val_error_arr[2] = darts_val_err
 
     # Assemble derivative error array
-    deriv_error_arr = np.empty([3, 2, *(n_checking_points * np.ones(n_dim).astype('int32'))])
+    deriv_error_arr = np.empty([3, n_dim, *(n_checking_points * np.ones(n_dim).astype('int32'))])
     deriv_error_arr[0] = delaunay_deriv_err
     deriv_error_arr[1] = piecewise_deriv_err
     deriv_error_arr[2] = darts_deriv_err
@@ -129,17 +132,18 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     # Plot error grid for Delaunay
     if plot2d:
         if n_dim == 2:
-            test = piecewise_derivs[0]
+            test = darts_derivs[0]
             fig = go.Figure(data=[go.Surface(z=test, x=np.linspace(axis_min, axis_max, n_checking_points),
                                              y=np.linspace(axis_min, axis_max, n_checking_points))])
+            fig.update_layout(title="Function Derivative in 1st dimension")
             fig.show()
 
-            img = plt.imshow(piecewise_derivs[0], vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
+            img = plt.imshow(darts_deriv_err[0], vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
             plt.colorbar(img)
             plt.title("Error heatmap")
             plt.xlabel('x')
             plt.ylabel('y')
-            # plt.show()
+            plt.show()
 
     return val_error_arr, deriv_error_arr
 
@@ -164,7 +168,7 @@ def plot_interp_error(n_dim, supp_grids):
     darts_mean_dererr = []
 
     for i in range(len(supp_grids)):
-        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 20, -1.0, 1.0, True)
+        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 10, -1.0, 1.0, False)
         del_mean_valerr.append(np.mean(val_err[0]))
         del_mean_dererr.append(np.mean(deriv_err[0]))
         piece_mean_valerr.append(np.mean(val_err[1]))
@@ -191,6 +195,6 @@ def plot_interp_error(n_dim, supp_grids):
         plt.xlabel("# of supporting points")
         plt.ylabel("Mean error")
 
-        plt.suptitle("Interpolator errors for n_dim=2")
+        plt.suptitle("Interpolator errors for n_dim="+str(n_dim))
         plt.tight_layout()
         plt.show()
