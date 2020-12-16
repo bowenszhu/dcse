@@ -4,11 +4,11 @@
 __host__ HashMap *create_hashmap(int capacity) {
     HashMap h_hashmap;
     /// size is set as a power of 2 in order to use bitwise operations and to avoid expensive modulo
-    h_hashmap.size = 2U;
+    h_hashmap.size = 2u;
     while (capacity >>= 1)
         h_hashmap.size <<= 1;
-    h_hashmap.sizeMinus1 = h_hashmap.size - 1U;
-    h_hashmap.occupied = 0U;
+    h_hashmap.sizeMinus1 = h_hashmap.size - 1u;
+    h_hashmap.occupied = 0u;
 
     HashMap *d_hashmap;
     KeyValue *data;
@@ -35,16 +35,16 @@ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double va
 
     unsigned slot = key & hashmap->sizeMinus1;
     /// avoid infinite loop if more than 'size' threads concurrently insert
-    for (unsigned i = 0; i < hashmap->size; i++)
+    for (unsigned i = 0u; i < hashmap->size; i++)
     {
         unsigned current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
         if (current_key == empty_key || current_key == key)
         {
             hashmap->data[slot].value = value;
-            atomicAdd(&hashmap->occupied, 1U);
+            atomicAdd(&hashmap->occupied, 1u);
             return insertSuccess;
         }
-        slot = (slot + 1U) & hashmap->sizeMinus1;
+        slot = (slot + 1u) & hashmap->sizeMinus1;
     }
     return insertFailTableIsFull;
 }
@@ -53,7 +53,7 @@ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
 {
     unsigned slot = key & hashmap->sizeMinus1;
     /// avoid infinite loop when table is full and does not contain the input key
-    for (unsigned i = 0; i < hashmap->size; i++)
+    for (unsigned i = 0u; i < hashmap->size; i++)
     {
         if (hashmap->data[slot].key == key)
         {
@@ -62,7 +62,7 @@ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
         }
         if (hashmap->data[slot].key == empty_key)
             return lookUpFailKeyNotFound;
-        slot = (slot + 1U) & hashmap->sizeMinus1;
+        slot = (slot + 1u) & hashmap->sizeMinus1;
     }
     return lookUpFailKeyNotFound;
 }

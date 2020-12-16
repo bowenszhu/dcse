@@ -16,7 +16,7 @@ struct HashMap
     KeyValue *data;
 };
 
-const unsigned empty_key = 0xffffffff;
+const unsigned empty_key = 0xffffffffu;
 
 const int insertSuccess = 0;
 const int insertFailTableIsFull = -1;
