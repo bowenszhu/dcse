@@ -7,24 +7,23 @@ __device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned int key)
 }
 
 __host__ HashMap *create_hashmap(int capacity) {
-    HashMap h_hashmap;
     /// size is set as a power of 2 in order to use bitwise operations and to avoid expensive modulo
-    h_hashmap.size = 2u;
+    unsigned size = 2u;
     while (capacity >>= 1)
-        h_hashmap.size <<= 1;
-    h_hashmap.sizeMinus1 = h_hashmap.size - 1u;
-    h_hashmap.occupied = 0u;
+        size <<= 1;
 
-    HashMap *d_hashmap;
+    HashMap *hashmap;
+    cudaMallocManaged(&hashmap, sizeof(HashMap));
+    hashmap->size = size;
+    hashmap->sizeMinus1 = size - 1u;
+    hashmap->occupied = 0u;
+
     KeyValue *data;
-    cudaMalloc(&d_hashmap, sizeof(HashMap));
-    cudaMalloc(&data, sizeof(KeyValue) * h_hashmap.size);
-    cudaMemset(data, 0xff, sizeof(KeyValue) * h_hashmap.size);
+    cudaMallocManaged(&data, sizeof(KeyValue) * size);
+    cudaMemset(data, 0xff, sizeof(KeyValue) * size);
+    cudaMemcpy(&hashmap->data, &data, sizeof(KeyValue*), cudaMemcpyDefault);
 
-    cudaMemcpy(d_hashmap, &h_hashmap, sizeof(HashMap), cudaMemcpyHostToDevice);
-    cudaMemcpy(&d_hashmap->data, &data, sizeof(KeyValue*), cudaMemcpyHostToDevice);
-
-    return d_hashmap;
+    return hashmap;
 }
 
 __host__ void delete_hashmap(HashMap *hashmap)
