@@ -26,7 +26,7 @@ __host__ void delete_hashmap(HashMap *hm)
 }
 
 __device__ int insert_data(HashMap *hm, const unsigned key, const double value) {
-    if (hm->occupied == hm->size)
+    if (hm->occupied >= hm->size)
         return insertFailTableIsFull;
 
     unsigned slot = key & hm->sizeMinus1;
@@ -44,6 +44,9 @@ __device__ int insert_data(HashMap *hm, const unsigned key, const double value) 
 }
 
 __device__ int lookup_data(HashMap *hm, const unsigned key, double &value) {
+    if (hm->occupied >= hm->size)
+        return lookUpFailKeyNotFound; ///< avoid infinite loop when table is full and does not contain the input key
+
     unsigned slot = key & hm->sizeMinus1;
     while (true)
     {
