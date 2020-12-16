@@ -15,7 +15,7 @@ include_directories(src/engines/pybind11/tests)
 add_executable(Hash
         src/engines/src/hashmap.cu
         src/engines/src/hashmap.h
-        )
+        src/engines/src/test_hashmap.cu)
 
 set_target_properties(Hash
         PROPERTIES
@@ -141,7 +141,8 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_static_thread.h
         src/engines/src/py_piecewise_linear_interpolator_static_thread.cu
         src/engines/src/hashmap.cu
-        src/engines/src/hashmap.h)
+        src/engines/src/hashmap.h
+        src/engines/src/test_hashmap.cu)
 
 set_target_properties(Darts
         PROPERTIES

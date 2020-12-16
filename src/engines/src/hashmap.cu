@@ -1,62 +1,89 @@
 #include "hashmap.h"
+#include <stdio.h>
 
 __host__ HashMap *create_hashmap(int capacity) {
-    HashMap *hm;
-    cudaMalloc(&hm, sizeof(HashMap));
-
+    HashMap h_hashmap;
     /// size is set as a power of 2 in order to use bitwise operations and to avoid expensive modulo
-    unsigned size = 2;
+    h_hashmap.size = 2U;
     while (capacity >>= 1)
-        size <<= 1;
-    cudaMalloc(&hm->data, sizeof(KeyValue) * size);
-    cudaMemset(hm->data, 0xff, sizeof(KeyValue) * size);
+        h_hashmap.size <<= 1;
+    h_hashmap.sizeMinus1 = h_hashmap.size - 1U;
+    h_hashmap.occupied = 0U;
 
-    cudaMemcpyToSymbol(&hm->size, &size, sizeof(unsigned));
-    size--;
-    cudaMemcpyToSymbol(&hm->sizeMinus1, &size, sizeof(unsigned));
-    size = 0;
-    cudaMemcpyToSymbol(&hm->occupied, &size, sizeof(unsigned));
-    return hm;
+    HashMap *d_hashmap;
+    KeyValue *data;
+    cudaMalloc(&d_hashmap, sizeof(HashMap));
+    cudaMalloc(&data, sizeof(KeyValue) * h_hashmap.size);
+    cudaMemset(data, 0xff, sizeof(KeyValue) * h_hashmap.size);
+
+    cudaMemcpy(d_hashmap, &h_hashmap, sizeof(HashMap), cudaMemcpyHostToDevice);
+    cudaMemcpy(&(d_hashmap->data), &data, sizeof(KeyValue*), cudaMemcpyHostToDevice);
+
+    return d_hashmap;
 }
 
-__host__ void delete_hashmap(HashMap *hm)
+__host__ void delete_hashmap(HashMap *hashmap)
 {
-    cudaFree(hm->data);
-    cudaFree(hm);
+    cudaFree(&hashmap->data);
+    cudaFree(hashmap);
 }
 
-__device__ int insert_data(HashMap *hm, const unsigned key, const double value) {
-    if (hm->occupied >= hm->size)
+__device__ int insert_data(HashMap* hashmap, const unsigned key, const double value)
+{
+    if (hashmap->occupied >= hashmap->size)
         return insertFailTableIsFull;
 
-    unsigned slot = key & hm->sizeMinus1;
-    while (true)
+    unsigned slot = key & hashmap->sizeMinus1;
+    /// avoid infinite loop if more than 'size' threads concurrently insert
+    for (unsigned i = 0; i < hashmap->size; i++)
     {
-        unsigned current_key = atomicCAS(&hm->data[slot].key, empty_key, key);
+        unsigned current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
         if (current_key == empty_key || current_key == key)
         {
-            hm->data[slot].value = value;
-            hm->occupied++;
+            hashmap->data[slot].value = value;
+            atomicAdd(&hashmap->occupied, 1U);
             return insertSuccess;
         }
-        slot = (slot + 1) & hm->sizeMinus1;
+        slot = (slot + 1U) & hashmap->sizeMinus1;
     }
+    return insertFailTableIsFull;
 }
 
-__device__ int lookup_data(HashMap *hm, const unsigned key, double &value) {
-    if (hm->occupied >= hm->size)
-        return lookUpFailKeyNotFound; ///< avoid infinite loop when table is full and does not contain the input key
-
-    unsigned slot = key & hm->sizeMinus1;
-    while (true)
+__device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
+{
+    unsigned slot = key & hashmap->sizeMinus1;
+    /// avoid infinite loop when table is full and does not contain the input key
+    for (unsigned i = 0; i < hashmap->size; i++)
     {
-        if (hm->data[slot].key == key)
+        if (hashmap->data[slot].key == key)
         {
-            value = hm->data[slot].value;
+            value = hashmap->data[slot].value;
             return lookUpSuccess;
         }
-        if (hm->data[slot].key == empty_key)
+        if (hashmap->data[slot].key == empty_key)
             return lookUpFailKeyNotFound;
-        slot = (slot + 1) & hm->sizeMinus1;
+        slot = (slot + 1U) & hashmap->sizeMinus1;
     }
+    return lookUpFailKeyNotFound;
+}
+
+__global__ void test_insert(HashMap *hm)
+{
+    unsigned key = threadIdx.x;
+    double value = 100.0 * threadIdx.x;
+    if (insert_data(hm, key, value))
+        printf("thread %d insertion failed\n", threadIdx.x);
+    printf("thread %d insert key %u value %f\n", threadIdx.x, key, value);
+}
+
+__global__ void test_lookup(HashMap *hm)
+{
+    unsigned key = threadIdx.x;
+    double expected_value = 100.0 * threadIdx.x;
+    double value;
+    if (lookup_data(hm, key, value))
+        printf("thread %d lookup failed\n", threadIdx.x);
+    if (fabs(value - expected_value) > 1e-5)
+        printf("thread %d lookup mismatch expected: %f got: %f\n", threadIdx.x, expected_value, value);
+    printf("thread %d lookup finished\n", threadIdx.x);
 }
