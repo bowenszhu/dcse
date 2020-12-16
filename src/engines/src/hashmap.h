@@ -23,6 +23,8 @@ const int insertFailTableIsFull = -1;
 const int lookUpSuccess = 0;
 const int lookUpFailKeyNotFound = -1;
 
+__device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned key);
+
 __host__ HashMap *create_hashmap(int capacity);
 
 __host__ void delete_hashmap(HashMap* hashmap);

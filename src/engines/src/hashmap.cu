@@ -1,6 +1,11 @@
 #include "hashmap.h"
 #include <stdio.h>
 
+__device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned int key)
+{
+    return key & hashmap->sizeMinus1;
+}
+
 __host__ HashMap *create_hashmap(int capacity) {
     HashMap h_hashmap;
     /// size is set as a power of 2 in order to use bitwise operations and to avoid expensive modulo
@@ -17,7 +22,7 @@ __host__ HashMap *create_hashmap(int capacity) {
     cudaMemset(data, 0xff, sizeof(KeyValue) * h_hashmap.size);
 
     cudaMemcpy(d_hashmap, &h_hashmap, sizeof(HashMap), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(d_hashmap->data), &data, sizeof(KeyValue*), cudaMemcpyHostToDevice);
+    cudaMemcpy(&d_hashmap->data, &data, sizeof(KeyValue*), cudaMemcpyHostToDevice);
 
     return d_hashmap;
 }
@@ -33,7 +38,7 @@ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double va
     if (hashmap->occupied >= hashmap->size)
         return insertFailTableIsFull;
 
-    unsigned slot = key & hashmap->sizeMinus1;
+    unsigned slot = hash(hashmap, key);
     /// avoid infinite loop if more than 'size' threads concurrently insert
     for (unsigned i = 0u; i < hashmap->size; i++)
     {
@@ -51,7 +56,7 @@ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double va
 
 __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
 {
-    unsigned slot = key & hashmap->sizeMinus1;
+    unsigned slot = hash(hashmap, key);
     /// avoid infinite loop when table is full and does not contain the input key
     for (unsigned i = 0u; i < hashmap->size; i++)
     {
