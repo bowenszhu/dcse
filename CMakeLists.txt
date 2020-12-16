@@ -12,6 +12,15 @@ include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
+add_executable(Hash
+        src/engines/src/hashmap.cu
+        src/engines/src/hashmap.h
+        )
+
+set_target_properties(Hash
+        PROPERTIES
+        CUDA_ARCHITECTURES 61)
+
 add_executable(PLI_warp
         src/engines/src/cuda_debug.cu
         src/engines/src/PiecewiseLinearInterpolatorBase_warp.h
@@ -130,7 +139,9 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_static_warp.h
         src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
         src/engines/src/PiecewiseLinearInterpolator_static_thread.h
-        src/engines/src/py_piecewise_linear_interpolator_static_thread.cu)
+        src/engines/src/py_piecewise_linear_interpolator_static_thread.cu
+        src/engines/src/hashmap.cu
+        src/engines/src/hashmap.h)
 
 set_target_properties(Darts
         PROPERTIES
