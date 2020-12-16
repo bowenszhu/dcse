@@ -2,9 +2,11 @@
 
 
 template <int n_dim>
-__global__ void evaluate_thread(const double g_point_data[], const double g_axes_min[n_dim],
-                                const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim + 1],
-                                const int n_input_point, double g_points_deriv[], double g_interp_values[])
+__global__ void
+__launch_bounds__(1024, 1)
+evaluate_thread(const double g_point_data[], const double g_axes_min[n_dim],
+                const double g_axes_step_inv[n_dim], const int g_axes_mult[n_dim + 1],
+                const int n_input_point, double g_points_deriv[], double g_interp_values[])
 {
     __shared__ double s_axes_min[n_dim];
     __shared__ double s_axes_step_inv[n_dim];
