@@ -1,7 +1,7 @@
 #include "hashmap.h"
 #include <stdio.h>
 
-__device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned int key)
+__host__ __device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned int key)
 {
     return key & hashmap->sizeMinus1;
 }
@@ -32,7 +32,7 @@ __host__ void delete_hashmap(HashMap *hashmap)
     cudaFree(hashmap);
 }
 
-__device__ int insert_data(HashMap* hashmap, const unsigned key, const double value)
+__host__ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double value)
 {
     if (hashmap->occupied >= hashmap->size)
         return insertFailTableIsFull;
@@ -41,11 +41,19 @@ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double va
     /// avoid infinite loop if more than 'size' threads concurrently insert
     for (unsigned i = 0u; i < hashmap->size; i++)
     {
+#ifdef __CUDA_ARCH__
         unsigned current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
+#else
+        unsigned current_key = __sync_val_compare_and_swap(&hashmap->data[slot].key, empty_key, key);
+#endif
         if (current_key == empty_key || current_key == key)
         {
             hashmap->data[slot].value = value;
+#ifdef __CUDA_ARCH__
             atomicAdd(&hashmap->occupied, 1u);
+#else
+            __sync_add_and_fetch(&hashmap->occupied, 1u);
+#endif
             return insertSuccess;
         }
         slot = (slot + 1u) & hashmap->sizeMinus1;
@@ -53,7 +61,7 @@ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double va
     return insertFailTableIsFull;
 }
 
-__device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
+__host__ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
 {
     unsigned slot = hash(hashmap, key);
     /// avoid infinite loop when table is full and does not contain the input key
