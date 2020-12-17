@@ -18,10 +18,8 @@ __host__ HashMap *create_hashmap(int capacity) {
     hashmap->sizeMinus1 = size - 1;
     hashmap->occupied = 0;
 
-    KeyValue *data;
-    cudaMallocManaged(&data, sizeof(KeyValue) * size);
-    cudaMemset(data, 0xff, sizeof(KeyValue) * size);
-    cudaMemcpy(&hashmap->data, &data, sizeof(KeyValue*), cudaMemcpyDefault);
+    cudaMallocManaged(&hashmap->data, sizeof(KeyValue) * size);
+    cudaMemset(hashmap->data, 0xff, sizeof(KeyValue) * size); ///< initialize all to empty key 0xffffffff
 
     return hashmap;
 }
