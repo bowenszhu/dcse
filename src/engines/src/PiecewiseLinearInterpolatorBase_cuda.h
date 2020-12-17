@@ -41,6 +41,10 @@ protected:
     timer_node *timer;
 
     void get_point_state(int point_i, std::vector<double> &state);
+
+    void get_point_from_index(int index, std::array<int, n_dim> &vertex);
+
+    void get_real_point_from_index_point(const std::array<int, n_dim> &vertex, std::vector<double> &point);
 };
 
 template<int n_dim>
@@ -107,6 +111,24 @@ template<int n_dim>
 void PiecewiseLinearInterpolatorBase_cuda<n_dim>::init_timer_node(timer_node *timer_)
 {
     timer = timer_;
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase_cuda<n_dim>::get_point_from_index(int index, std::array<int, n_dim> &vertex)
+{
+    for (int dim = 0; dim < n_dim; dim++)
+    {
+        vertex[dim] = index / h_axes_mult[dim + 1];
+        index %= h_axes_mult[dim + 1];
+    }
+}
+
+template<int n_dim>
+void PiecewiseLinearInterpolatorBase_cuda<n_dim>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
+                                                                                  std::vector<double> &point)
+{
+    for (int i = 0; i < n_dim; i++)
+        point[i] = vertex[i] * h_axes_step[i] + h_axes_min[i];
 }
 
 #endif //DCSE2020_PIECEWISELINEARINTERPOLATORBASE_CUDA_CU

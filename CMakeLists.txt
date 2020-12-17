@@ -32,24 +32,17 @@ set_target_properties(Hash
 add_executable(PLI_adaptive
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
-        src/engines/src/PiecewiseLinearInterpolator_adpative.cu
-        src/engines/src/PiecewiseLinearInterpolator_adpative.h)
+        src/engines/src/PiecewiseLinearInterpolator_adaptive_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_adaptive_cuda.h
+        src/engines/src/cuda_debug.cu
+        src/engines/src/hashmap.cu
+        src/engines/src/hashmap.h
+        src/engines/src/queue.cu
+        src/engines/src/queue.h)
 
 set_target_properties(PLI_adaptive
         PROPERTIES
-        CUDA_ARCHITECTURES 61)
-
-add_executable(PLI_static
-        src/engines/src/cuda_debug.cu
-        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
-        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_warp.h
-        src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
-        src/engines/src/PiecewiseLinearInterpolator_static_thread.h)
-
-set_target_properties(PLI_static
-        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
         CUDA_ARCHITECTURES 61)
 
 add_executable(Darts
@@ -161,10 +154,11 @@ add_executable(Darts
         src/engines/src/hashmap.cu
         src/engines/src/hashmap.h
         src/engines/src/test_hashmap.cu
-        src/engines/src/PiecewiseLinearInterpolator_adpative.cu
-        src/engines/src/PiecewiseLinearInterpolator_adpative.h
+        src/engines/src/PiecewiseLinearInterpolator_adaptive_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_adaptive_cuda.h
         src/engines/src/queue.cu
-        src/engines/src/queue.h src/engines/src/test_queue.cu)
+        src/engines/src/queue.h
+        src/engines/src/test_queue.cu)
 
 set_target_properties(Darts
         PROPERTIES

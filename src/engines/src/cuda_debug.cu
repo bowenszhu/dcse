@@ -11,6 +11,7 @@
 #include "PiecewiseLinearInterpolator_static.h"
 #include "PiecewiseLinearInterpolator_static_warp.h"
 #include "PiecewiseLinearInterpolator_static_thread.h"
+#include "PiecewiseLinearInterpolator_adaptive_cuda.h"
 
 class op : public operator_set_evaluator_iface {
 public:
@@ -51,7 +52,7 @@ int main()
     std::vector<double> interp (n_point);
     std::vector<double> derivatives (n_point * n_dim);
 
-    PiecewiseLinearInterpolator_static_warp<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
+    PiecewiseLinearInterpolator_adaptive_cuda<n_dim> interpolator (&face, axesPoints, axesMin, axesMax);
     interpolator.evaluate_with_derivatives(points, block_idx, interp, derivatives);
 
     printf("\n*********************** CUDA C Interpolator\n");
