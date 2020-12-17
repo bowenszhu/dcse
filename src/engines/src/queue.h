@@ -8,12 +8,8 @@ struct Queue
     unsigned int size;
     unsigned int sizeMinus1;
     unsigned int n_occupied;
-    int lock;
     int *array;
 };
-
-const int unlocked = 0;
-const int locked = 1;
 
 const int enqueueSuccess = 0;
 const int enqueueFailQueueIsFull = -1;

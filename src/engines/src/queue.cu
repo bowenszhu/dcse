@@ -16,7 +16,6 @@ __host__ Queue *create_queue(int capacity)
     queue->rear = size - 1;
     queue->size = size;
     queue->sizeMinus1 = size - 1;
-    queue->lock = unlocked;
 
     cudaMallocManaged(&queue->array, sizeof(int) * size);
 
