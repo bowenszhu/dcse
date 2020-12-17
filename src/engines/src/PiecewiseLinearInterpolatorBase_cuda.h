@@ -13,12 +13,12 @@ __global__ void compute_step(const int *axes_points, const double *axes_min, con
 __global__ void compute_mult(const int *axes_points, int *axes_mult);
 
 template <int n_dim>
-class PiecewiseLinearInterpolatorBase_warp {
+class PiecewiseLinearInterpolatorBase_cuda {
 public:
-    PiecewiseLinearInterpolatorBase_warp(const std::array<int, n_dim> &axesPoints,
+    PiecewiseLinearInterpolatorBase_cuda(const std::array<int, n_dim> &axesPoints,
                                          const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax);
 
-    virtual ~PiecewiseLinearInterpolatorBase_warp();
+    virtual ~PiecewiseLinearInterpolatorBase_cuda();
 
     void init_timer_node(timer_node *timer_);
 
@@ -44,7 +44,7 @@ protected:
 };
 
 template<int n_dim>
-PiecewiseLinearInterpolatorBase_warp<n_dim>::PiecewiseLinearInterpolatorBase_warp(
+PiecewiseLinearInterpolatorBase_cuda<n_dim>::PiecewiseLinearInterpolatorBase_cuda(
         const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
         const std::array<double, n_dim> &axesMax) : h_axes_min(axesMin.data())
 {
@@ -80,7 +80,7 @@ PiecewiseLinearInterpolatorBase_warp<n_dim>::PiecewiseLinearInterpolatorBase_war
 }
 
 template<int n_dim>
-PiecewiseLinearInterpolatorBase_warp<n_dim>::~PiecewiseLinearInterpolatorBase_warp()
+PiecewiseLinearInterpolatorBase_cuda<n_dim>::~PiecewiseLinearInterpolatorBase_cuda()
 {
     free(h_axes_step);
     free(h_axes_mult);
@@ -94,7 +94,7 @@ PiecewiseLinearInterpolatorBase_warp<n_dim>::~PiecewiseLinearInterpolatorBase_wa
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase_warp<n_dim>::get_point_state(int point_idx, std::vector<double> &state)
+void PiecewiseLinearInterpolatorBase_cuda<n_dim>::get_point_state(int point_idx, std::vector<double> &state)
 {
     for (int i = 0; i < n_dim; i++)
     {
@@ -104,7 +104,7 @@ void PiecewiseLinearInterpolatorBase_warp<n_dim>::get_point_state(int point_idx,
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase_warp<n_dim>::init_timer_node(timer_node *timer_)
+void PiecewiseLinearInterpolatorBase_cuda<n_dim>::init_timer_node(timer_node *timer_)
 {
     timer = timer_;
 }

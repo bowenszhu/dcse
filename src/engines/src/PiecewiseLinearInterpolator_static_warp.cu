@@ -145,7 +145,7 @@ template<int n_dim>
 PiecewiseLinearInterpolator_static_warp<n_dim>::PiecewiseLinearInterpolator_static_warp(
         operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
-        : PiecewiseLinearInterpolatorBase_warp<n_dim>(axesPoints, axesMin, axesMax)
+        : PiecewiseLinearInterpolatorBase_cuda<n_dim>(axesPoints, axesMin, axesMax)
 {
     int n_point = *(this->h_axes_mult);
     cudaMalloc(&d_point_data, n_point * sizeof(double));

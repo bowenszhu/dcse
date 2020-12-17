@@ -1,7 +1,7 @@
 #ifndef DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_WARP_H
 #define DCSE2020_PIECEWISELINEARINTERPOLATOR_STATIC_WARP_H
 
-#include "PiecewiseLinearInterpolatorBase_warp.h"
+#include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
 
 template<int n_dim>
@@ -43,7 +43,7 @@ compute_interp_deriv(const double &scaled_point_dim, const int tri_order_dim, co
  * @tparam n_dim The number of dimension
  */
 template <int n_dim>
-class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_warp<n_dim>
+class PiecewiseLinearInterpolator_static_warp : public PiecewiseLinearInterpolatorBase_cuda<n_dim>
 {
 public:
     PiecewiseLinearInterpolator_static_warp(operator_set_evaluator_iface *base_points_generator,

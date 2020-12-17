@@ -2,7 +2,7 @@
 #define DCSE2020_HASHMAP_H
 
 
-struct __align__(16) KeyValue
+struct KeyValue
 {
     unsigned key;
     double value;

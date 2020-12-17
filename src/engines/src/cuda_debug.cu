@@ -6,7 +6,7 @@
 #include <array>
 #include <iostream>
 #include <numeric>
-#include "PiecewiseLinearInterpolatorBase_warp.h"
+#include "PiecewiseLinearInterpolatorBase_cuda.h"
 #include "evaluator_iface.h"
 #include "PiecewiseLinearInterpolator_static.h"
 #include "PiecewiseLinearInterpolator_static_warp.h"

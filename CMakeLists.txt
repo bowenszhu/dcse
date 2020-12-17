@@ -21,16 +21,24 @@ set_target_properties(Hash
         PROPERTIES
         CUDA_ARCHITECTURES 61)
 
-add_executable(PLI_warp
+add_executable(PLI_adaptive
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu src/engines/src/PiecewiseLinearInterpolator_adpative.cu src/engines/src/PiecewiseLinearInterpolator_adpative.h)
+
+set_target_properties(PLI_adaptive
+        PROPERTIES
+        CUDA_ARCHITECTURES 61)
+
+add_executable(PLI_static
         src/engines/src/cuda_debug.cu
-        src/engines/src/PiecewiseLinearInterpolatorBase_warp.h
-        src/engines/src/PiecewiseLinearInterpolatorBase_warp.cu
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
         src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
         src/engines/src/PiecewiseLinearInterpolator_static_warp.h
         src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
         src/engines/src/PiecewiseLinearInterpolator_static_thread.h)
 
-set_target_properties(PLI_warp
+set_target_properties(PLI_static
         PROPERTIES
         CUDA_ARCHITECTURES 61)
 
@@ -134,7 +142,7 @@ add_executable(Darts
         src/engines/src/PiecewiseLinearInterpolator_adaptive.inl
         src/engines/src/PiecewiseLinearInterpolator_adaptive.h
         src/engines/src/py_piecewise_linear_interpolator_adaptive.cpp
-        src/engines/src/PiecewiseLinearInterpolatorBase_warp.h
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
         src/engines/src/PiecewiseLinearInterpolator_static_warp.cu
         src/engines/src/PiecewiseLinearInterpolator_static_warp.h
         src/engines/src/PiecewiseLinearInterpolator_static_thread.cu
@@ -142,7 +150,7 @@ add_executable(Darts
         src/engines/src/py_piecewise_linear_interpolator_static_thread.cu
         src/engines/src/hashmap.cu
         src/engines/src/hashmap.h
-        src/engines/src/test_hashmap.cu)
+        src/engines/src/test_hashmap.cu src/engines/src/PiecewiseLinearInterpolator_adpative.cu src/engines/src/PiecewiseLinearInterpolator_adpative.h)
 
 set_target_properties(Darts
         PROPERTIES
