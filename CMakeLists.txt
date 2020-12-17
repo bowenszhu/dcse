@@ -12,6 +12,14 @@ include_directories(src/engines/pybind11/include/pybind11)
 include_directories(src/engines/pybind11/include/pybind11/detail)
 include_directories(src/engines/pybind11/tests)
 
+add_executable(Queue
+        src/engines/src/queue.cu
+        src/engines/src/queue.h src/engines/src/test_queue.cu)
+
+set_target_properties(Queue
+        PROPERTIES
+        CUDA_ARCHITECTURES 61)
+
 add_executable(Hash
         src/engines/src/hashmap.cu
         src/engines/src/hashmap.h
@@ -23,7 +31,9 @@ set_target_properties(Hash
 
 add_executable(PLI_adaptive
         src/engines/src/PiecewiseLinearInterpolatorBase_cuda.h
-        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu src/engines/src/PiecewiseLinearInterpolator_adpative.cu src/engines/src/PiecewiseLinearInterpolator_adpative.h)
+        src/engines/src/PiecewiseLinearInterpolatorBase_cuda.cu
+        src/engines/src/PiecewiseLinearInterpolator_adpative.cu
+        src/engines/src/PiecewiseLinearInterpolator_adpative.h)
 
 set_target_properties(PLI_adaptive
         PROPERTIES
@@ -150,7 +160,11 @@ add_executable(Darts
         src/engines/src/py_piecewise_linear_interpolator_static_thread.cu
         src/engines/src/hashmap.cu
         src/engines/src/hashmap.h
-        src/engines/src/test_hashmap.cu src/engines/src/PiecewiseLinearInterpolator_adpative.cu src/engines/src/PiecewiseLinearInterpolator_adpative.h)
+        src/engines/src/test_hashmap.cu
+        src/engines/src/PiecewiseLinearInterpolator_adpative.cu
+        src/engines/src/PiecewiseLinearInterpolator_adpative.h
+        src/engines/src/queue.cu
+        src/engines/src/queue.h src/engines/src/test_queue.cu)
 
 set_target_properties(Darts
         PROPERTIES
