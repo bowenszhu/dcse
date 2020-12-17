@@ -34,7 +34,7 @@ void test_table_is_full()
 struct hashmap_key
 {
     HashMap *hashmap;
-    unsigned key;
+    int key;
 };
 
 int cpu_thread_insert(void *thr_data)
@@ -42,8 +42,8 @@ int cpu_thread_insert(void *thr_data)
     hashmap_key *hm_key = (hashmap_key*) thr_data;
     double value = 100.0 * hm_key->key;
     if (insert_data(hm_key->hashmap, hm_key->key, value))
-        printf("CPU thread key %u insertion failed\n", hm_key->key);
-    printf("CPU thread insert key %u value %f\n", hm_key->key, value);
+        printf("CPU thread key %d insertion failed\n", hm_key->key);
+    printf("CPU thread insert key %d value %f\n", hm_key->key, value);
     return 0;
 }
 
@@ -53,10 +53,10 @@ int cpu_thread_lookup(void *thr_data)
     double expected_value = 100.0 * hm_key->key;
     double value;
     if (lookup_data(hm_key->hashmap, hm_key->key, value))
-        printf("CPU thread lookup failed for key %u\n", hm_key->key);
+        printf("CPU thread lookup failed for key %d\n", hm_key->key);
     if (fabs(value - expected_value) > 1e-5)
-        printf("CPU thread lookup mismatch key %u expected: %f got: %f\n", hm_key->key, expected_value, value);
-    printf("CPU thread lookup finished for key %u\n", hm_key->key);
+        printf("CPU thread lookup mismatch key %d expected: %f got: %f\n", hm_key->key, expected_value, value);
+    printf("CPU thread lookup finished for key %d\n", hm_key->key);
     return 0;
 }
 

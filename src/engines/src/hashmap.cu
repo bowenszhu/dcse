@@ -1,22 +1,22 @@
 #include "hashmap.h"
 #include <stdio.h>
 
-__host__ __device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned int key)
+__host__ __device__ __forceinline__ int hash(HashMap *hashmap, int key)
 {
     return key & hashmap->sizeMinus1;
 }
 
 __host__ HashMap *create_hashmap(int capacity) {
     /// size is set as a power of 2 in order to use bitwise operations and to avoid expensive modulo
-    unsigned size = 2u;
+    int size = 2;
     while (capacity >>= 1)
         size <<= 1;
 
     HashMap *hashmap;
     cudaMallocManaged(&hashmap, sizeof(HashMap));
     hashmap->size = size;
-    hashmap->sizeMinus1 = size - 1u;
-    hashmap->occupied = 0u;
+    hashmap->sizeMinus1 = size - 1;
+    hashmap->occupied = 0;
 
     KeyValue *data;
     cudaMallocManaged(&data, sizeof(KeyValue) * size);
@@ -32,40 +32,40 @@ __host__ void delete_hashmap(HashMap *hashmap)
     cudaFree(hashmap);
 }
 
-__host__ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double value)
+__host__ __device__ int insert_data(HashMap* hashmap, const int key, const double value)
 {
     if (hashmap->occupied >= hashmap->size)
         return insertFailTableIsFull;
 
-    unsigned slot = hash(hashmap, key);
+    int slot = hash(hashmap, key);
     /// avoid infinite loop if more than 'size' threads concurrently insert
-    for (unsigned i = 0u; i < hashmap->size; i++)
+    for (int i = 0; i < hashmap->size; i++)
     {
 #ifdef __CUDA_ARCH__
-        unsigned current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
+        int current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
 #else
-        unsigned current_key = __sync_val_compare_and_swap(&hashmap->data[slot].key, empty_key, key);
+        int current_key = __sync_val_compare_and_swap(&hashmap->data[slot].key, empty_key, key);
 #endif
         if (current_key == empty_key || current_key == key)
         {
             hashmap->data[slot].value = value;
 #ifdef __CUDA_ARCH__
-            atomicAdd(&hashmap->occupied, 1u);
+            atomicAdd(&hashmap->occupied, 1);
 #else
             __sync_add_and_fetch(&hashmap->occupied, 1u);
 #endif
             return insertSuccess;
         }
-        slot = (slot + 1u) & hashmap->sizeMinus1;
+        slot = (slot + 1) & hashmap->sizeMinus1;
     }
     return insertFailTableIsFull;
 }
 
-__host__ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value)
+__host__ __device__ int lookup_data(HashMap* hashmap, const int key, double &value)
 {
-    unsigned slot = hash(hashmap, key);
+    int slot = hash(hashmap, key);
     /// avoid infinite loop when table is full and does not contain the input key
-    for (unsigned i = 0u; i < hashmap->size; i++)
+    for (int i = 0; i < hashmap->size; i++)
     {
         if (hashmap->data[slot].key == key)
         {
@@ -74,24 +74,24 @@ __host__ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double
         }
         if (hashmap->data[slot].key == empty_key)
             return lookUpFailKeyNotFound;
-        slot = (slot + 1u) & hashmap->sizeMinus1;
+        slot = (slot + 1) & hashmap->sizeMinus1;
     }
     return lookUpFailKeyNotFound;
 }
 
 __global__ void test_insert(HashMap *hm)
 {
-    unsigned key = threadIdx.x;
-    double value = 100.0 * threadIdx.x;
+    int key = threadIdx.x;
+    double value = 100.0 * key;
     if (insert_data(hm, key, value))
         printf("thread %d insertion failed\n", threadIdx.x);
-    printf("thread %d insert key %u value %f\n", threadIdx.x, key, value);
+    printf("thread %d insert key %d value %f\n", threadIdx.x, key, value);
 }
 
 __global__ void test_lookup(HashMap *hm)
 {
-    unsigned key = threadIdx.x;
-    double expected_value = 100.0 * threadIdx.x;
+    int key = threadIdx.x;
+    double expected_value = 100.0 * key;
     double value;
     if (lookup_data(hm, key, value))
         printf("thread %d lookup failed\n", threadIdx.x);

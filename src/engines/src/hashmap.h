@@ -4,34 +4,36 @@
 
 struct KeyValue
 {
-    unsigned key;
+    int key;
     double value;
 };
 
 struct HashMap
 {
-    unsigned size;
-    unsigned sizeMinus1;
-    unsigned occupied;
+    int size;
+    int sizeMinus1;
+    int occupied;
     KeyValue *data;
 };
 
-const unsigned empty_key = 0xffffffffu;
+/// set -1 as empty key, since all expected input keys are nonnegative
+/// the byte 0xff makes it easier to initialize hashmap (see cudaMemset in create_hashmap)
+const int empty_key = 0xffffffff;
 
 const int insertSuccess = 0;
 const int insertFailTableIsFull = -1;
 const int lookUpSuccess = 0;
 const int lookUpFailKeyNotFound = -1;
 
-__host__ __device__ __forceinline__ unsigned hash(HashMap *hashmap, unsigned key);
+__host__ __device__ __forceinline__ int hash(HashMap *hashmap, int key);
 
 __host__ HashMap *create_hashmap(int capacity);
 
 __host__ void delete_hashmap(HashMap* hashmap);
 
-__host__ __device__ int insert_data(HashMap* hashmap, const unsigned key, const double value);
+__host__ __device__ int insert_data(HashMap* hashmap, const int key, const double value);
 
-__host__ __device__ int lookup_data(HashMap* hashmap, const unsigned key, double &value);
+__host__ __device__ int lookup_data(HashMap* hashmap, const int key, double &value);
 
 /// the following functions are used for testing
 __global__ void test_insert(HashMap *hm);
