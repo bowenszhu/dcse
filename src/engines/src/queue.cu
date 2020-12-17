@@ -31,8 +31,25 @@ __host__ void delete_queue(Queue *queue)
 
 __host__ __device__ int enqueue(Queue *queue, int item)
 {
+#ifdef __CUDA_ARCH__
+    atomicAdd_system(&queue->n_occupied, 1u);
+#else
+    __sync_add_and_fetch(&queue->n_occupied, 1u);
+#endif
+
+    /// since the current support from atomic functions is limited,
+    /// if the number of concurrent enqueue operations + the number of existing occupied slots >= size of queue,
+    /// enqueue is rejected for some (or even all) threads even if the queue is not really full.
     if (queue->n_occupied >= queue->size)
+    {
+#ifdef __CUDA_ARCH__
+        atomicSub_system(&queue->n_occupied, 1u);
+#else
+        __sync_sub_and_fetch(&queue->n_occupied, 1u);
+#endif
+
         return enqueueFailQueueIsFull;
+    }
 
     /// no need to be concerned about overflow
     /// since 1. rear is of type unsigned int
@@ -46,12 +63,6 @@ __host__ __device__ int enqueue(Queue *queue, int item)
 #endif
 
     queue->array[rear] = item;
-
-#if __CUDA_ARCH__
-    atomicAdd_system(&queue->n_occupied, 1u);
-#else
-    __sync_add_and_fetch(&queue->n_occupied, 1u);
-#endif
 
     return enqueueSuccess;
 }
@@ -82,6 +93,5 @@ __host__ __device__ int dequeue(Queue *queue, int &item)
 __global__ void test_enqueue(Queue *queue)
 {
     int item = threadIdx.x;
-    printf(enqueue(queue, item) ? "thread %d enqueue failed, queue is full\n" : "thread %d enqueue success\n",
-           threadIdx.x);
+    printf(enqueue(queue, item) ? "thread %d enqueue failed\n" : "thread %d enqueue success\n", threadIdx.x);
 }

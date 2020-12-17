@@ -32,12 +32,12 @@ void test_GPU_enqueue_CPU_dequeue()
     delete_queue(queue);
 }
 
-void test_queue_is_full()
+void test_queue_insufficient_size()
 {
     const int capacity = 7;
     Queue *queue = create_queue(capacity);
 
-    /// expect all success
+    /// expect fail
     const int n = 10;
     test_enqueue<<<1, n>>>(queue);
     cudaDeviceSynchronize();
@@ -53,6 +53,9 @@ void test_queue_is_full()
 
 int main()
 {
+    printf("\n\n----------- test normal operations of queue\n\n");
     test_GPU_enqueue_CPU_dequeue();
-//    test_queue_is_full();
+
+    printf("\n\n----------- test #concurrent enqueue >= size\n\n");
+    test_queue_insufficient_size();
 }
