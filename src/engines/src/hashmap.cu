@@ -40,7 +40,7 @@ __host__ __device__ int insert_data(HashMap* hashmap, const int key, const doubl
     for (int i = 0; i < hashmap->size; i++)
     {
 #ifdef __CUDA_ARCH__
-        int current_key = atomicCAS(&hashmap->data[slot].key, empty_key, key);
+        int current_key = atomicCAS_system(&hashmap->data[slot].key, empty_key, key);
 #else
         int current_key = __sync_val_compare_and_swap(&hashmap->data[slot].key, empty_key, key);
 #endif
@@ -48,7 +48,7 @@ __host__ __device__ int insert_data(HashMap* hashmap, const int key, const doubl
         {
             hashmap->data[slot].value = value;
 #ifdef __CUDA_ARCH__
-            atomicAdd(&hashmap->occupied, 1);
+            atomicAdd_system(&hashmap->occupied, 1);
 #else
             __sync_add_and_fetch(&hashmap->occupied, 1u);
 #endif
