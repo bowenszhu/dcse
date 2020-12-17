@@ -264,6 +264,10 @@ int PiecewiseLinearInterpolator_adaptive_cuda<n_dim>::CPU_thread_evaluate_base_p
     const int point_idx = h_p_i->point_idx;
     PiecewiseLinearInterpolator_adaptive_cuda<n_dim> *interpolator = h_p_i->interpolator;
 
+    double value;
+    if (!lookup_data(hashmap, point_idx, value)) /// skip if point has been evaluated
+        return 0;
+
     std::array<int, n_dim> point_axis_index;
     interpolator->get_point_from_index(point_idx, point_axis_index);
 
