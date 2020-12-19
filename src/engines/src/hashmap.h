@@ -6,6 +6,13 @@ struct KeyValue
 {
     int key;
     double value;
+    int status;
+    /// As this is a concurrent hashmap, in rare cases, it is possible that when an insert() adds the key but has not
+    /// written the value, at the same time another lookup() finds the key but gets an invalid value.
+    /// Therefore, the flag 'status' is added for each key-value pair.
+    /// The flag is initialized as status = int(0xffffffff) = -1 meaning the value is invalid.
+    /// After insert() changes the value, it sets the flag to status = 0 indicating that the value is valid.
+    /// The concurrent lookup() in the aforementioned case will wait until the flag is set to retrieve the value.
 };
 
 struct HashMap

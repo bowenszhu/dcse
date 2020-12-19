@@ -52,6 +52,7 @@ __host__ __device__ int insert_data(HashMap* hashmap, const int key, const doubl
 #else
             __sync_add_and_fetch(&hashmap->occupied, 1u);
 #endif
+            hashmap->data[slot].status = 0; /// set the flag to status = 0 indicating the value is valid
             return insertSuccess;
         }
         slot = (slot + 1) & hashmap->sizeMinus1;
@@ -67,6 +68,7 @@ __host__ __device__ int lookup_data(HashMap* hashmap, const int key, double &val
     {
         if (hashmap->data[slot].key == key)
         {
+            while (hashmap->data[slot].status); ///< wait until valid value is written by concurrent insert()
             value = hashmap->data[slot].value;
             return lookUpSuccess;
         }
