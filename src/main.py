@@ -5,7 +5,7 @@ from src.error_analysis import plot_interp_error
 from src.plotting_error_different_dimensions import barplot
 
 if __name__ == '__main__':
-    plot_interp_error(2, [8, 12, 16, 20, 24, 32])
+    plot_interp_error(3, [4, 8, 16, 32, 64])
 
     # For plotting the bar plot comparing different interpolators at
     # different dims for the same number of supporting points per axis

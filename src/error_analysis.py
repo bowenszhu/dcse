@@ -8,23 +8,14 @@ from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolato
 from src.cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 
-
-def func(x):
-    f = np.cos(x[0])
-    for i in range(1, x.shape[0]):
-        f += np.cos(x[i])
-    return f
-
-
-def func_deriv(x):
-    derivs = [-np.sin(x[0])]
-    for i in range(1, x.shape[0]):
-        derivs.append(-np.sin(x[i]))
-    return derivs
+from src.testing_functions import func2d
+from src.testing_functions import derivs2d
+from src.testing_functions import func3d
+from src.testing_functions import derivs3d
 
 
 def func_helper(*var):
-    return func(np.array(var))
+    return func3d(np.array(var))
 
 
 def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
@@ -82,12 +73,12 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Calculate exact values
     print("Calculating exact values...", end=" ")
-    exact_vals = np.apply_along_axis(func, 0, checking_grid)
+    exact_vals = np.apply_along_axis(func3d, 0, checking_grid)
     print("Done")
 
     # Calculate exact derivatives
     print("Calculating exact derivatives...", end=" ")
-    exact_derivs = np.apply_along_axis(func_deriv, 0, checking_grid)
+    exact_derivs = np.apply_along_axis(derivs3d, 0, checking_grid)
     print("Done")
 
     # Delaunay Barycentric (static) interpolation
@@ -168,7 +159,7 @@ def plot_interp_error(n_dim, supp_grids):
     darts_mean_dererr = []
 
     for i in range(len(supp_grids)):
-        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 10, -1.0, 1.0, False)
+        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 3, -1.0, 1.0, False)
         del_mean_valerr.append(np.mean(val_err[0]))
         del_mean_dererr.append(np.mean(deriv_err[0]))
         piece_mean_valerr.append(np.mean(val_err[1]))
@@ -195,6 +186,5 @@ def plot_interp_error(n_dim, supp_grids):
         plt.xlabel("# of supporting points")
         plt.ylabel("Mean error")
 
-        plt.suptitle("Interpolator errors for n_dim="+str(n_dim))
         plt.tight_layout()
         plt.show()
