@@ -18,12 +18,14 @@ class CppStaticPiecewiseLinearInterpolator:
         if engines_available:
             # create a darts wrapper for function
             class custom_evaluator(operator_set_evaluator_iface):
-                def __init__(self, func):
+                def __init__(self, func_list):
                     super().__init__()
-                    self.func = func
-
+                    self.func_list = func_list
                 def evaluate(self, state, values):
-                    values[0] = self.func(*state)
+                    for i, f in enumerate(self.func_list):
+                        values.append(f(*state))
+                        if i == len(self.func_list):
+                            return 0
                     return 0
 
             # create the instance of the wrapper
@@ -35,7 +37,7 @@ class CppStaticPiecewiseLinearInterpolator:
 
             # for every dimensionality a separate class exists in darts - here we evaluate its name
             # and get the class from engines, will raise AttributeError if class cannot be found
-            itor_name = getattr(m, 'piecewise_linear_interpolator_static_%d' % self.n_dim)
+            itor_name = getattr(m, 'piecewise_linear_interpolator_static_%d_%d' % (self.n_dim, len(func)))
 
             # create the instance of interpolator
             # point calculation happens here, so measure it

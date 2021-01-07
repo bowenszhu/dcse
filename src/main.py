@@ -43,13 +43,18 @@ def func_9d(var1, var2, var3, var4, var5, var6, var7, var8, var9):
 
 
 def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_point):
+    def func2(*vars):
+        return sum([var * var for var in vars])
     test_grid = np.array(np.meshgrid(*grid, indexing='ij'))
     axes_min = [-1.1] * n_dim
     axes_max = [1.1] * n_dim
     print('\n\n', n_dim, '- dimensional', grid_shape, 'test grid over', axes_points, 'supporting points')
 
     def performance_itor_cpp(interpolation_method):
-        itor = interpolation_method(func, axes_points, axes_min, axes_max)
+        if interpolation_method == CppStaticPiecewiseLinearInterpolator:
+            itor = CppStaticPiecewiseLinearInterpolator([func, func2], axes_points, axes_min, axes_max)
+        else:
+            itor = interpolation_method(func, axes_points, axes_min, axes_max)
         itor.interpolate_array(test_grid)
         interpolation_time_per_point = itor.get_interpolation_time() / test_grid.size
         print(itor, 'init: %f s, interpolation: %f s (%.2e s per point)' %
@@ -82,7 +87,6 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
     # performance_itor_py(PiecewiseLinearInterpolator, adaptive=False)
     # performance_itor_py(PiecewiseLinearInterpolator, adaptive=True)
     # print()
-
 
 def scipy_delaunay_performance():
     print('\n\nSciPy Delaunay triangulation for unit hypercube:')

@@ -11,8 +11,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
-class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim>
+template <int n_dim, int n_ops>
+class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim, n_ops>
 {
 public:
     /**
@@ -31,6 +31,7 @@ public:
 
 private:
     std::vector<double> point_data;      ///< the real values of all supporting points
+    std::array<double, n_ops> point_data_array;
     /**
      * This function transfers index of supporting point to its indices along axes.
      *

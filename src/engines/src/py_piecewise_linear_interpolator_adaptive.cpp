@@ -5,25 +5,37 @@
 #include "PiecewiseLinearInterpolator_adaptive.h"
 
 
-template <int n_dim>
+template <int n_dim, int n_ops>
 struct piecewise_linear_interpolator_adaptive_exposer
 {
     static void expose(py::module &m)
     {
         using namespace pybind11::literals;
 
-        std::string name = "piecewise_linear_interpolator_adaptive_" + std::to_string(n_dim);
+        std::string name = "piecewise_linear_interpolator_adaptive_" + std::to_string(n_dim) + "_" + std::to_string(n_ops);
         std::string long_name = "Piecewise linear interpolator in " + std::to_string(n_dim)
-                                + "-dimensional parameter space with adaptive storage";
+                + "-dimensional parameter space with adaptive storage with" + std::to_string(n_ops) + "operators";
         try
         {
-            py::class_<PiecewiseLinearInterpolator_adaptive<n_dim>>(m, name.c_str(), long_name.c_str())
-                    .def(py::init<operator_set_evaluator_iface *, std::array<int, n_dim> &, std::array<double, n_dim> &,
-                            std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
-                    .def("evaluate", &PiecewiseLinearInterpolator_adaptive<n_dim>::evaluate, "point"_a)
-                    .def("evaluate_with_derivatives",
-                         &PiecewiseLinearInterpolator_adaptive<n_dim>::evaluate_with_derivatives,
-                         "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a);
+            if (n_ops == 1) {
+                py::class_<PiecewiseLinearInterpolator_adaptive<n_dim, 1>>(m, name.c_str(), long_name.c_str())
+                        .def(py::init<operator_set_evaluator_iface *, std::array<int, n_dim> &, std::array<double, n_dim> &,
+                                std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
+                        .def("evaluate", &PiecewiseLinearInterpolator_adaptive<n_dim, 1>::evaluate, "point"_a)
+                        .def("evaluate_with_derivatives",
+                            &PiecewiseLinearInterpolator_adaptive<n_dim, 1>::evaluate_with_derivatives,
+                            "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a);
+            }
+            if (n_ops == 2) {
+                py::class_<PiecewiseLinearInterpolator_adaptive<n_dim, 2>>(m, name.c_str(), long_name.c_str())
+                        .def(py::init<operator_set_evaluator_iface *, operator_set_evaluator_iface *,
+                        std::array<int, n_dim> &, std::array<double, n_dim> &,
+                                std::array<double, n_dim> &>(), py::keep_alive<1, 2>())
+                        .def("evaluate", &PiecewiseLinearInterpolator_adaptive<n_dim, 2>::evaluate, "point"_a)
+                        .def("evaluate_with_derivatives",
+                            &PiecewiseLinearInterpolator_adaptive<n_dim, 2>::evaluate_with_derivatives,
+                            "points"_a, "block_idx"_a, "interp_values"_a, "derivatives"_a);
+            }
         }
         catch (...) {
             // exceptions are expected - due to template-based exposure some n_dims-n_ops pairs can overlap
@@ -34,24 +46,42 @@ struct piecewise_linear_interpolator_adaptive_exposer
 
 void pybind_piecewise_linear_interpolator_adaptive(py::module &m)
 {
-    piecewise_linear_interpolator_adaptive_exposer<2> e2;
+    piecewise_linear_interpolator_adaptive_exposer<2, 1> e2;
     e2.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<3> e3;
+    piecewise_linear_interpolator_adaptive_exposer<3, 1> e3;
     e3.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<4> e4;
+    piecewise_linear_interpolator_adaptive_exposer<4, 1> e4;
     e4.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<5> e5;
+    piecewise_linear_interpolator_adaptive_exposer<5, 1> e5;
     e5.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<6> e6;
+    piecewise_linear_interpolator_adaptive_exposer<6, 1> e6;
     e6.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<7> e7;
+    piecewise_linear_interpolator_adaptive_exposer<7, 1> e7;
     e7.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<8> e8;
+    piecewise_linear_interpolator_adaptive_exposer<8, 1> e8;
     e8.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<9> e9;
+    piecewise_linear_interpolator_adaptive_exposer<9, 1> e9;
     e9.expose(m);
-    piecewise_linear_interpolator_adaptive_exposer<10> e10;
+    piecewise_linear_interpolator_adaptive_exposer<10, 1> e10;
     e10.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<2, 2> e22;
+    e22.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<3, 2> e32;
+    e32.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<4, 2> e42;
+    e42.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<5, 2> e52;
+    e52.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<6, 2> e62;
+    e62.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<7, 2> e72;
+    e72.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<8, 2> e82;
+    e82.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<9, 2> e92;
+    e92.expose(m);
+    piecewise_linear_interpolator_adaptive_exposer<10, 2> e102;
+    e102.expose(m);
 }
 
 

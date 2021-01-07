@@ -7,7 +7,7 @@
  * Interpolator base for static/adaptive piecewise linear interpolator.
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
+template <int n_dim, int n_ops>
 class PiecewiseLinearInterpolatorBase
 {
 public:

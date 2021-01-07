@@ -2,8 +2,8 @@
 #include <algorithm>
 #include "PiecewiseLinearInterpolatorBase.h"
 
-template<int n_dim>
-PiecewiseLinearInterpolatorBase<n_dim>::PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints,
+template<int n_dim, int n_ops>
+PiecewiseLinearInterpolatorBase<n_dim, n_ops>::PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints,
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
@@ -20,8 +20,8 @@ PiecewiseLinearInterpolatorBase<n_dim>::PiecewiseLinearInterpolatorBase(const st
         axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
 }
 
-template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::find_hypercube(const std::vector<double> &points,
+template<int n_dim, int n_ops>
+void PiecewiseLinearInterpolatorBase<n_dim, n_ops>::find_hypercube(const std::vector<double> &points,
                                                             std::array<int, n_dim> &hypercube,
                                                             std::array<double, n_dim> &scaled_point,
                                                             const int point_index)
@@ -34,8 +34,8 @@ void PiecewiseLinearInterpolatorBase<n_dim>::find_hypercube(const std::vector<do
     }
 }
 
-template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::find_simplex(const std::array<int, n_dim> &hypercube,
+template<int n_dim, int n_ops>
+void PiecewiseLinearInterpolatorBase<n_dim, n_ops>::find_simplex(const std::array<int, n_dim> &hypercube,
                                                           const std::array<double, n_dim> &scaled_point,
                                                           std::array<int, n_dim> &tri_order,
                                                           std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
@@ -53,8 +53,8 @@ void PiecewiseLinearInterpolatorBase<n_dim>::find_simplex(const std::array<int, 
     }
 }
 
-template<int n_dim>
-double PiecewiseLinearInterpolatorBase<n_dim>::evaluate(const std::vector<double> &point)
+template<int n_dim, int n_ops>
+double PiecewiseLinearInterpolatorBase<n_dim, n_ops>::evaluate(const std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
@@ -74,13 +74,13 @@ double PiecewiseLinearInterpolatorBase<n_dim>::evaluate(const std::vector<double
     return interp;
 }
 
-template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+template<int n_dim, int n_ops>
+void PiecewiseLinearInterpolatorBase<n_dim, n_ops>::evaluate_with_derivatives(const std::vector<double> &points,
                                                                        const std::vector<int> &block_idx,
                                                                        std::vector<double> &interp_values,
                                                                        std::vector<double> &derivatives)
 {
-    for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
+    for (std::size_t block_i = 0; block_i < block_idx.size() / n_ops; block_i += n_ops)
     {
         int point_i = block_idx[block_i];
         int point_index = point_i * n_dim; ///< index of the point's first coordinate in the std::vector points
@@ -93,23 +93,29 @@ void PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std
         std::array<int, n_dim> tri_order;
         find_simplex(hypercube, scaled_point, tri_order, simplex);
 
-        std::array<double, n_dim + 1> simplex_vertex_values;
+        std::array<std::array<double, n_dim + 1>, n_ops> simplex_vertex_values;
         for (int i = 0; i <= n_dim; i++)
             simplex_vertex_values[i] = get_value(simplex[i]);
 
-        interp_values[point_i] = simplex_vertex_values[0];
+        for (int i = 0; i < n_ops; i++)
+        {
+            interp_values[point_i * n_ops + i] = simplex_vertex_values[0][i];
+        }
         double simplex_vertex_values_gap;
         for (int i = 0; i < n_dim; i++)
         {
-            simplex_vertex_values_gap = simplex_vertex_values[i + 1] - simplex_vertex_values[i];
-            interp_values[point_i] += (1 - scaled_point[tri_order[i]]) * simplex_vertex_values_gap;
-            derivatives[point_index + tri_order[i]] = - simplex_vertex_values_gap * axes_step_inv[tri_order[i]];
+            for (int j = 0; j < n_ops; j++)
+            {
+                simplex_vertex_values_gap = simplex_vertex_values[i + 1][j] - simplex_vertex_values[i][j];
+                interp_values[point_i * n_ops + j] += (1 - scaled_point[tri_order[i]]) * simplex_vertex_values_gap;
+                derivatives[(point_index + tri_order[i]) * n_ops + j] = - simplex_vertex_values_gap * axes_step_inv[tri_order[i]];
+            }
         }
     }
 }
 
-template<int n_dim>
-int PiecewiseLinearInterpolatorBase<n_dim>::get_index_from_point(const std::array<int, n_dim> &vertex)
+template<int n_dim, int n_ops>
+int PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_index_from_point(const std::array<int, n_dim> &vertex)
 {
     int index = 0;
     for (int dim_i = 0; dim_i < n_dim; dim_i++)
@@ -117,8 +123,8 @@ int PiecewiseLinearInterpolatorBase<n_dim>::get_index_from_point(const std::arra
     return index;
 }
 
-template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
+template<int n_dim, int n_ops>
+void PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
                                                                              std::vector<double> &point)
 {
     for (int i = 0; i < n_dim; i++)

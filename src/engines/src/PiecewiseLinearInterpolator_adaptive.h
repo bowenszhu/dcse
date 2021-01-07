@@ -10,7 +10,7 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
+template <int n_dim, int n_ops>
 class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorBase<n_dim>
 {
 public:
@@ -18,6 +18,30 @@ public:
                                          const std::array<int, n_dim> &axesPoints,
                                          const std::array<double, n_dim> &axesMin,
                                          const std::array<double, n_dim> &axesMax);
+
+private:
+    std::unordered_map<int, double> point_data;             ///< adaptive storage
+    operator_set_evaluator_iface *base_points_generator;    ///< real function
+    /**
+     * The function checks whether the value at the given vertex is computed before,
+     *      if yes, the value is directly returned;
+     *      if not, the function computes the value, stores it and then returns it.
+     *
+     * @param vertex The index of the given supporting point along axes
+     * @return The real function value of the point
+     */
+    double get_value(const std::array<int, n_dim> &vertex) override;
+};
+
+template <int n_dim>
+class PiecewiseLinearInterpolator_adaptive<n_dim, 2> : public PiecewiseLinearInterpolatorBase<n_dim>
+{
+public:
+    PiecewiseLinearInterpolator_adaptive(operator_set_evaluator_iface *base_points_generator,
+                                        operator_set_evaluator_iface *base_points_generator1,
+                                        const std::array<int, n_dim> &axesPoints,
+                                        const std::array<double, n_dim> &axesMin,
+                                        const std::array<double, n_dim> &axesMax);
 
 private:
     std::unordered_map<int, double> point_data;             ///< adaptive storage
