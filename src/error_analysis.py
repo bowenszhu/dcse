@@ -8,14 +8,11 @@ from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolato
 from src.cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 
-from src.testing_functions import func2d
-from src.testing_functions import derivs2d
-from src.testing_functions import func3d
-from src.testing_functions import derivs3d
+from testing_functions import *
 
 
 def func_helper(*var):
-    return func3d(np.array(var))
+    return func5d(np.array(var))
 
 
 def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
@@ -73,12 +70,12 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Calculate exact values
     print("Calculating exact values...", end=" ")
-    exact_vals = np.apply_along_axis(func3d, 0, checking_grid)
+    exact_vals = np.apply_along_axis(func5d, 0, checking_grid)
     print("Done")
 
     # Calculate exact derivatives
     print("Calculating exact derivatives...", end=" ")
-    exact_derivs = np.apply_along_axis(derivs3d, 0, checking_grid)
+    exact_derivs = np.apply_along_axis(derivs5d, 0, checking_grid)
     print("Done")
 
     # Delaunay Barycentric (static) interpolation
@@ -159,7 +156,7 @@ def plot_interp_error(n_dim, supp_grids):
     darts_mean_dererr = []
 
     for i in range(len(supp_grids)):
-        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 3, -1.0, 1.0, False)
+        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 2, -1.0, 1.0, False)
         del_mean_valerr.append(np.mean(val_err[0]))
         del_mean_dererr.append(np.mean(deriv_err[0]))
         piece_mean_valerr.append(np.mean(val_err[1]))
@@ -171,7 +168,7 @@ def plot_interp_error(n_dim, supp_grids):
         plt.figure(1)
         plt.loglog(supp_grids, del_mean_valerr, label="Delaunay")
         plt.loglog(supp_grids, piece_mean_valerr, label="Piecewise Linear")
-        plt.loglog(supp_grids, darts_mean_valerr, label="Darts multilinear")
+        plt.loglog(supp_grids, darts_mean_valerr, label="Darts Multilinear")
         plt.legend()
         plt.title("Function error")
         plt.xlabel("# of supporting points")
@@ -180,7 +177,7 @@ def plot_interp_error(n_dim, supp_grids):
         plt.figure(2)
         plt.loglog(supp_grids, del_mean_dererr, label="Delaunay")
         plt.loglog(supp_grids, piece_mean_dererr, label="Piecewise Linear")
-        plt.loglog(supp_grids, darts_mean_dererr, label="Darts multilinear")
+        plt.loglog(supp_grids, darts_mean_dererr, label="Darts Multilinear")
         plt.legend()
         plt.title("Derivative error")
         plt.xlabel("# of supporting points")
