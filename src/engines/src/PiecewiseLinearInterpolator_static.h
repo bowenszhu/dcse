@@ -11,8 +11,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
-class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim>
+template <int n_dim, typename T= long int>
+class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim, T>
 {
 public:
     /**
@@ -34,7 +34,7 @@ private:
     /**
      * This function transfers index of supporting point to its indices along axes.
      *
-     * For example, in the 2-dimensional grid with axes_points = [4, 3],
+     * For example, in the 2-dimensional grid with axes_lpoints = [4, 3],
      * the supporting point with index 0 is [0, 0],
      * the supporting point with index 4 is [1, 0],
      * the supporting point with index 10 is [3, 1].
@@ -42,7 +42,7 @@ private:
      * @param[in] index Index of the supporting point in the storage
      * @param[out] vertex The supporting point's index along each axis
      */
-    void get_point_from_index(int index, std::array<int, n_dim> &vertex);
+    void get_point_from_index(T index, std::array<int, n_dim> &vertex);
     /**
      * Get the real function value of the given supporting point.
      *

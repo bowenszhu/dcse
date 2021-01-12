@@ -2,26 +2,40 @@
 #include <algorithm>
 #include "PiecewiseLinearInterpolatorBase.h"
 
-template<int n_dim>
-PiecewiseLinearInterpolatorBase<n_dim>::PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints,
+template<int n_dim, typename T= long int>
+PiecewiseLinearInterpolatorBase<n_dim, T>::PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints,
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
+
+    unsigned long long int check = axes_points[0];
+    for (int dim_i=1; dim_i<n_dim; dim_i++)
+        check *= axes_points[dim_i];
+    if (check > std::numeric_limits<T>::max())
+    {
+        std::cerr<<"The number of supporting points exceeds the maximum value type "<<typeid(T).name()<<"can hold"<<std::endl;
+    }
+
+
     for (int dim = 0; dim < n_dim; dim++)
     {
+
         axes_step[dim] = (axes_max[dim] - axes_min[dim]) / (axes_points[dim] - 1);
         axes_step_inv[dim] = 1 / axes_step[dim];
     }
+
+
     for (int vertex_i = 0; vertex_i < n_dim; vertex_i++)
         for (int dim_i = vertex_i; dim_i < n_dim; dim_i++)
             standard_simplex[vertex_i][dim_i] = 1;
     axes_mult[n_dim - 1] = 1;
     for (int dim {n_dim - 2}; dim >= 0; dim--)
         axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
+
 }
 
-template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::find_hypercube(const std::vector<double> &points,
+template<int n_dim, typename T = long int>
+void PiecewiseLinearInterpolatorBase<n_dim,T>::find_hypercube(const std::vector<double> &points,
                                                             std::array<int, n_dim> &hypercube,
                                                             std::array<double, n_dim> &scaled_point,
                                                             const int point_index)
@@ -35,7 +49,7 @@ void PiecewiseLinearInterpolatorBase<n_dim>::find_hypercube(const std::vector<do
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::find_simplex(const std::array<int, n_dim> &hypercube,
+void PiecewiseLinearInterpolatorBase<n_dim,T>::find_simplex(const std::array<int, n_dim> &hypercube,
                                                           const std::array<double, n_dim> &scaled_point,
                                                           std::array<int, n_dim> &tri_order,
                                                           std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
@@ -54,7 +68,7 @@ void PiecewiseLinearInterpolatorBase<n_dim>::find_simplex(const std::array<int, 
 }
 
 template<int n_dim>
-double PiecewiseLinearInterpolatorBase<n_dim>::evaluate(const std::vector<double> &point)
+double PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate(const std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
     std::array<double, n_dim> scaled_point;
@@ -75,7 +89,7 @@ double PiecewiseLinearInterpolatorBase<n_dim>::evaluate(const std::vector<double
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std::vector<double> &points,
+void PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate_with_derivatives(const std::vector<double> &points,
                                                                        const std::vector<int> &block_idx,
                                                                        std::vector<double> &interp_values,
                                                                        std::vector<double> &derivatives)
@@ -108,17 +122,19 @@ void PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std
     }
 }
 
-template<int n_dim>
-int PiecewiseLinearInterpolatorBase<n_dim>::get_index_from_point(const std::array<int, n_dim> &vertex)
+template<int n_dim, typename T=long int>
+int PiecewiseLinearInterpolatorBase<n_dim,T>::get_index_from_point(const std::array<int, n_dim> &vertex)
 {
-    int index = 0;
+
+
+    T index = 0;
     for (int dim_i = 0; dim_i < n_dim; dim_i++)
         index += vertex[dim_i] * this->axes_mult[dim_i];
     return index;
 }
 
 template<int n_dim>
-void PiecewiseLinearInterpolatorBase<n_dim>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
+void PiecewiseLinearInterpolatorBase<n_dim,T>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
                                                                              std::vector<double> &point)
 {
     for (int i = 0; i < n_dim; i++)

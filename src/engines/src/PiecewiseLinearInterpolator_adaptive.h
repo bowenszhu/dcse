@@ -10,8 +10,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
-class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorBase<n_dim>
+template <int n_dim, typename T= long int>
+class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorBase<n_dim, T>
 {
 public:
     PiecewiseLinearInterpolator_adaptive(operator_set_evaluator_iface *base_points_generator,
