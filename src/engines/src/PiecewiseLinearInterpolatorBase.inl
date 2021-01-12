@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "PiecewiseLinearInterpolatorBase.h"
 
-template<int n_dim, typename T= long int>
+template<int n_dim, typename T>
 PiecewiseLinearInterpolatorBase<n_dim, T>::PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints,
     const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
@@ -34,7 +34,7 @@ PiecewiseLinearInterpolatorBase<n_dim, T>::PiecewiseLinearInterpolatorBase(const
 
 }
 
-template<int n_dim, typename T = long int>
+template<int n_dim, typename T>
 void PiecewiseLinearInterpolatorBase<n_dim,T>::find_hypercube(const std::vector<double> &points,
                                                             std::array<int, n_dim> &hypercube,
                                                             std::array<double, n_dim> &scaled_point,
@@ -48,7 +48,7 @@ void PiecewiseLinearInterpolatorBase<n_dim,T>::find_hypercube(const std::vector<
     }
 }
 
-template<int n_dim>
+template<int n_dim, typename T>
 void PiecewiseLinearInterpolatorBase<n_dim,T>::find_simplex(const std::array<int, n_dim> &hypercube,
                                                           const std::array<double, n_dim> &scaled_point,
                                                           std::array<int, n_dim> &tri_order,
@@ -67,7 +67,7 @@ void PiecewiseLinearInterpolatorBase<n_dim,T>::find_simplex(const std::array<int
     }
 }
 
-template<int n_dim>
+template<int n_dim, typename T>
 double PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate(const std::vector<double> &point)
 {
     std::array<int, n_dim> hypercube;
@@ -88,7 +88,7 @@ double PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate(const std::vector<dou
     return interp;
 }
 
-template<int n_dim>
+template<int n_dim, typename T>
 void PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate_with_derivatives(const std::vector<double> &points,
                                                                        const std::vector<int> &block_idx,
                                                                        std::vector<double> &interp_values,
@@ -122,7 +122,7 @@ void PiecewiseLinearInterpolatorBase<n_dim, T>::evaluate_with_derivatives(const 
     }
 }
 
-template<int n_dim, typename T=long int>
+template<int n_dim, typename T>
 int PiecewiseLinearInterpolatorBase<n_dim,T>::get_index_from_point(const std::array<int, n_dim> &vertex)
 {
 
@@ -133,7 +133,7 @@ int PiecewiseLinearInterpolatorBase<n_dim,T>::get_index_from_point(const std::ar
     return index;
 }
 
-template<int n_dim>
+template<int n_dim, typename T>
 void PiecewiseLinearInterpolatorBase<n_dim,T>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
                                                                              std::vector<double> &point)
 {

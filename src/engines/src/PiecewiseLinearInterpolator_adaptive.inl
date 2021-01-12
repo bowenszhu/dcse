@@ -1,13 +1,13 @@
 #include "PiecewiseLinearInterpolator_adaptive.h"
 
-template<int n_dim, typename T = long int>
+template<int n_dim, typename T>
 PiecewiseLinearInterpolator_adaptive<n_dim, T>::PiecewiseLinearInterpolator_adaptive(
         operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
         : PiecewiseLinearInterpolatorBase<n_dim, T>(axesPoints, axesMin, axesMax),
                 base_points_generator(base_points_generator) { }
 
-template<int n_dim, typename T = long int>
+template<int n_dim, typename T>
 double PiecewiseLinearInterpolator_adaptive<n_dim, T>::get_value(const std::array<int, n_dim> &vertex) {
     T index = this->get_index_from_point(vertex);
     auto search = point_data.find(index);

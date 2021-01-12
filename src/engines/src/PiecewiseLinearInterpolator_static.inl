@@ -1,7 +1,7 @@
 #include "PiecewiseLinearInterpolator_static.h"
 
 
-template<int n_dim, typename T = long int>
+template<int n_dim, typename T>
 PiecewiseLinearInterpolator_static<n_dim, T>::PiecewiseLinearInterpolator_static(
         operator_set_evaluator_iface *base_points_generator, const std::array<int, n_dim> &axesPoints,
         const std::array<double, n_dim> &axesMin, const std::array<double, n_dim> &axesMax)
@@ -22,7 +22,7 @@ PiecewiseLinearInterpolator_static<n_dim, T>::PiecewiseLinearInterpolator_static
     }
 }
 
-template<int n_dim, typename T= long int>
+template<int n_dim, typename T>
 void PiecewiseLinearInterpolator_static<n_dim, T>::get_point_from_index(T index,
                                                                      std::array<int, n_dim> &vertex)
 {
@@ -33,7 +33,7 @@ void PiecewiseLinearInterpolator_static<n_dim, T>::get_point_from_index(T index,
     }
 }
 
-template<int n_dim, typename T= long int>
+template<int n_dim, typename T>
 double PiecewiseLinearInterpolator_static<n_dim, T>::get_value(const std::array<int, n_dim> &vertex)
 {
     T index = this->get_index_from_point(vertex);
