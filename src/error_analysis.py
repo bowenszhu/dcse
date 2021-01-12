@@ -12,7 +12,7 @@ from testing_functions import *
 
 
 def func_helper(*var):
-    return func5d(np.array(var))
+    return func6d(np.array(var))
 
 
 def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
@@ -70,12 +70,12 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Calculate exact values
     print("Calculating exact values...", end=" ")
-    exact_vals = np.apply_along_axis(func5d, 0, checking_grid)
+    exact_vals = np.apply_along_axis(func6d, 0, checking_grid)
     print("Done")
 
     # Calculate exact derivatives
     print("Calculating exact derivatives...", end=" ")
-    exact_derivs = np.apply_along_axis(derivs5d, 0, checking_grid)
+    exact_derivs = np.apply_along_axis(derivs6d, 0, checking_grid)
     print("Done")
 
     # Delaunay Barycentric (static) interpolation
