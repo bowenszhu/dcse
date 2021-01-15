@@ -27,8 +27,8 @@
 #include <limits>
 #include <algorithm>
 
-#include "operator_set_interpolator_gpu.h"
 #include "gpu_tools.h"
+#include "operator_set_interpolator_common.h"
 
 // To maximize performance use constant memory
 // Disadvantage 1 - Simulataneous usage of multiple objecst with different parameters is not possible
@@ -41,6 +41,7 @@ __constant__ value_t axis_step_gpu[MAX_GPU_NC];
 __constant__ value_t axis_step_inv_gpu[MAX_GPU_NC];
 // Here we shoudl use uint64_t, however this type seems not to work ()
 __constant__ uint32_t axis_body_mult_gpu[MAX_GPU_NC];
+__constant__ uint32_t axis_points_gpu[MAX_GPU_NC];
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
 __global__ void
@@ -48,10 +49,15 @@ operator_set_interpolator_static_kernel(const unsigned int n_blocks, const index
                                         const interp_value_t *body_data_gpu,
                                         value_t *interp_values, value_t *interp_derivs);
 
+template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
+__global__ void
+operator_set_simple_kernel(const unsigned int n_blocks, const index_t *block_idx, value_t *axis_values,
+                           value_t *interp_values, value_t *interp_derivs);
+
 using namespace std;
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
-operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_interpolator_gpu(operator_set_evaluator_iface *base_points_generator_, std::vector<index_t> &axis_resolution, std::vector<interp_value_t> &axis_min_, std::vector<interp_value_t> &axis_max_) : base_points_generator(base_points_generator_)
+operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_interpolator_gpu(operator_set_evaluator_iface *base_points_generator_, const std::vector<index_t> &axis_resolution, const std::vector<value_t> &axis_min_, const std::vector<value_t> &axis_max_) : base_points_generator(base_points_generator_)
 
 {
 
@@ -60,9 +66,18 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   values_gpu = 0;
   derivatives_gpu = 0;
   block_idx_gpu = 0;
+  body_data_gpu = 0;
 
   uint64_t n_points_total = 1;
   uint64_t n_bodies_total = 1;
+  if (axis_resolution[0] == 0)
+  {
+    fake_mode = 1;
+  }
+  else
+  {
+    fake_mode = 0;
+  }
 
   for (int i = 0; i < N_DIMS; i++)
   {
@@ -87,14 +102,20 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
     axis_mult[i] = axis_mult[i + 1] * axis_points[i + 1];
     axis_body_mult[i] = axis_body_mult[i + 1] * (axis_points[i + 1] - 1);
   }
+  // for fake, after important definitions have been made, we can return
+  if (fake_mode)
+  {
+    return;
+  }
 
-  cudaMemcpyToSymbol(axis_min_gpu, axis_min, sizeof(axis_min));
-  cudaMemcpyToSymbol(axis_max_gpu, axis_max, sizeof(axis_max));
+  cudaMemcpyToSymbol(axis_min_gpu, axis_min.data(), sizeof(axis_min));
+  cudaMemcpyToSymbol(axis_max_gpu, axis_max.data(), sizeof(axis_max));
   cudaMemcpyToSymbol(axis_step_gpu, axis_step, sizeof(axis_step));
   cudaMemcpyToSymbol(axis_step_inv_gpu, axis_step_inv, sizeof(axis_step_inv));
   cudaMemcpyToSymbol(axis_body_mult_gpu, axis_body_mult, sizeof(axis_body_mult));
+  cudaMemcpyToSymbol(axis_points_gpu, axis_points.data(), sizeof(axis_points));
 
-  //std::cout << "Allocating storage for static interpolation on GPU (" << n_points_total << " points, " << n_bodies_total << " bodies)..." << std::endl;
+  std::cout << "Allocating storage for static interpolation (" << n_points_total << " points, " << n_bodies_total << " bodies)..." << std::endl;
 
   point_data.resize(n_points_total);
   //body_data.resize(n_bodies_total);
@@ -105,7 +126,7 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   // body data storage on GPU
   CUDA_CHECK_RETURN(cudaMalloc((void **)&body_data_gpu, sizeof(interp_value_t) * n_bodies_total * N_VERTS * N_OPS));
 
-  //std::cout << "Generating point data..." << std::endl;
+  std::cout << "Generating point data..." << std::endl;
 
   // in fact timer is never there, since it`s set via init_timer_node procedure...
   if (timer)
@@ -145,7 +166,7 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   if (timer)
     timer->node["body generation"].node["point generation"].stop();
 
-  //std::cout << "Populating body data..." << std::endl;
+  std::cout << "Populating body data..." << std::endl;
 
   body_data_points_t points;
   for (auto i = 0; i < n_bodies_total; i++)
@@ -166,9 +187,12 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
 }
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
-int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_derivatives(std::vector<value_t> &state, std::vector<index_t> &block_idx, std::vector<value_t> &values, std::vector<value_t> &derivatives)
+int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_derivatives(const std::vector<value_t> &state, const std::vector<index_t> &block_idx, std::vector<value_t> &values, std::vector<value_t> &derivatives)
 {
-  index_t n_fixed_obl_limits = 0;
+  if (fake_mode)
+  {
+    printf("Fake mode for CPU call of GPU interpolators is unexpected!\n");
+  }
 
   if (timer)
     timer->start();
@@ -205,10 +229,6 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_
 
   n_interpolations += N_OPS * block_idx.size();
 
-  if (n_fixed_obl_limits)
-  {
-    cout << "OBL limits fix applied " << n_fixed_obl_limits << " time(s) \n";
-  }
   if (timer)
     timer->stop();
   return 0;
@@ -217,8 +237,6 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
 int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_derivatives_d(index_t n_blocks, value_t *state_d, index_t *block_idx_d, value_t *values_d, value_t *derivatives_d)
 {
-  index_t n_fixed_obl_limits = 0;
-
   if (timer)
     timer->start();
 
@@ -226,20 +244,24 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate_with_
     timer->node["gpu interpolation"].start();
 
   index_t n_threads = n_blocks;
-  operator_set_interpolator_static_kernel<interp_value_t, N_DIMS, N_OPS>
-      KERNEL_1D_THREAD(n_threads, ROW_KERNEL_BLOCK_SIZE)(n_threads, block_idx_d, state_d,
-                                                  body_data_gpu,
-                                                  values_d, derivatives_d);
+  if (fake_mode)
+  {
+    operator_set_simple_kernel<interp_value_t, N_DIMS, N_OPS>
+        KERNEL_1D_THREAD(n_threads, ROW_KERNEL_BLOCK_SIZE)(n_threads, block_idx_d, state_d,
+                                                           values_d, derivatives_d);
+  }
+  else
+  {
+    operator_set_interpolator_static_kernel<interp_value_t, N_DIMS, N_OPS>
+        KERNEL_1D_THREAD(n_threads, ROW_KERNEL_BLOCK_SIZE)(n_threads, block_idx_d, state_d,
+                                                           body_data_gpu,
+                                                           values_d, derivatives_d);
+  }
   cudaDeviceSynchronize();
   if (timer)
     timer->node["gpu interpolation"].stop();
 
   n_interpolations += N_OPS * n_blocks;
-
-  if (n_fixed_obl_limits)
-  {
-    cout << "OBL limits fix applied " << n_fixed_obl_limits << " time(s) \n";
-  }
 
   if (timer)
     timer->stop();
@@ -259,77 +281,79 @@ operator_set_interpolator_static_kernel(const unsigned int n_blocks, const index
   index_t i_cell = block_idx[i];
   //printf("working %d on %d\n", i, i_cell);
   static const uint16_t N_VERTS = 1 << N_DIMS;
-  interp_value_t workspace[N_VERTS * (N_DIMS + 1) * N_OPS];
 
   interp_index_t body_idx = 0;
+  interp_value_t axis_low[N_DIMS];
+  interp_value_t mult[N_DIMS];
 
-  // apply hard fix for obl limits
   for (int i = 0; i < N_DIMS; ++i)
   {
-
-    if (axis_values[i_cell * N_DIMS + i] < axis_min_gpu[i])
-    {
-      axis_values[i_cell * N_DIMS + i] = axis_min_gpu[i];
-    }
-    else if (axis_values[i_cell * N_DIMS + i] > axis_max_gpu[i])
-    {
-      axis_values[i_cell * N_DIMS + i] = axis_max_gpu[i];
-    }
-
-    int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min_gpu[i]) * axis_step_inv_gpu[i]);
-
+    unsigned int axis_idx = get_axis_idx_low_mult(axis_values + i_cell * N_DIMS, i,
+                                                  &axis_min_gpu[0], &axis_max_gpu[0],
+                                                  &axis_step_gpu[0], &axis_step_inv_gpu[0], &axis_points_gpu[0],
+                                                  axis_low, mult);
     body_idx += axis_idx * axis_body_mult_gpu[i];
   }
 
-  // copy operator values for all vertices
-  for (int i = 0; i < N_VERTS * N_OPS; ++i)
-  {
-    workspace[i] = body_data_gpu[body_idx * N_VERTS * N_OPS + i];
-  }
+  interpolate_with_derivatives<value_t, interp_value_t, N_DIMS, N_OPS>(axis_values + i_cell * N_DIMS, body_data_gpu + body_idx * N_VERTS * N_OPS,
+                                                                       &axis_low[0], &mult[0], &axis_step_inv_gpu[0],
+                                                                       interp_values + i_cell * N_OPS,
+                                                                       interp_derivs + i_cell * N_OPS * N_DIMS);
+}
 
-  int pwr = N_VERTS / 2; // distance between high and low values
-  for (int i = 0; i < N_DIMS; ++i)
-  {
-    int axis_idx = int((axis_values[i_cell * N_DIMS + i] - axis_min_gpu[i]) * axis_step_inv_gpu[i]);
-    interp_value_t axis_low = axis_idx * axis_step_gpu[i] + axis_min_gpu[i];
-    interp_value_t mult = (axis_values[i_cell * N_DIMS + i] - axis_low) * axis_step_inv_gpu[i];
-    for (int j = 0; j < pwr; ++j)
-    {
-      for (int op = 0; op < N_OPS; ++op)
-      {
-        // update own derivative
-        workspace[((i + 1) * N_VERTS + j) * N_OPS + op] = (workspace[(j + pwr) * N_OPS + op] - workspace[j * N_OPS + op]) * axis_step_inv_gpu[i];
-      }
+// fake kernel for engine_nc_gpu with N_DIMS acc N_DIMS flux operators
+template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
+__global__ void
+operator_set_simple_kernel(const unsigned int n_blocks, const index_t *block_idx, value_t *axis_values,
+                           value_t *interp_values, value_t *interp_derivs)
+{
+  const unsigned i = blockIdx.x * blockDim.x + threadIdx.x; // global thread index
+  if (i > n_blocks - 1)
+    return;
 
-      // update all dependent derivatives
-      for (int k = 0; k < i; k++)
-      {
-        for (int op = 0; op < N_OPS; ++op)
-        {
-          workspace[(N_VERTS * (k + 1) + j) * N_OPS + op] = workspace[(N_VERTS * (k + 1) + j) * N_OPS + op] + mult * (workspace[(N_VERTS * (k + 1) + j + pwr) * N_OPS + op] - workspace[(N_VERTS * (k + 1) + j) * N_OPS + op]);
-        }
-      }
+  index_t i_cell = block_idx[i];
 
-      for (int op = 0; op < N_OPS; ++op)
-      {
-        // interpolate value
-        workspace[j * N_OPS + op] = workspace[j * N_OPS + op] + (axis_values[i_cell * N_DIMS + i] - axis_low) * workspace[(N_VERTS * (i + 1) + j) * N_OPS + op];
-      }
-    }
-    pwr /= 2;
-  }
+  // here assume simpliest setting where we only have N_DIMS acc operators and N_DIMS flux operators
+  // then assign every acc and flux operator value to correspondent composition from state
+  value_t zc_last = 1;
+  // start from the first composition
+  int v_idx = 1;
   for (int op = 0; op < N_OPS; ++op)
   {
-    interp_values[i_cell * N_OPS + op] = workspace[op];
+    if (v_idx < N_DIMS)
+    {
+      interp_values[i_cell * N_OPS + op] = axis_values[i_cell * N_DIMS + v_idx];
+      zc_last -= axis_values[i_cell * N_DIMS + v_idx];
+    }
+    else
+    {
+      interp_values[i_cell * N_OPS + op] = zc_last;
+      zc_last = 1;
+    }
+
     for (int i = 0; i < N_DIMS; ++i)
     {
-      interp_derivs[i_cell * N_OPS * N_DIMS + op * N_DIMS + i] = workspace[N_VERTS * (i + 1) * N_OPS + op];
+      interp_derivs[i_cell * N_OPS * N_DIMS + op * N_DIMS + i] = 0;
+    }
+    // reset v_idx for flux operators
+    if (v_idx == N_DIMS)
+    {
+      for (int i = 1; i < N_DIMS; ++i)
+      {
+        interp_derivs[i_cell * N_OPS * N_DIMS + op * N_DIMS + i] = -1;
+      }
+      v_idx = 1;
+    }
+    else
+    {
+      interp_derivs[i_cell * N_OPS * N_DIMS + op * N_DIMS + v_idx] = 1;
+      v_idx++;
     }
   }
 }
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
-int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate(std::vector<value_t> &state, std::vector<value_t> &values)
+int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::evaluate(const std::vector<value_t> &state, std::vector<value_t> &values)
 {
 
   return 0;
@@ -357,6 +381,9 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::benchmark(inde
   interp_value_t ax_min = 0;
   interp_value_t ax_max = 200;
   uint32_t n_runs = 10;
+
+  if (n_runs * n_blocks * N_OPS < 1e7)
+    n_runs = 1e7 / n_blocks / N_OPS;
 
   uint64_t n_points_total = 1;
   uint64_t n_cubes_total = 1;
@@ -399,11 +426,12 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::benchmark(inde
     axis_body_mult[k] = axis_body_mult[k + 1] * (axis_points[k + 1] - 1);
   }
 
-  cudaMemcpyToSymbol(axis_min_gpu, axis_min, sizeof(axis_min));
-  cudaMemcpyToSymbol(axis_max_gpu, axis_max, sizeof(axis_max));
+  cudaMemcpyToSymbol(axis_min_gpu, axis_min.data(), sizeof(axis_min));
+  cudaMemcpyToSymbol(axis_max_gpu, axis_max.data(), sizeof(axis_max));
   cudaMemcpyToSymbol(axis_step_gpu, axis_step, sizeof(axis_step));
   cudaMemcpyToSymbol(axis_step_inv_gpu, axis_step_inv, sizeof(axis_step_inv));
   cudaMemcpyToSymbol(axis_body_mult_gpu, axis_body_mult, sizeof(axis_body_mult));
+  cudaMemcpyToSymbol(axis_points_gpu, axis_points.data(), sizeof(axis_points));
 
   used_body_idx.resize(n_cubes_total * param_space_frac);
 
@@ -463,8 +491,7 @@ int operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::benchmark(inde
   omips = n_interpolations * n_runs / main_timer / 1000000;
   omips_gpu = n_interpolations * n_runs / main_timer_gpu / 1000000;
   // mln. interpolations per second
-  printf("OMIPS min %.0lf (%.0lf), max %.0lf (%.0lf), avg: %.0lf (%.0lf) (%d runs)\n",
-         omips_min, omips_min_gpu, omips_max, omips_max_gpu, omips, omips_gpu, n_runs);
+  printf("OMIPS min %7.1lf, max %7.1lf, avg: %7.1lf (%d runs)\n", omips_min_gpu, omips_max_gpu, omips_gpu, n_runs);
 
   return 0;
 }
@@ -479,22 +506,6 @@ void operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::get_point_sta
     remainder_idx = remainder_idx % axis_mult[i];
     state[i] = axis_min[i] + axis_step[i] * axis_idx;
   }
-}
-
-template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
-typename operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::interp_index_t
-operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::get_body_index(state_t &state)
-{
-  interp_index_t body_idx = 0;
-  interp_index_t body_idx_mult = 1;
-
-  for (auto i = 0; i < N_DIMS; ++i)
-  {
-    interp_index_t axis_idx = interp_index_t((state[i] - axis_min[i]) * axis_step_inv[i]);
-    body_idx += axis_idx * body_idx_mult;
-    body_idx_mult *= (axis_points[i] - 1);
-  }
-  return body_idx;
 }
 
 template <typename interp_value_t, uint8_t N_DIMS, uint8_t N_OPS>
@@ -519,14 +530,3 @@ void operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::get_body_poin
     }
   }
 }
-
-template class operator_set_interpolator_gpu<double, 1, 1>;
-template class operator_set_interpolator_gpu<double, 2, 1>;
-template class operator_set_interpolator_gpu<double, 3, 1>;
-template class operator_set_interpolator_gpu<double, 4, 1>;
-template class operator_set_interpolator_gpu<double, 5, 1>;
-template class operator_set_interpolator_gpu<double, 6, 1>;
-template class operator_set_interpolator_gpu<double, 7, 1>;
-template class operator_set_interpolator_gpu<double, 8, 1>;
-template class operator_set_interpolator_gpu<double, 9, 1>;
-template class operator_set_interpolator_gpu<double, 10, 1>;

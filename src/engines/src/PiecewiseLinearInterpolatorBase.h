@@ -3,12 +3,14 @@
 
 #include <array>
 
+#include "evaluator_iface.h"
+
 /**
  * Interpolator base for static/adaptive piecewise linear interpolator.
  * @tparam n_dim The number of dimensions
  */
 template <int n_dim>
-class PiecewiseLinearInterpolatorBase
+class PiecewiseLinearInterpolatorBase : public operator_set_gradient_evaluator_iface
 {
 public:
     /**
@@ -17,7 +19,17 @@ public:
      * @param point
      * @return The interpolation value at the given point
      */
-    double evaluate(const std::vector<double> &point);
+    double evaluate_single_operator(const std::vector<double> &point);
+
+    /**
+     * Compute the interpolation value at the given point.
+     *
+     * @param point
+     * @param values Interpolated value(s)
+     * @return 0 if interpolation is successful
+     */
+    int evaluate(const std::vector<value_t> &point, std::vector<value_t> &values);
+
     /**
      * Given an array of points, compute their interpolation values and approximate gradients.
      *
@@ -34,13 +46,30 @@ public:
      * @param[out] derivatives std::vector with size n_dim * n_points
      *      Approximate gradients
      */
-    void evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
-                                   std::vector<double> &interp_values, std::vector<double> &derivatives);
+    int evaluate_with_derivatives(const std::vector<double> &points, const std::vector<int> &block_idx,
+                                  std::vector<double> &interp_values, std::vector<double> &derivatives);
+
+    /**
+     * Get the parametrization minimum value for given axis
+     *
+     * @param axis
+     * @return parametrization minimum value for given axis
+     */
+    double get_axis_min(int axis);
+
+    /**
+     * Get the parametrization maximum value for given axis
+     *
+     * @param axis
+     * @return parametrization maximum value for given axis
+     */
+
+    double get_axis_max(int axis);
 
 protected:
-    const std::array<int, n_dim> axes_points;  ///< number of supporting points along each axis
-    const std::array<double, n_dim> axes_min;  ///< minimum at each axis
-    const std::array<double, n_dim> axes_max;  ///< maximum of each axis
+    const std::vector<int> axes_points; ///< number of supporting points along each axis
+    const std::vector<double> axes_min; ///< minimum at each axis
+    const std::vector<double> axes_max; ///< maximum of each axis
     /// multiplication factor used for transferring supporting point to point index
     std::array<int, n_dim> axes_mult;
     /// the distance between neighbor supporting points for each axis
@@ -53,8 +82,9 @@ protected:
      * @param axesMin Minimum for each axis
      * @param axesMax Maximum for each axis
      */
-    PiecewiseLinearInterpolatorBase(const std::array<int, n_dim> &axesPoints, const std::array<double, n_dim> &axesMin,
-                                    const std::array<double, n_dim> &axesMax);
+    PiecewiseLinearInterpolatorBase(const std::vector<int> &axesPoints,
+                                    const std::vector<double> &axesMin,
+                                    const std::vector<double> &axesMax);
     /**
      * Given the coordinate of a point, the function computes the hypercube where the point is located and its scaled
      * coordinate inside the hypercube.

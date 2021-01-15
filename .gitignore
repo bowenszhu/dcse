@@ -7,5 +7,7 @@
 *.html
 /src/engines/src/engines_build_info.cpp
 /cmake-build-debug/
-/src/interpolation_errors.eps
-/src/interpolation_errors.png
+**/*.log
+.vscode/settings.json
+**/*.eps
+**/*.png

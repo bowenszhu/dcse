@@ -25,12 +25,12 @@ public:
      * @param axesMax Maximum for each axis
      */
     PiecewiseLinearInterpolator_static(operator_set_evaluator_iface *base_points_generator,
-                                       const std::array<int, n_dim> &axesPoints,
-                                       const std::array<double, n_dim> &axesMin,
-                                       const std::array<double, n_dim> &axesMax);
+                                       const std::vector<int> &axesPoints,
+                                       const std::vector<double> &axesMin,
+                                       const std::vector<double> &axesMax);
 
 private:
-    std::vector<double> point_data;      ///< the real values of all supporting points
+    std::vector<double> point_data; ///< the real values of all supporting points
     /**
      * This function transfers index of supporting point to its indices along axes.
      *

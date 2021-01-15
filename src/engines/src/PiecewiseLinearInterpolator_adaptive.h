@@ -15,13 +15,13 @@ class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorB
 {
 public:
     PiecewiseLinearInterpolator_adaptive(operator_set_evaluator_iface *base_points_generator,
-                                         const std::array<int, n_dim> &axesPoints,
-                                         const std::array<double, n_dim> &axesMin,
-                                         const std::array<double, n_dim> &axesMax);
+                                         const std::vector<int> &axesPoints,
+                                         const std::vector<double> &axesMin,
+                                         const std::vector<double> &axesMax);
 
 private:
-    std::unordered_map<int, double> point_data;             ///< adaptive storage
-    operator_set_evaluator_iface *base_points_generator;    ///< real function
+    std::unordered_map<int, double> point_data;          ///< adaptive storage
+    operator_set_evaluator_iface *base_points_generator; ///< real function
     /**
      * The function checks whether the value at the given vertex is computed before,
      *      if yes, the value is directly returned;

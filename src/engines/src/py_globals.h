@@ -7,8 +7,8 @@
 //    This file is part of the Delft Advanced Research Terra Simulator (DARTS)
 //
 //    DARTS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as 
-//    published by the Free Software Foundation, either version 3 of the 
+//    it under the terms of the GNU Lesser General Public License as
+//    published by the Free Software Foundation, either version 3 of the
 //    License, or (at your option) any later version.
 //
 //    DARTS is distributed in the hope that it will be useful,
@@ -16,23 +16,17 @@
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //
-//    You should have received a copy of the GNU Lesser General Public 
+//    You should have received a copy of the GNU Lesser General Public
 //    License along with DARTS. If not, see <http://www.gnu.org/licenses/>.
 // *************************************************************************
 #ifndef PY_GLOBALS_H
 #define PY_GLOBALS_H
 
-#include <stl_bind.h>
+#include "stl_bind.h"
 #include "globals.h"
 
 namespace py = pybind11;
 PYBIND11_MAKE_OPAQUE(std::vector<index_t>);
 PYBIND11_MAKE_OPAQUE(std::vector<value_t>);
 
-
 #endif
-
-
-
-
-
