@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/include/python3.6m",
+                "${workspaceFolder}/src/engines/src",
+                "/usr/local/cuda/include",
+                "${workspaceFolder}/src/engines/pybind11/include/pybind11"
+            ],
+            "defines": ["WITH_GPU"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

@@ -25,11 +25,11 @@
 #include "py_globals.h"
 #include <stl.h>
 
-#include "py_operator_set_interpolator.hpp"
+#include "py_operator_set_interpolator_exposer.hpp"
 
 namespace py = pybind11;
 
-void pybind_operator_set_interpolator_rates(py::module &m)
+void pybind_operator_set_interpolator_1op(py::module &m)
 {
   // N_DIMS = 1, 2, ..., N_DIMS_MAX
   const int N_DIMS_MAX = MAX_NC;
@@ -37,6 +37,8 @@ void pybind_operator_set_interpolator_rates(py::module &m)
   // N_OPS = A * N_DIMS + B
   const int A = 0;
   const int B = 1;
+  
+  // expose interpolators for a single operator in up to MAX_NC dimensions
   recursive_exposer_ndims_nops<operator_set_interpolator_exposer, py::module, N_DIMS_MAX, A, B> e;
 
   e.expose(m);

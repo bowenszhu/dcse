@@ -35,7 +35,7 @@ class CppAdaptivePiecewiseLinearInterpolator:
 
             # for every dimensionality a separate class exists in darts - here we evaluate its name
             # and get the class from engines, will raise AttributeError if class cannot be found
-            itor_name = getattr(m, 'piecewise_linear_interpolator_adaptive_%d' % self.n_dim)
+            itor_name = getattr(m, 'piecewise_linear_interpolator_adaptive_i_d_%d_1' % self.n_dim)
 
             # create the instance of interpolator
             # point calculation happens here, so measure it

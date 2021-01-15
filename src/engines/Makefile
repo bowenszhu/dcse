@@ -17,18 +17,15 @@ SUBDIRS     =
 BUILD_DIRS  = $(BUILD_DIR) $(patsubst %,$(BUILD_DIR)/%,$(SUBDIRS))
 
 
-OBJ =  operator_set_interpolator_static.o \
-	py_evaluator_iface.o \
+OBJ =  py_evaluator_iface.o \
 	py_globals.o \
 	py_main.o \
-	py_operator_set_interpolator_rates.o \
-	py_operator_set_interpolator_static.o \
-	py_piecewise_linear_interpolator_static.o \
-	py_piecewise_linear_interpolator_adaptive.o \
-	engines_build_info.o
+	py_operator_set_interpolator_1op.o \
+	py_operator_set_interpolator_sim.o \
+	engines_build_info.o 
 
-OBJ_GPU =  	operator_set_interpolator_gpu.cu.o \
-			py_operator_set_interpolator_gpu.o 
+OBJ_GPU = 
+
 
 
 OBJ_D = $(patsubst %,$(BUILD_DIR)/%,$(OBJ))
@@ -70,8 +67,12 @@ $(BUILD_DIRS):
 $(BUILD_DIR)/%.o:          src/%.cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS) $(DFLAGS)  -c -o  $@ $<
 
+# template class instantiation (for interpolators, for example) has been moved to expose functions
+# in order to simplify and generalize the code. So *.cu do not exist anymore
+# consequently, for GPU build those py_*.cpp files which expose gpu classes have to be compiled by nvcc
+# the simpliest solution is to compile all cpp files by nvcc using --x=cu
 $(BUILD_DIR)/%.gpu.o:          src/%.cpp
-	$(CXX) $(CXXFLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU)  -c -o  $@ $<
+	$(NVCC) $(NVCCFLAGS) --x=cu $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<
 
 $(BUILD_DIR)/%.cu.gpu.o:          src/%.cu
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) $(IFLAGS_GPU) $(DFLAGS_GPU) -c -o  $@ $<

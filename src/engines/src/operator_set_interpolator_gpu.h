@@ -49,19 +49,19 @@ class operator_set_interpolator_gpu : public operator_set_gradient_evaluator_ifa
 
 public:
   operator_set_interpolator_gpu(operator_set_evaluator_iface *base_points_generator,
-                                std::vector<index_t> &axis_resolution,
-                                std::vector<interp_value_t> &axis_min,
-                                std::vector<interp_value_t> &axis_max);
+                                const std::vector<index_t> &axis_resolution,
+                                const std::vector<value_t> &axis_min,
+                                const std::vector<value_t> &axis_max);
 
   ~operator_set_interpolator_gpu();
 
   int benchmark(index_t n_points, index_t n_blocks, value_t used_paramspace_fraction, index_t n_unique_bodies); // random init and do several performance runs
 
   int evaluate_with_derivatives(
-      std::vector<value_t> &state,      // INPUT: state variables for every block
-      std::vector<index_t> &block_idx,  // INPUT: array with blocks indexes to process (for OP_NUM)
-      std::vector<value_t> &values,     // OUTPUT: evaluated state function('s) values for every block
-      std::vector<value_t> &derivatives // OUTPUT: evaluated state function('s) derivatives for every block
+      const std::vector<value_t> &state,     // INPUT: state variables for every block
+      const std::vector<index_t> &block_idx, // INPUT: array with blocks indexes to process (for OP_NUM)
+      std::vector<value_t> &values,          // OUTPUT: evaluated state function('s) values for every block
+      std::vector<value_t> &derivatives      // OUTPUT: evaluated state function('s) derivatives for every block
   );
 
   // device version of the evaluate_with_derivatives function, all data assumed to be hosted on device
@@ -74,15 +74,12 @@ public:
   );
 
   int evaluate(
-      std::vector<value_t> &state, // INPUT: state variables
-      std::vector<value_t> &values // OUTPUT: evaluated operator set values
+      const std::vector<value_t> &state, // INPUT: state variables
+      std::vector<value_t> &values       // OUTPUT: evaluated operator set values
   );
 
   // get state correpondent to for given point index
   void inline get_point_state(interp_index_t point_idx, state_t &state);
-
-  // calculate body index for given state
-  interp_index_t inline get_body_index(state_t &state);
 
   // calculate point indexes for given body
   void inline get_body_points(interp_index_t body_idx, body_data_points_t &body_points);
@@ -136,13 +133,13 @@ public:
 
 public:
   // Host properties
-  uint32_t axis_points[N_DIMS];    // [n_dim] number of points along each interpolation axis
-  interp_value_t axis_min[N_DIMS]; // [n_dim] minimum values of each of interpolation axis
-  interp_value_t axis_max[N_DIMS]; // [n_dim] maximum values of each of interpolation axis
-  value_t axis_step[N_DIMS];       // [n_dim] steps of each of interpolation axis
-  value_t axis_step_inv[N_DIMS];   // [n_dim] inversed steps of each of interpolation axis
-  uint64_t axis_mult[N_DIMS];      // [n_dim] mult factor for each axis (for vertices) to ease structured mesh calculations
-  uint32_t axis_body_mult[N_DIMS]; // [n_dim] mult factor for each axis (for bodies) to ease structured mesh calculations
+  std::array<uint32_t, N_DIMS> axis_points; // [n_dim] number of points along each interpolation axis
+  std::array<value_t, N_DIMS> axis_min;     // [n_dim] minimum values of each of interpolation axis
+  std::array<value_t, N_DIMS> axis_max;     // [n_dim] maximum values of each of interpolation axis
+  value_t axis_step[N_DIMS];                // [n_dim] steps of each of interpolation axis
+  value_t axis_step_inv[N_DIMS];            // [n_dim] inversed steps of each of interpolation axis
+  uint64_t axis_mult[N_DIMS];               // [n_dim] mult factor for each axis (for vertices) to ease structured mesh calculations
+  uint32_t axis_body_mult[N_DIMS];          // [n_dim] mult factor for each axis (for bodies) to ease structured mesh calculations
 
   // this object is quieried for operator values at a given point in parameter space
   // N_DIMS and N_OPS must match
@@ -165,6 +162,14 @@ public:
   index_t *block_idx_gpu;
   index_t gpu_data_size;
 
+  // Fake mode to emulate work for high-dimensional models
+  // Generates simplest incompressimble operator set of acc and flux, with correct derivatives
+  int fake_mode;
+
   //axis_params_t axis_params;
 };
+
+// now include implementation of the templated class from inl file
+#include "operator_set_interpolator_gpu.inl"
+
 #endif
