@@ -11,10 +11,6 @@ from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInte
 from testing_functions import *
 
 
-def func_helper(*var):
-    return func6d(np.array(var))
-
-
 def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
     """
     Finds interpolation errors for Delaunay, Piecewise Linear and DARTS interpolators.
@@ -60,28 +56,38 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     assert n_checking_points > n_supporting_points
     assert axis_max > axis_min
 
+    # Deduce function and derivatives names from n_dim
+    func_name = eval('func%dd' % n_dim)
+    derivs_name = eval('derivs%dd' % n_dim)
+
+    def func_helper(*var):
+        return func_name(np.array(var))
+
     # Create grids
     ax_supp_pts = np.ones(n_dim).astype('int32') * n_supporting_points
     ax_min = np.ones(n_dim) * axis_min
     ax_max = np.ones(n_dim) * axis_max
     # Checking grid made slightly smaller than supporting grid to prevent errors
-    checking_pts = np.tile(np.linspace(axis_min + 0.01, axis_max - 0.01, n_checking_points), (n_dim, 1))
+    checking_pts = np.tile(np.linspace(
+        axis_min + 0.01, axis_max - 0.01, n_checking_points), (n_dim, 1))
     checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
     print("Calculating exact values...", end=" ")
-    exact_vals = np.apply_along_axis(func6d, 0, checking_grid)
+    exact_vals = np.apply_along_axis(func_name, 0, checking_grid)
     print("Done")
 
     # Calculate exact derivatives
     print("Calculating exact derivatives...", end=" ")
-    exact_derivs = np.apply_along_axis(derivs6d, 0, checking_grid)
+    exact_derivs = np.apply_along_axis(derivs_name, 0, checking_grid)
     print("Done")
 
     # Delaunay Barycentric (static) interpolation
     print("Performing Delaunay (static) interpolation...", end=" ")
-    delaunay_itor = DelaunayBarycentricInterpolator(func_helper, ax_supp_pts, ax_min, ax_max)
-    delaunay_vals, delaunay_derivs = delaunay_itor.interpolate_array(checking_grid)
+    delaunay_itor = DelaunayBarycentricInterpolator(
+        func_helper, ax_supp_pts, ax_min, ax_max)
+    delaunay_vals, delaunay_derivs = delaunay_itor.interpolate_array(
+        checking_grid)
     delaunay_val_err = np.abs(exact_vals - delaunay_vals)
     delaunay_deriv_err = np.abs(exact_derivs - delaunay_derivs)
     print("Done\nInitialization:", round(delaunay_itor.initialization_time, 6),
@@ -89,8 +95,10 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Piecewise Linear (static) interpolation
     print("Performing Piecewise Linear (static) interpolation...", end=" ")
-    piecewise_itor = CppPiecewiseLinearInterpolator(func_helper, ax_supp_pts, ax_min, ax_max)
-    piecewise_vals, piecewise_derivs = piecewise_itor.interpolate_array(checking_grid)
+    piecewise_itor = CppPiecewiseLinearInterpolator(
+        func_helper, ax_supp_pts, ax_min, ax_max)
+    piecewise_vals, piecewise_derivs = piecewise_itor.interpolate_array(
+        checking_grid)
     piecewise_val_err = np.abs(exact_vals - piecewise_vals)
     piecewise_deriv_err = np.abs(exact_derivs - piecewise_derivs)
     print("Done\nInitialization:", round(piecewise_itor.initialization_time, 6),
@@ -98,7 +106,8 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Darts Multilinear (Static) interpolation
     print("Performing Darts Multilinear (Static) interpolation...", end=" ")
-    darts_itor = DartsMultilinearStaticInterpolator(func_helper, ax_supp_pts, ax_min, ax_max)
+    darts_itor = DartsMultilinearStaticInterpolator(
+        func_helper, ax_supp_pts, ax_min, ax_max)
     darts_vals, darts_derivs = darts_itor.interpolate_array(checking_grid)
     darts_val_err = np.abs(exact_vals - darts_vals)
     darts_deriv_err = np.abs(exact_derivs - darts_derivs)
@@ -106,13 +115,15 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
           "s Interpolation:", darts_itor.get_interpolation_time(), "s\n")
 
     # Assemble function error array
-    val_error_arr = np.empty([3, *(n_checking_points * np.ones(n_dim).astype('int32'))])
+    val_error_arr = np.empty(
+        [3, *(n_checking_points * np.ones(n_dim).astype('int32'))])
     val_error_arr[0] = delaunay_val_err
     val_error_arr[1] = piecewise_val_err
     val_error_arr[2] = darts_val_err
 
     # Assemble derivative error array
-    deriv_error_arr = np.empty([3, n_dim, *(n_checking_points * np.ones(n_dim).astype('int32'))])
+    deriv_error_arr = np.empty(
+        [3, n_dim, *(n_checking_points * np.ones(n_dim).astype('int32'))])
     deriv_error_arr[0] = delaunay_deriv_err
     deriv_error_arr[1] = piecewise_deriv_err
     deriv_error_arr[2] = darts_deriv_err
@@ -126,7 +137,8 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
             fig.update_layout(title="Function Derivative in 1st dimension")
             fig.show()
 
-            img = plt.imshow(darts_deriv_err[0], vmin=0, extent=[axis_min, axis_max, axis_min, axis_max])
+            img = plt.imshow(darts_deriv_err[0], vmin=0, extent=[
+                             axis_min, axis_max, axis_min, axis_max])
             plt.colorbar(img)
             plt.title("Error heatmap")
             plt.xlabel('x')
@@ -156,7 +168,8 @@ def plot_interp_error(n_dim, supp_grids):
     darts_mean_dererr = []
 
     for i in range(len(supp_grids)):
-        val_err, deriv_err = find_interp_errors(n_dim, supp_grids[i], supp_grids[i] * 2, -1.0, 1.0, False)
+        val_err, deriv_err = find_interp_errors(
+            n_dim, supp_grids[i], supp_grids[i] * 2, -1.0, 1.0, False)
         del_mean_valerr.append(np.mean(val_err[0]))
         del_mean_dererr.append(np.mean(deriv_err[0]))
         piece_mean_valerr.append(np.mean(val_err[1]))
