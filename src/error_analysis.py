@@ -8,8 +8,6 @@ from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolato
 from src.cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 
-from testing_functions import *
-
 
 def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, axis_max, plot2d=False):
     """
@@ -57,6 +55,8 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     assert axis_max > axis_min
 
     # Deduce function and derivatives names from n_dim
+    exec('from testing_functions import func%dd' % n_dim)
+    exec('from testing_functions import derivs%dd' % n_dim)
     func_name = eval('func%dd' % n_dim)
     derivs_name = eval('derivs%dd' % n_dim)
 
