@@ -68,10 +68,14 @@ class DartsMultilinearStaticInterpolator:
             assert (len(grid.shape) == self.n_dim + 1)
             assert (grid.shape[0] == self.n_dim)
             result_shape = grid.shape[1:]
+
             # move the first axis to the last place
-            xi = np.rollaxis(grid, 0, self.n_dim + 1)
+            # states = np.rollaxis(grid, 0, self.n_dim + 1)
+            states = np.moveaxis(grid, 0, -1)
+            gradient_shape = states.shape
+
             # flatten all axes
-            states = xi.flatten()
+            states = states.flatten()
             self.states = value_vector(states)
 
             self.block_idx = index_vector(np.arange(int(len(states) / self.n_dim), dtype=np.int32))
@@ -84,10 +88,12 @@ class DartsMultilinearStaticInterpolator:
 
             # interpolate and shape the result
             self.interpolator.evaluate_with_derivatives(self.states, self.block_idx, self.values, self.derivs)
-            result = np.array(self.values, copy=False)
+
             # timer_output = self.timer.print('', str())
             # print(timer_output)
-            return result.reshape(result_shape)
+            values = np.array(self.values, copy=False).reshape(result_shape)
+            derivs = np.moveaxis(np.array(self.derivs, copy=False).reshape(gradient_shape), -1, 0)
+            return values, derivs
         else:
             print("Engines are not available")
             pass
