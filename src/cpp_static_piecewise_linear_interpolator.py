@@ -62,9 +62,12 @@ class CppStaticPiecewiseLinearInterpolator:
             result_shape = grid.shape[1:]
 
             # move the first axis to the last place
+            states = np.moveaxis(grid, 0, -1)
+            gradient_shape = states.shape
+
             # flatten all axes
-            states = np.moveaxis(grid, 0, -1).flatten()
-            points = value_vector(np.moveaxis(grid, 0, -1).flatten())
+            states = states.flatten()
+            points = value_vector(states)
 
             block_idx = index_vector(np.arange(int(len(states) / self.n_dim), dtype=np.int32))
 
@@ -73,14 +76,14 @@ class CppStaticPiecewiseLinearInterpolator:
 
             # derivatives should fit self.n_dim values per point
             derivatives = value_vector([0] * len(states))
-
             # interpolate and shape the result
             interpolation_start_time = time.process_time()
             self.interpolator.evaluate_with_derivatives(points, block_idx, values, derivatives)
             self.interpolation_time += time.process_time() - interpolation_start_time
 
-            result = np.array(values, copy=False)
-            return result.reshape(result_shape)
+            values = np.array(values, copy=False).reshape(result_shape)
+            derivatives = np.moveaxis(np.array(derivatives, copy=False).reshape(gradient_shape), -1, 0)
+            return values, derivatives
         else:
             print("Engines are not available")
 
@@ -113,7 +116,7 @@ if __name__ == '__main__':
     axes_max = [1.1] * n_dim
 
     itor = CppStaticPiecewiseLinearInterpolator(func_3d, axes_points, axes_min, axes_max)
-    z_itor = itor.interpolate_array(test_grid)
+    values, gradients = itor.interpolate_array(test_grid)
     print('{:<22}'.format('cpp_linear'), '{:<10}'.format('static'),
           'init: %f s, interpolation: %f s (%.2e s per point)' %
           (itor.get_init_time(), itor.get_interpolation_time(),
