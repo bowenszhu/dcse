@@ -59,15 +59,15 @@ def scipy_delaunay_performance():
         print('dimension:', n_dim, end='  ')
         start_time = time.process_time()
         unit_hypercube = np.array(np.meshgrid(*[[0, 1]] * n_dim)).T.reshape(-1, n_dim)
-        tri = Delaunay(unit_hypercube)
+        Delaunay(unit_hypercube)
         print('time:', time.process_time() - start_time, 's')
 
 
 def compare_execution_time():
     time_per_point = dict()
 
-    def func(*vars):
-        return sum([var * var for var in vars])
+    def func(*my_vars):
+        return sum([var * var for var in my_vars])
 
     n_supporting_pints = 3000000
     n_interp_points = 10000
