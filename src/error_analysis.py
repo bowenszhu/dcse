@@ -94,8 +94,8 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     itor_names = []
     value_errors = []
     derivative_errors = []
-    print ('Testing %d-dimensional space with %d supporting points per axis:' % (n_dim, n_supporting_points))
-    print ('')
+    print('Testing %d-dimensional space with %d supporting points per axis:' % (n_dim, n_supporting_points))
+    print('')
     for itor_name in itors:
         print('\t %s' % itor_name.__name__, end="... ")
         itor_names.append(itor_name.__name__)
@@ -176,7 +176,7 @@ def plot_interp_error(n_dim, supp_grids):
     if len(supp_grids) > 1:
         plt.figure(1)
         for i, name in enumerate(itor_name):
-            plt.loglog(supp_grids, results[0][:,i], label=name)
+            plt.loglog(supp_grids, results[0][:, i], label=name)
         plt.legend()
         plt.title("Function error")
         plt.xlabel("# of supporting points")
