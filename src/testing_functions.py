@@ -2,6 +2,28 @@
 
 import numpy as np
 
+def func_2d(var1, var2):
+    return np.sin(np.pi * var1) * np.sin(np.pi * var2) + 2 * var1 + var2
+
+
+def func_3d(var1, var2, var3):
+    return 2 * var1 * var1 + 3 * var2 - var3
+
+
+def func_5d(var1, var2, var3, var4, var5):
+    return 2 * var1 * var1 + 3 * var2 - var3 + var4 * var5
+
+
+def func_6d(var1, var2, var3, var4, var5, var6):
+    return 2 * var1 * var1 + 3 * var2 - var3 + var4 * var5 * var6
+
+
+def func_7d(var1, var2, var3, var4, var5, var6, var7):
+    return 2 * var1 * var1 + 3 * var2 - var3 + var4 * var5 * var6 + 7 * var7
+
+
+def func_9d(var1, var2, var3, var4, var5, var6, var7, var8, var9):
+    return 2 * var1 * var1 + 3 * var2 - var3 + var4 * var5 * var6 + 7 * var7 + var8 * var9
 
 def func2d(x):
     return x[0] * np.sin(x[0]) + x[0] * np.sin(x[1]) + \

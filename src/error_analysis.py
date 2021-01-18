@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
-from src.cpp_static_piecewise_linear_interpolator import CppPiecewiseLinearInterpolator
+from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
 from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
 
 
@@ -95,7 +95,7 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
 
     # Piecewise Linear (static) interpolation
     print("Performing Piecewise Linear (static) interpolation...", end=" ")
-    piecewise_itor = CppPiecewiseLinearInterpolator(
+    piecewise_itor = CppStaticPiecewiseLinearInterpolator(
         func_helper, ax_supp_pts, ax_min, ax_max)
     piecewise_vals, piecewise_derivs = piecewise_itor.interpolate_array(
         checking_grid)
