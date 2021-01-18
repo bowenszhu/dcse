@@ -17,7 +17,8 @@ flake8:
 pylint:
   stage: Static Analysis
   script:
-    - pylint --ignore=pybind11 --max-line-length=120 -d C0114 src
+    - pylint --ignore=pybind11 --max-line-length=120 -d C0114 -d E1136 -d R0913 -d C0116 --ignored-modules=scipy src --extension-pkg-whitelist=scipy
+
 
 build_linux:
   stage: Build

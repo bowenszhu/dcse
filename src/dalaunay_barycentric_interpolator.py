@@ -1,5 +1,5 @@
 import time
-from typing import Callable, List
+from typing import Callable, List, Tuple
 from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
 import numpy as np
 from src.interpolator_base import InterpolatorBase
@@ -36,7 +36,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     >>> y = np.linspace(-1, 1, 200)
     >>> points = (x, y)
     >>> grid = np.array(np.meshgrid(*points))
-    >>> res = interpolator.interpolate_array(grid)
+    >>> interpolants, gradients = interpolator.interpolate_array(grid)
     """
     # pylint: disable=R0913
     def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
@@ -85,9 +85,11 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         simplex = self.unit_hypercube[self.tri.simplices[simplex_i]] + hypercube
         values = self.get_simplex_values(simplex)
         interpolant = np.dot(barycentric, values)
+        # t_inv = np.vstack((t_inv, -t_inv.sum(axis=0)))
+        # gradient = np.dot(values, t_inv) / self.axes_len_interval
         return interpolant
 
-    def interpolate_array(self, grid: np.ndarray) -> np.ndarray:
+    def interpolate_array(self, grid: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute the barycentric interpolants at given grid based on Delaunay triangulation.
 
@@ -113,9 +115,12 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         -------
         interpolants : (nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
             Interpolation values at the input grid.
+        gradients : (n_dim, nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
+            Approximate gradients at the input grid.
         """
         res_shape = grid.shape[1:]
-        points = np.moveaxis(grid, 0, -1).reshape((-1, len(grid)))
+        points = np.moveaxis(grid, 0, -1)
+        points = points.reshape((-1, len(grid)))
 
         interpolation_start_time = time.process_time()
 
@@ -127,8 +132,12 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         barycentric = np.column_stack((barycentric, 1 - barycentric.sum(axis=-1)))
         simplices = (self.unit_hypercube[self.tri.simplices[simplices_i]].swapaxes(0, 1) + hypercubes).swapaxes(0, 1)
         values = self.get_simplices_values(simplices)
-        interpolants = np.einsum('ij,ij->i', barycentric, values)
+        interpolants = np.einsum('ij,ij->i', barycentric, values).reshape(res_shape)
+        ts_inv = np.append(ts_inv, np.expand_dims(-ts_inv.sum(axis=1), axis=1), axis=1)
+        gradients = np.einsum('ijk,ij->ik', ts_inv, values) / self.axes_len_interval
+        gradients = gradients.reshape(np.moveaxis(grid, 0, -1).shape)
+        gradients = np.moveaxis(gradients, -1, 0)
 
         self.interpolation_time += time.process_time() - interpolation_start_time
 
-        return interpolants.reshape(res_shape)
+        return interpolants, gradients
