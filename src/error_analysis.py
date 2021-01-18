@@ -128,6 +128,40 @@ def find_interp_errors(n_dim, n_supporting_points, n_checking_points, axis_min, 
     deriv_error_arr[1] = piecewise_deriv_err
     deriv_error_arr[2] = darts_deriv_err
 
+    # fig = go.Figure(data=[go.Surface(z=exact_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="Function exact values")
+    # fig.show()
+    #
+    # fig = go.Figure(data=[go.Surface(z=darts_vals, x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="DARTS values")
+    # fig.show()
+    #
+    # fig = go.Figure(data=[go.Surface(z=exact_derivs[0], x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="Function exact derivs x")
+    # fig.show()
+    # fig = go.Figure(data=[go.Surface(z=exact_derivs[1], x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="Function exact derivs y")
+    # fig.show()
+    #
+    # fig = go.Figure(data=[go.Surface(z=darts_derivs[0], x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="DARTS derivs x")
+    # fig.show()
+    #
+    # fig = go.Figure(data=[go.Surface(z=darts_derivs[1], x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="DARTS derivs y")
+    # fig.show()
+
+    # fig = go.Figure(data=[go.Surface(z=piecewise_derivs[0], x=np.linspace(axis_min, axis_max, n_checking_points),
+    #                                  y=np.linspace(axis_min, axis_max, n_checking_points))])
+    # fig.update_layout(title="piecewise values")
+    # fig.show()
+
     # Plot error grid for Delaunay
     if plot2d:
         if n_dim == 2:
@@ -198,3 +232,35 @@ def plot_interp_error(n_dim, supp_grids):
 
         plt.tight_layout()
         plt.show()
+
+
+
+def plot_2D_interp_error_surface(supp_grids, plot_derivative_errors = 0):
+    """
+    Plots interpolation error surface.
+
+    Parameters:
+    ----------------
+    supp_grids : list of ints
+        List containing the number of supporting points per grid axis to calculate the error
+    """
+    axis_min = -1.0
+    axis_max = 1.0
+
+    for i in range(len(supp_grids)):
+        n_checking_points = 100
+        val_err, deriv_err = find_interp_errors(2, supp_grids[i], n_checking_points, axis_min, axis_max, False)
+        for itor in range(3):
+            fig = go.Figure(data=[go.Surface(z=val_err[itor], x=np.linspace(axis_min, axis_max, n_checking_points),
+                                             y=np.linspace(axis_min, axis_max, n_checking_points))])
+            fig.update_layout(title="Itor %d interpolation error map"%itor)
+            fig.show()
+            if plot_derivative_errors:
+                fig = go.Figure(data=[go.Surface(z=deriv_err[itor][0], x=np.linspace(axis_min, axis_max, n_checking_points),
+                                                 y=np.linspace(axis_min, axis_max, n_checking_points))])
+                fig.update_layout(title="Itor %d interpolation derivative 0 error map" % itor)
+                fig.show()
+                fig = go.Figure(data=[go.Surface(z=deriv_err[itor][1], x=np.linspace(axis_min, axis_max, n_checking_points),
+                                                 y=np.linspace(axis_min, axis_max, n_checking_points))])
+                fig.update_layout(title="Itor %d interpolation derivative 0 error map" % itor)
+                fig.show()
