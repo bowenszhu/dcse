@@ -115,7 +115,7 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   cudaMemcpyToSymbol(axis_body_mult_gpu, axis_body_mult, sizeof(axis_body_mult));
   cudaMemcpyToSymbol(axis_points_gpu, axis_points.data(), sizeof(axis_points));
 
-  std::cout << "Allocating storage for static interpolation (" << n_points_total << " points, " << n_bodies_total << " bodies)..." << std::endl;
+  //std::cout << "Allocating storage for static interpolation (" << n_points_total << " points, " << n_bodies_total << " bodies)..." << std::endl;
 
   point_data.resize(n_points_total);
   //body_data.resize(n_bodies_total);
@@ -126,7 +126,7 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   // body data storage on GPU
   CUDA_CHECK_RETURN(cudaMalloc((void **)&body_data_gpu, sizeof(interp_value_t) * n_bodies_total * N_VERTS * N_OPS));
 
-  std::cout << "Generating point data..." << std::endl;
+  //std::cout << "Generating point data..." << std::endl;
 
   // in fact timer is never there, since it`s set via init_timer_node procedure...
   if (timer)
@@ -166,7 +166,7 @@ operator_set_interpolator_gpu<interp_value_t, N_DIMS, N_OPS>::operator_set_inter
   if (timer)
     timer->node["body generation"].node["point generation"].stop();
 
-  std::cout << "Populating body data..." << std::endl;
+  //std::cout << "Populating body data..." << std::endl;
 
   body_data_points_t points;
   for (auto i = 0; i < n_bodies_total; i++)
