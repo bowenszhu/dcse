@@ -57,12 +57,16 @@ class CppStaticPiecewiseLinearInterpolator:
 
     def interpolate_array(self, grid):
         if engines_available:
-            assert (len(grid.shape) == self.n_dim + 1)
-            assert (grid.shape[0] == self.n_dim)
-            result_shape = grid.shape[1:]
+            if len(grid.shape) > 1:
+                assert (len(grid.shape) == self.n_dim + 1)
+                assert (grid.shape[0] == self.n_dim)
 
-            # move the first axis to the last place
-            states = np.moveaxis(grid, 0, -1)
+                result_shape = grid.shape[1:]
+                states = np.moveaxis(grid, 0, -1)
+            else:
+                states = grid.reshape((-1, self.n_dim))
+                result_shape = (len(states))
+
             gradient_shape = states.shape
 
             # flatten all axes
