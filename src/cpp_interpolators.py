@@ -1,13 +1,14 @@
 # pylint: skip-file
 from cpp_interpolator_base import CppInterpolatorBase
 
+
 class CppAdaptivePiecewiseLinearInterpolator(CppInterpolatorBase):
     def __init__(self, func, axes_points, axes_min, axes_max):
         self.itor_base_name = 'piecewise_linear_interpolator_adaptive_i_d'
         super().__init__(func, axes_points, axes_min, axes_max)
-    def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'adaptive', 'CPU')
 
+    def __str__(self):
+        return '{:<19}{:<5}{:<15}{:<4}'.format('piecewise_linear', 'C++', 'adaptive', 'CPU')
 
 
 class CppStaticPiecewiseLinearInterpolator(CppInterpolatorBase):
@@ -16,7 +17,8 @@ class CppStaticPiecewiseLinearInterpolator(CppInterpolatorBase):
         super().__init__(func, axes_points, axes_min, axes_max)
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('piecewise_linear', 'C++', 'static', 'CPU')
+        return '{:<19}{:<5}{:<15}{:<4}'.format('piecewise_linear', 'C++', 'static', 'CPU')
+
 
 class DartsMultilinearAdaptiveInterpolator(CppInterpolatorBase):
     def __init__(self, func, axes_points, axes_min, axes_max):
@@ -24,7 +26,16 @@ class DartsMultilinearAdaptiveInterpolator(CppInterpolatorBase):
         super().__init__(func, axes_points, axes_min, axes_max)
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('multi_linear', 'C++', 'adaptive', 'CPU')
+        return '{:<19}{:<5}{:<15}{:<4}'.format('multi_linear', 'C++', 'adaptive', 'CPU')
+
+
+class DartsMultilinearAdaptiveLongInterpolator(CppInterpolatorBase):
+    def __init__(self, func, axes_points, axes_min, axes_max):
+        self.itor_base_name = 'operator_set_interpolator_l_d'
+        super().__init__(func, axes_points, axes_min, axes_max)
+
+    def __str__(self):
+        return '{:<19}{:<5}{:<15}{:<4}'.format('multi_linear', 'C++', 'adaptive long', 'CPU')
 
 
 class DartsMultilinearStaticInterpolator(CppInterpolatorBase):
@@ -33,7 +44,8 @@ class DartsMultilinearStaticInterpolator(CppInterpolatorBase):
         super().__init__(func, axes_points, axes_min, axes_max)
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('multi_linear', 'C++', 'static', 'CPU')
+        return '{:<19}{:<5}{:<15}{:<4}'.format('multi_linear', 'C++', 'static', 'CPU')
+
 
 class DartsMultilinearStaticInterpolatorGPU(CppInterpolatorBase):
     def __init__(self, func, axes_points, axes_min, axes_max):
@@ -44,4 +56,4 @@ class DartsMultilinearStaticInterpolatorGPU(CppInterpolatorBase):
         return self.timer.node['gpu interpolation'].get_timer()
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('DARTS_multilinear', 'C++', 'static', 'GPU')
+        return '{:<19}{:<5}{:<15}{:<4}'.format('multi_linear', 'C++', 'static', 'GPU')

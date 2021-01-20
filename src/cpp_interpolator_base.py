@@ -1,10 +1,9 @@
 # pylint: skip-file
 import importlib
-import time
 
 import numpy as np
-
 from src.engines.engines import operator_set_evaluator_iface, timer_node, value_vector, index_vector
+
 
 class CppInterpolatorBase:
     def __init__(self, func, axes_points, axes_min, axes_max):

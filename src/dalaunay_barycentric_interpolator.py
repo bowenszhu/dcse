@@ -150,4 +150,4 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         return interpolants, gradients
 
     def __str__(self):
-        return '{:<19}{:<5}{:<9}{:<4}'.format('Delaunay', 'py', 'adaptive', 'CPU')
+        return '{:<19}{:<5}{:<15}{:<4}'.format('Delaunay', 'py', 'adaptive', 'CPU')

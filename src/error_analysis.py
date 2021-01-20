@@ -5,13 +5,14 @@ import numpy as np
 import plotly.graph_objects as go
 
 from src.cpp_interpolators import CppAdaptivePiecewiseLinearInterpolator, CppStaticPiecewiseLinearInterpolator, \
-    DartsMultilinearAdaptiveInterpolator, DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU
+    DartsMultilinearAdaptiveInterpolator, DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU, \
+    DartsMultilinearAdaptiveLongInterpolator
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 
 static_interpolators = [CppStaticPiecewiseLinearInterpolator,
                         DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU]
 adaptive_interpolators = [DelaunayBarycentricInterpolator, CppAdaptivePiecewiseLinearInterpolator,
-                          DartsMultilinearAdaptiveInterpolator]
+                          DartsMultilinearAdaptiveInterpolator, DartsMultilinearAdaptiveLongInterpolator]
 
 
 def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checking_points, axis_min, axis_max,
@@ -90,6 +91,8 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
         itors.extend(static_interpolators)
     if include_adaptive:
         itors.extend(adaptive_interpolators)
+    else:
+        itors.append(DartsMultilinearAdaptiveLongInterpolator)
 
     itor_names = []
     value_errors = []

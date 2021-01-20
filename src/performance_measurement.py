@@ -5,7 +5,8 @@ from matplotlib import pyplot as plt
 from scipy.spatial.qhull import Delaunay
 
 from src.cpp_interpolators import CppAdaptivePiecewiseLinearInterpolator, CppStaticPiecewiseLinearInterpolator, \
-    DartsMultilinearAdaptiveInterpolator, DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU
+    DartsMultilinearAdaptiveInterpolator, DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU, \
+    DartsMultilinearAdaptiveLongInterpolator
 
 
 def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_point):
@@ -40,6 +41,7 @@ def measure_performance(n_dim, func, axes_points, grid_shape, grid, time_per_poi
         performance_itor_cpp(DartsMultilinearStaticInterpolatorGPU)
         performance_itor_cpp(DartsMultilinearStaticInterpolator)
         performance_itor_cpp(DartsMultilinearAdaptiveInterpolator)
+        performance_itor_cpp(DartsMultilinearAdaptiveLongInterpolator)
         print()
         performance_itor_cpp(CppStaticPiecewiseLinearInterpolator)
         performance_itor_cpp(CppAdaptivePiecewiseLinearInterpolator)
