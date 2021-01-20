@@ -148,3 +148,6 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         self.interpolation_time += time.process_time() - interpolation_start_time
 
         return interpolants, gradients
+
+    def __str__(self):
+        return '{:<19}{:<5}{:<9}{:<4}'.format('Delaunay', 'py', 'adaptive', 'CPU')

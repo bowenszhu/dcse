@@ -87,6 +87,7 @@ int PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std:
                                                                       std::vector<double> &interp_values,
                                                                       std::vector<double> &derivatives)
 {
+    timer->start();
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
     {
         int point_i = block_idx[block_i];
@@ -113,6 +114,7 @@ int PiecewiseLinearInterpolatorBase<n_dim>::evaluate_with_derivatives(const std:
             derivatives[point_index + tri_order[i]] = -simplex_vertex_values_gap * axes_step_inv[tri_order[i]];
         }
     }
+    timer->stop();
     return 0;
 }
 

@@ -4,16 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 
-from src.cpp_adaptive_piecewise_linear_interpolator import CppAdaptivePiecewiseLinearInterpolator
-from src.cpp_static_piecewise_linear_interpolator import CppStaticPiecewiseLinearInterpolator
+from src.cpp_interpolators import CppAdaptivePiecewiseLinearInterpolator, CppStaticPiecewiseLinearInterpolator, \
+    DartsMultilinearAdaptiveInterpolator, DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
-from src.darts_multilinear_adaptive_interpolator import DartsMultilinearAdaptiveInterpolator
-from src.darts_multilinear_static_interpolator import DartsMultilinearStaticInterpolator
-from src.darts_multilinear_static_interpolator_gpu import DartsMultilinearStaticInterpolatorGPU
 
-static_interpolators = [DelaunayBarycentricInterpolator, CppStaticPiecewiseLinearInterpolator,
+static_interpolators = [CppStaticPiecewiseLinearInterpolator,
                         DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU]
-adaptive_interpolators = [CppAdaptivePiecewiseLinearInterpolator, DartsMultilinearAdaptiveInterpolator]
+adaptive_interpolators = [DelaunayBarycentricInterpolator, CppAdaptivePiecewiseLinearInterpolator,
+                          DartsMultilinearAdaptiveInterpolator]
 
 
 def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checking_points, axis_min, axis_max,
@@ -53,7 +51,7 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
     """
 
     assert n_dim > 0
-    n_axis_checking_points = int(n_checking_points ** (1/n_dim))
+    n_axis_checking_points = int(n_checking_points ** (1 / n_dim))
     assert n_axis_checking_points > n_axis_supporting_points
     assert axis_max > axis_min
     print('')
@@ -97,8 +95,9 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
     value_errors = []
 
     for itor_name in itors:
-        itor_names.append(itor_name.__name__)
+        # itor_names.append(itor_name.__name__)
         itor = itor_name(func_helper, ax_supp_pts, ax_min, ax_max)
+        itor_names.append(str(itor))
         itor_vals, itor_derivs = itor.interpolate_array(checking_grid)
         # Interpolator derivatives could be estimated with np.gradient, but it is alwasy something`s off with indexing
         # leaving the code here
@@ -123,7 +122,7 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
             fig.show()
 
         print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.1e}'
-              .format(itor_name.__name__,
+              .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
                       itor.get_interpolation_time() / checking_grid.size,
@@ -201,8 +200,10 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     value_errors = []
 
     for itor_name in itors:
-        itor_names.append(itor_name.__name__)
+        # itor_names.append(itor_name.__name__)
+
         itor = itor_name(func_helper, ax_supp_pts, ax_min, ax_max)
+        itor_names.append(str(itor))
         itor_vals, itor_derivs = itor.interpolate_array(checking_pts)
         # Interpolator derivatives could be estimated with np.gradient, but it is alwasy something`s off with indexing
         # leaving the code here
@@ -213,7 +214,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
         value_errors.append(value_error)
 
         print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.1e}'
-              .format(itor_name.__name__,
+              .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
                       itor.get_interpolation_time() / n_checking_points,
