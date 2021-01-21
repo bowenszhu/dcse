@@ -9,17 +9,20 @@ class CppInterpolatorBase:
     def __init__(self, func, axes_points, axes_min, axes_max):
         # create a darts wrapper for function
         class custom_evaluator(operator_set_evaluator_iface):
-            def __init__(self, func):
+            def __init__(self, func, n_ops):
                 super().__init__()
                 self.func = func
+                self.n_ops = n_ops
 
             def evaluate(self, state, values):
-                values[0] = self.func(*state)
+                func_value = self.func(*state)
+                values[0:self.n_ops] = value_vector([func_value] * self.n_ops)
                 return 0
 
         # create the instance of the wrapper
-        self.evaluator = custom_evaluator(func)
         self.n_dim = len(axes_points)
+        self.n_ops = 2 * self.n_dim
+        self.evaluator = custom_evaluator(func, self.n_ops)
 
         # create darts timer to measure time
         self.timer = timer_node()
@@ -30,7 +33,7 @@ class CppInterpolatorBase:
 
         # for every dimensionality a separate class exists in darts - here we evaluate its name
         # and get the class from engines, will raise AttributeError if class cannot be found
-        itor_name = getattr(m, '%s_%d_1' % (self.itor_base_name, self.n_dim))
+        itor_name = getattr(m, '%s_%d_%d' % (self.itor_base_name, self.n_dim, self.n_ops))
 
         # create the instance of interpolator
         # point calculation happens here, so measure it
@@ -60,7 +63,7 @@ class CppInterpolatorBase:
             states = grid.reshape((-1, self.n_dim))
             result_shape = (len(states))
 
-        gradient_shape = states.shape
+        # gradient_shape = states.shape
 
         # flatten all axes
         states = states.flatten()
@@ -69,16 +72,22 @@ class CppInterpolatorBase:
         block_idx = index_vector(np.arange(int(len(states) / self.n_dim), dtype=np.int32))
 
         # values should fit single value per point
-        values = value_vector([0] * int((len(states) / self.n_dim)))
+        values = value_vector([0] * int((len(states) / self.n_dim)) * self.n_ops)
 
         # derivatives should fit self.n_dim values per point
-        derivatives = value_vector([0] * len(states))
+        derivatives = value_vector([0] * len(states) * self.n_ops)
 
         # interpolate and shape the result
         self.interpolator.evaluate_with_derivatives(points, block_idx, values, derivatives)
+        for o in range(self.n_ops - 1):
+            assert (values[::self.n_ops] == values[o + 1::self.n_ops])
+            for d in range(self.n_dim):
+                assert (derivatives[d::self.n_ops * self.n_dim] == derivatives[
+                                                                   (o + 1) * self.n_dim + d::self.n_ops * self.n_dim])
+        values = np.array(values[::self.n_ops], copy=False).reshape(result_shape)
 
-        values = np.array(values, copy=False).reshape(result_shape)
-        derivatives = np.moveaxis(np.array(derivatives, copy=False).reshape(gradient_shape), -1, 0)
+        # derivatives = np.moveaxis(np.array(derivatives, copy=False).reshape(gradient_shape), -1, 0)
+        derivatives = values
         return values, derivatives
 
     def get_init_time(self):

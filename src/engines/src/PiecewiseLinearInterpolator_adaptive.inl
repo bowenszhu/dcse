@@ -1,14 +1,14 @@
 #include "PiecewiseLinearInterpolator_adaptive.h"
 
-template <int n_dim>
-PiecewiseLinearInterpolator_adaptive<n_dim>::PiecewiseLinearInterpolator_adaptive(
+template <int n_dim, int n_ops>
+PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::PiecewiseLinearInterpolator_adaptive(
     operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
     const std::vector<double> &axesMin, const std::vector<double> &axesMax)
-    : PiecewiseLinearInterpolatorBase<n_dim>(axesPoints, axesMin, axesMax),
+    : PiecewiseLinearInterpolatorBase<n_dim, n_ops>(axesPoints, axesMin, axesMax),
       base_points_generator(base_points_generator) {}
 
-template <int n_dim>
-double PiecewiseLinearInterpolator_adaptive<n_dim>::get_value(const std::array<int, n_dim> &vertex)
+template <int n_dim, int n_ops>
+void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values)
 {
     int index = this->get_index_from_point(vertex);
     auto search = point_data.find(index);
@@ -16,11 +16,19 @@ double PiecewiseLinearInterpolator_adaptive<n_dim>::get_value(const std::array<i
     {
         std::vector<double> point(n_dim);
         this->get_real_point_from_index_point(vertex, point);
-        std::vector<double> operator_value(1);
-        base_points_generator->evaluate(point, operator_value);
-        point_data[index] = operator_value[0];
-        return operator_value[0];
+        std::vector<double> operator_values(n_ops);
+        base_points_generator->evaluate(point, operator_values);
+        for (int j = 0; j < n_ops; j++)
+        {
+            point_data[index][j] = operator_values[j];
+            values[j] = operator_values[j];
+        }
     }
     else
-        return search->second;
+    {
+        for (int j = 0; j < n_ops; j++)
+        {
+            values[j] = search->second[j];
+        }
+    }
 }

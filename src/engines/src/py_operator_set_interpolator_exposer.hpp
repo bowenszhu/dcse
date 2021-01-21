@@ -105,7 +105,7 @@ struct operator_set_interpolator_exposer
     expose_class<uint32_t, double, operator_set_interpolator<uint32_t, double, N_DIMS, N_OPS>>(m, "operator_set_interpolator_");
 
     // DARTS adaptive with 64 bit index and 64 bit data
-    expose_class<uint64_t, double, operator_set_interpolator<uint64_t, double, N_DIMS, N_OPS>>(m,  "operator_set_interpolator_");
+    expose_class<uint64_t, double, operator_set_interpolator<uint64_t, double, N_DIMS, N_OPS>>(m, "operator_set_interpolator_");
 
     // DARTS static with 32 bit index and 32 bit data
     //expose_class<uint32_t, float, operator_set_interpolator_static<float, N_DIMS, N_OPS>>(m,  "operator_set_interpolator_static_");
@@ -114,10 +114,10 @@ struct operator_set_interpolator_exposer
     expose_class<uint32_t, double, operator_set_interpolator_static<double, N_DIMS, N_OPS>>(m, "operator_set_interpolator_static_");
 
     // PiecewiseLinear adaptive with 32 bit index and 64 bit data
-    expose_class<uint32_t, double, PiecewiseLinearInterpolator_adaptive<N_DIMS>>(m, "piecewise_linear_interpolator_adaptive_");
+    expose_class<uint32_t, double, PiecewiseLinearInterpolator_adaptive<N_DIMS, N_OPS>>(m, "piecewise_linear_interpolator_adaptive_");
 
     // PiecewiseLinear static with 32 bit index and 64 bit data
-    expose_class<uint32_t, double, PiecewiseLinearInterpolator_static<N_DIMS>>(m, "piecewise_linear_interpolator_static_");
+    expose_class<uint32_t, double, PiecewiseLinearInterpolator_static<N_DIMS, N_OPS>>(m, "piecewise_linear_interpolator_static_");
 
     // we expose static GPU versions only when GPU build is active
 #ifdef WITH_GPU

@@ -9,7 +9,7 @@ from src.cpp_interpolators import CppAdaptivePiecewiseLinearInterpolator, CppSta
     DartsMultilinearAdaptiveLongInterpolator
 from src.dalaunay_barycentric_interpolator import DelaunayBarycentricInterpolator
 
-static_interpolators = [CppStaticPiecewiseLinearInterpolator,
+static_interpolators = [DartsMultilinearStaticInterpolator, CppStaticPiecewiseLinearInterpolator,
                         DartsMultilinearStaticInterpolator, DartsMultilinearStaticInterpolatorGPU]
 adaptive_interpolators = [DelaunayBarycentricInterpolator, CppAdaptivePiecewiseLinearInterpolator,
                           DartsMultilinearAdaptiveInterpolator, DartsMultilinearAdaptiveLongInterpolator]

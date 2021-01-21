@@ -7,8 +7,8 @@
 //    This file is part of the Delft Advanced Research Terra Simulator (DARTS)
 //
 //    DARTS is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU Lesser General Public License as 
-//    published by the Free Software Foundation, either version 3 of the 
+//    it under the terms of the GNU Lesser General Public License as
+//    published by the Free Software Foundation, either version 3 of the
 //    License, or (at your option) any later version.
 //
 //    DARTS is distributed in the hope that it will be useful,
@@ -16,10 +16,9 @@
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //    GNU General Public License for more details.
 //
-//    You should have received a copy of the GNU Lesser General Public 
+//    You should have received a copy of the GNU Lesser General Public
 //    License along with DARTS. If not, see <http://www.gnu.org/licenses/>.
 // *************************************************************************
-
 
 #include <pybind11.h>
 #include "py_globals.h"
@@ -33,9 +32,9 @@ void pybind_operator_set_interpolator_sim(py::module &m)
 {
   // N_DIMS = 1, 2, ..., N_DIMS_MAX
   const int N_DIMS_MAX = MAX_NC;
-  
+
   // N_OPS = A * N_DIMS + B
-  const int A = 1;
+  const int A = 2;
   const int B = 0;
 
   // expose interpolators for a 2*N_DIMS operators in up to MAX_NC dimensions
@@ -43,4 +42,3 @@ void pybind_operator_set_interpolator_sim(py::module &m)
 
   e.expose(m);
 }
-

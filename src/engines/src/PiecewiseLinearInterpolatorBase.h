@@ -9,18 +9,10 @@
  * Interpolator base for static/adaptive piecewise linear interpolator.
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
+template <int n_dim, int n_ops>
 class PiecewiseLinearInterpolatorBase : public operator_set_gradient_evaluator_iface
 {
 public:
-    /**
-     * Compute the interpolation value at the given point.
-     *
-     * @param point
-     * @return The interpolation value at the given point
-     */
-    double evaluate_single_operator(const std::vector<double> &point);
-
     /**
      * Compute the interpolation value at the given point.
      *
@@ -110,16 +102,16 @@ protected:
     void find_simplex(const std::array<int, n_dim> &hypercube, const std::array<double, n_dim> &scaled_point,
                       std::array<int, n_dim> &tri_order, std::array<std::array<int, n_dim>, n_dim + 1> &simplex);
     /**
-     * If static storage is used, the function extracts the real function value of the given supporting point from the
+     * If static storage is used, the function extracts n_ops function values of the given supporting point from the
      * pre-computed storage.
-     * If adaptive storage is used, the function checks whether the value at the given vertex is computed before,
+     * If adaptive storage is used, the function checks whether the values are computed before,
      *      if yes, the value is directly returned;
-     *      if not, the function computes the value, stores it and then returns it.
+     *      if not, the function computes the values, stores them and then returns.
      *
-     * @param vertex The index of the given supporting point along axes
-     * @return The real function value of the point
+     * @param[in] vertex The index of the given supporting point along axes
+     * @param[out] values The real values of n_ops functions at a given point
      */
-    virtual double get_value(const std::array<int, n_dim> &vertex) = 0;
+    virtual void get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values) = 0;
     /**
      * Given a supporting point, compute its index.
      *

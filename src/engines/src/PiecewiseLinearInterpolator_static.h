@@ -11,8 +11,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim>
-class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim>
+template <int n_dim, int n_ops>
+class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim, n_ops>
 {
 public:
     /**
@@ -46,10 +46,10 @@ private:
     /**
      * Get the real function value of the given supporting point.
      *
-     * @param vertex The index of the given supporting point along axes
-     * @return The real function value of the point
+     * @param[in] vertex The index of the given supporting point along axes
+     * @param[out] values The real values of n_ops functions at a given point
      */
-    double get_value(const std::array<int, n_dim> &vertex) override;
+    void get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values) override;
 };
 
 #include "PiecewiseLinearInterpolator_static.inl"
