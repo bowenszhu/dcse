@@ -71,9 +71,13 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
     ax_supp_pts = np.ones(n_dim).astype('int32') * n_axis_supporting_points
     ax_min = np.ones(n_dim) * axis_min
     ax_max = np.ones(n_dim) * axis_max
-    # Checking grid made slightly smaller than supporting grid to prevent errors
+    # Checking grid should be smaller than supporting grid to mimic real application conditions
+    total_range = axis_max - axis_min
+    # higher dimensionality corresponds to smaller fraction of used space
+    half_work_range = (total_range / (2 ** n_dim)) / 2
+    midpoint = (axis_min + axis_max) / 2
     checking_pts = np.tile(np.linspace(
-        axis_min + 0.01, axis_max - 0.01, n_axis_checking_points), (n_dim, 1))
+        midpoint - half_work_range, midpoint + half_work_range, n_axis_checking_points), (n_dim, 1))
     checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
@@ -91,8 +95,7 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
         itors.extend(static_interpolators)
     if include_adaptive:
         itors.extend(adaptive_interpolators)
-    else:
-        itors.append(DartsMultilinearAdaptiveLongInterpolator)
+
 
     itor_names = []
     value_errors = []
@@ -186,8 +189,15 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     ax_supp_pts = np.ones(n_dim).astype('int32') * n_axis_supporting_points
     ax_min = np.ones(n_dim) * axis_min
     ax_max = np.ones(n_dim) * axis_max
+
+    # Checking grid should be smaller than supporting grid to mimic real application conditions
+    total_range = axis_max - axis_min
+    # higher dimensionality corresponds to smaller fraction of used space
+    work_range = total_range / (2 ** n_dim)
+    midpoint = (axis_min + axis_max) / 2
     # Checking grid made up randomly, making sure everything is 0.01 inside parameter space
-    checking_pts = np.random.rand(n_checking_points * n_dim) * (axis_max - axis_min - 0.02) + axis_min + 0.01
+    # random points are generated in [0;1] inveral by default - scale it properly
+    checking_pts = np.random.rand(n_checking_points * n_dim) * (work_range) + midpoint - work_range / 2
 
     # Calculate exact values
     exact_vals = np.apply_along_axis(func_name, 1, checking_pts.reshape(n_checking_points, n_dim))
@@ -198,6 +208,8 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
         itors.extend(static_interpolators)
     if include_adaptive:
         itors.extend(adaptive_interpolators)
+    else:
+        itors.append(DartsMultilinearAdaptiveLongInterpolator)
 
     itor_names = []
     value_errors = []
