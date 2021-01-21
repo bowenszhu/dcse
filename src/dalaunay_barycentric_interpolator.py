@@ -1,7 +1,9 @@
 import time
 from typing import Callable, List, Tuple
-from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
+
 import numpy as np
+from scipy.spatial.qhull import Delaunay  # pylint: disable=E0611
+
 from src.interpolator_base import InterpolatorBase
 
 
@@ -38,6 +40,7 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
     >>> grid = np.array(np.meshgrid(*points))
     >>> interpolants, gradients = interpolator.interpolate_array(grid)
     """
+
     # pylint: disable=R0913
     def __init__(self, func: Callable[..., float], axes_points: List[int], axes_min: List[float],
                  axes_max: List[float], adaptive: bool = True):
@@ -118,9 +121,13 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         gradients : (n_dim, nP_1, nP_2, ..., nP_nDim) where nP_i is the number of points in the i-th axis
             Approximate gradients at the input grid.
         """
-        res_shape = grid.shape[1:]
-        points = np.moveaxis(grid, 0, -1)
-        points = points.reshape((-1, len(grid)))
+        if len(grid.shape) > 1:
+            res_shape = grid.shape[1:]
+            points = np.moveaxis(grid, 0, -1)
+            points = points.reshape((-1, len(grid)))
+        else:
+            points = grid.reshape((-1, self.n_dim))
+            res_shape = (len(points))
 
         interpolation_start_time = time.process_time()
 
@@ -141,3 +148,6 @@ class DelaunayBarycentricInterpolator(InterpolatorBase):
         self.interpolation_time += time.process_time() - interpolation_start_time
 
         return interpolants, gradients
+
+    def __str__(self):
+        return '{:<19}{:<5}{:<15}{:<4}'.format('Delaunay', 'py', 'adaptive', 'CPU')
