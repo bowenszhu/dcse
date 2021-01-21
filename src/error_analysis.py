@@ -96,7 +96,6 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
     if include_adaptive:
         itors.extend(adaptive_interpolators)
 
-
     itor_names = []
     value_errors = []
 
