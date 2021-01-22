@@ -19,6 +19,8 @@ public:
                                          const std::vector<double> &axesMin,
                                          const std::vector<double> &axesMax);
 
+    uint64_t get_n_points_used() override;
+
 private:
     std::unordered_map<int, std::array<double, n_ops>> point_data; ///< adaptive storage
     operator_set_evaluator_iface *base_points_generator;           ///< real function
@@ -34,6 +36,8 @@ private:
 
     std::vector<double> point;
     std::vector<double> operator_values;
+
+    int n_points_used;
 };
 
 #include "PiecewiseLinearInterpolator_adaptive.inl"

@@ -5,11 +5,12 @@ PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::PiecewiseLinearInterpolator_
     operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
     const std::vector<double> &axesMin, const std::vector<double> &axesMax)
     : PiecewiseLinearInterpolatorBase<n_dim, n_ops>(axesPoints, axesMin, axesMax),
-      base_points_generator(base_points_generator) 
-      {
-          point.resize(n_dim);
-          operator_values.resize(n_ops);
-      }
+      base_points_generator(base_points_generator)
+{
+    point.resize(n_dim);
+    operator_values.resize(n_ops);
+    n_points_used = 0;
+}
 
 template <int n_dim, int n_ops>
 void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values)
@@ -27,6 +28,7 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
             values[j] = operator_values[j];
         }
         this->timer->node["point generation"].stop();
+        n_points_used++;
     }
     else
     {
@@ -36,3 +38,9 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
         }
     }
 }
+
+template <int n_dim, int n_ops>
+uint64_t PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_n_points_used()
+{
+    return n_points_used;
+};

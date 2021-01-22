@@ -58,6 +58,28 @@ public:
 
     double get_axis_max(int axis);
 
+    /**
+     * Get the number of interpolation that took place
+     *
+     * @return the number of interpolations that took place
+     */
+    uint64_t get_n_interpolations();
+
+    /**
+     * Get the parametrization resolution
+     *
+     * @return the number of points along the first axis (usually that number matches for all axes)
+     */
+    int get_resolution();
+
+    /**
+     * Get the total number of parametrization points
+     *
+     * @return the total number of parametrization points
+     */
+
+    uint64_t get_n_points_total();
+
 protected:
     const std::vector<int> axes_points; ///< number of supporting points along each axis
     const std::vector<double> axes_min; ///< minimum at each axis
@@ -68,6 +90,9 @@ protected:
     std::array<double, n_dim> axes_step;
     std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
     std::array<std::array<int, n_dim>, n_dim + 1> standard_simplex; ///< a standard simplex
+    uint64_t n_interpolations;                                      ///< Total number of interpolations that took place
+    uint64_t n_points_total;                                        ///< Total number of parametrization points
+
     /**
      * Initialize fields.
      * @param axesPoints Number of supporting points along axes

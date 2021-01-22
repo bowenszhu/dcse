@@ -18,6 +18,18 @@ PiecewiseLinearInterpolatorBase<n_dim, n_ops>::PiecewiseLinearInterpolatorBase(c
     axes_mult[n_dim - 1] = 1;
     for (int dim{n_dim - 2}; dim >= 0; dim--)
         axes_mult[dim] = axes_mult[dim + 1] * axes_points[dim + 1];
+
+    n_points_total = 1;
+    for (int dim = 0; dim < n_dim; dim++)
+        n_points_total *= axes_points[dim];
+
+    if (n_points_total > std::numeric_limits<int>::max())
+    {
+        std::string error = "Error: The total requested amount of points (" + std::to_string(n_points_total) +
+                            ") exceeds the limit in PiecewiseLinearInterpolator index type (" + std::to_string(std::numeric_limits<int>::max()) + ")\n";
+        throw std::runtime_error(error);
+    }
+    n_interpolations = 0;
 }
 
 template <int n_dim, int n_ops>
@@ -121,6 +133,7 @@ int PiecewiseLinearInterpolatorBase<n_dim, n_ops>::evaluate_with_derivatives(con
         }
     }
     timer->stop();
+    n_interpolations += block_idx.size() * n_ops;
     return 0;
 }
 
@@ -151,4 +164,22 @@ template <int n_dim, int n_ops>
 value_t PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_axis_min(int axis)
 {
     return axes_min[axis];
+}
+
+template <int n_dim, int n_ops>
+uint64_t PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_n_interpolations()
+{
+    return n_interpolations;
+}
+
+template <int n_dim, int n_ops>
+int PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_resolution()
+{
+    return axes_points[0];
+}
+
+template <int n_dim, int n_ops>
+uint64_t PiecewiseLinearInterpolatorBase<n_dim, n_ops>::get_n_points_total()
+{
+    return n_points_total;
 }
