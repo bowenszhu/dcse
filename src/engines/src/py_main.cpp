@@ -27,6 +27,7 @@ void pybind_globals(py::module &);
 void pybind_evaluator_iface(py::module &);
 void pybind_operator_set_interpolator_1op(py::module &);
 void pybind_operator_set_interpolator_sim(py::module &);
+void pybind_operator_set_interpolator_wells(py::module &);
 void pybind_piecewise_linear_interpolator_static(py::module &);
 void pybind_piecewise_linear_interpolator_adaptive(py::module &);
 class operator_set_gradient_evaluator_iface;
@@ -60,4 +61,5 @@ PYBIND11_MODULE(engines, m)
   pybind_evaluator_iface(m);
   pybind_operator_set_interpolator_1op(m);
   pybind_operator_set_interpolator_sim(m);
+  pybind_operator_set_interpolator_wells(m);
 }

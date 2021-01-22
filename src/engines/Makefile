@@ -4,7 +4,7 @@ include conf_nvcc.mk
 TARGET      = engines.so
 IFLAGS      = -I./src -I./pybind11/include/pybind11 `python3-config --includes`
 IFLAGS_GPU  = $(IFLAGS) -I/usr/local/cuda/include
-DFLAGS      = 
+DFLAGS      = -D_GLIBCXX_USE_CXX11_ABI=0
 DFLAGS_GPU	= $(DFLAGS) -DWITH_GPU
 LFLAGS_BASE	+= 
 LFLAGS      = $(LFLAGS_BASE)
@@ -22,6 +22,7 @@ OBJ =  py_evaluator_iface.o \
 	py_main.o \
 	py_operator_set_interpolator_1op.o \
 	py_operator_set_interpolator_sim.o \
+	py_operator_set_interpolator_wells.o \
 	engines_build_info.o 
 
 OBJ_GPU = 

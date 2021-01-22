@@ -77,7 +77,7 @@ void pybind_globals(py::module &m)
 {
   using namespace pybind11::literals;
 
-  py::class_<timer_node>(m, "timer_node", "Timers tree structure")
+  py::class_<timer_node>(m, "timer_node", "Timers tree structure", py::module_local(true))
       .def(py::init<>())
       .def("start", &timer_node::start)
       .def("stop", &timer_node::stop)

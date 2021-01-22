@@ -18,6 +18,7 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
     auto search = point_data.find(index);
     if (search == point_data.end()) ///< std::unordered_map<...>::contains is supported since C++20
     {
+        this->timer->node["point generation"].start();
         this->get_real_point_from_index_point(vertex, point);
         base_points_generator->evaluate(point, operator_values);
         for (int j = 0; j < n_ops; j++)
@@ -25,6 +26,7 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
             point_data[index][j] = operator_values[j];
             values[j] = operator_values[j];
         }
+        this->timer->node["point generation"].stop();
     }
     else
     {
