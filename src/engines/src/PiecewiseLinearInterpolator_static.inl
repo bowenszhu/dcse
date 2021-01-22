@@ -8,19 +8,20 @@ PiecewiseLinearInterpolator_static<n_dim, n_ops>::PiecewiseLinearInterpolator_st
 {
     int n_points = this->axes_mult[0] * axesPoints[0];
     point_data.resize(n_points * n_ops);
+    std::vector<double> point(n_dim);
+    std::vector<double> operator_values(n_ops);
+
     for (int point_i = 0; point_i < n_points; point_i++)
     {
         std::array<int, n_dim> point_axis_index;
         get_point_from_index(point_i, point_axis_index);
 
-        std::vector<double> point(n_dim);
         this->get_real_point_from_index_point(point_axis_index, point);
 
-        std::vector<double> operator_value(n_ops);
-        base_points_generator->evaluate(point, operator_value);
+        base_points_generator->evaluate(point, operator_values);
         for (int i = 0; i < n_ops; i++)
         {
-            point_data[n_ops * point_i + i] = operator_value[i];
+            point_data[n_ops * point_i + i] = operator_values[i];
         }
     }
 }

@@ -5,7 +5,11 @@ PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::PiecewiseLinearInterpolator_
     operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
     const std::vector<double> &axesMin, const std::vector<double> &axesMax)
     : PiecewiseLinearInterpolatorBase<n_dim, n_ops>(axesPoints, axesMin, axesMax),
-      base_points_generator(base_points_generator) {}
+      base_points_generator(base_points_generator) 
+      {
+          point.resize(n_dim);
+          operator_values.resize(n_ops);
+      }
 
 template <int n_dim, int n_ops>
 void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values)
@@ -14,9 +18,7 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
     auto search = point_data.find(index);
     if (search == point_data.end()) ///< std::unordered_map<...>::contains is supported since C++20
     {
-        std::vector<double> point(n_dim);
         this->get_real_point_from_index_point(vertex, point);
-        std::vector<double> operator_values(n_ops);
         base_points_generator->evaluate(point, operator_values);
         for (int j = 0; j < n_ops; j++)
         {

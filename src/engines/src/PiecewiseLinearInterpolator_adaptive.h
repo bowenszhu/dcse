@@ -31,6 +31,9 @@ private:
      * @param[out] values The real values of n_ops functions at a given point
      */
     void get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values) override;
+
+    std::vector<double> point;
+    std::vector<double> operator_values;
 };
 
 #include "PiecewiseLinearInterpolator_adaptive.inl"
