@@ -4,7 +4,7 @@
 
 template <typename index_t, int n_dim, int n_ops>
 PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::PiecewiseLinearInterpolatorBase(const std::vector<int> &axesPoints,
-                                                                               const std::vector<double> &axesMin, const std::vector<double> &axesMax)
+                                                                                        const std::vector<double> &axesMin, const std::vector<double> &axesMax)
     : axes_points(axesPoints), axes_min(axesMin), axes_max(axesMax), standard_simplex()
 {
     for (int dim = 0; dim < n_dim; dim++)
@@ -34,9 +34,9 @@ PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::PiecewiseLinearInterpola
 
 template <typename index_t, int n_dim, int n_ops>
 void PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::find_hypercube(const std::vector<double> &points,
-                                                                   std::array<int, n_dim> &hypercube,
-                                                                   std::array<double, n_dim> &scaled_point,
-                                                                   const int point_index)
+                                                                            std::array<int, n_dim> &hypercube,
+                                                                            std::array<double, n_dim> &scaled_point,
+                                                                            const int point_index)
 {
     for (int i = 0; i < n_dim; i++)
     {
@@ -48,9 +48,9 @@ void PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::find_hypercube(cons
 
 template <typename index_t, int n_dim, int n_ops>
 void PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::find_simplex(const std::array<int, n_dim> &hypercube,
-                                                                 const std::array<double, n_dim> &scaled_point,
-                                                                 std::array<int, n_dim> &tri_order,
-                                                                 std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
+                                                                          const std::array<double, n_dim> &scaled_point,
+                                                                          std::array<int, n_dim> &tri_order,
+                                                                          std::array<std::array<int, n_dim>, n_dim + 1> &simplex)
 {
     std::iota(tri_order.begin(), tri_order.end(), 0);
     std::sort(tri_order.begin(), tri_order.end(),
@@ -95,9 +95,9 @@ int PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::evaluate(const std::
 
 template <typename index_t, int n_dim, int n_ops>
 int PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::evaluate_with_derivatives(const std::vector<double> &points,
-                                                                             const std::vector<int> &block_idx,
-                                                                             std::vector<double> &interp_values,
-                                                                             std::vector<double> &derivatives)
+                                                                                      const std::vector<int> &block_idx,
+                                                                                      std::vector<double> &interp_values,
+                                                                                      std::vector<double> &derivatives)
 {
     timer->start();
     for (std::size_t block_i = 0; block_i < block_idx.size(); block_i++)
@@ -148,7 +148,7 @@ index_t PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::get_index_from_p
 
 template <typename index_t, int n_dim, int n_ops>
 void PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>::get_real_point_from_index_point(const std::array<int, n_dim> &vertex,
-                                                                                    std::vector<double> &point)
+                                                                                             std::vector<double> &point)
 {
     for (int i = 0; i < n_dim; i++)
         point[i] = vertex[i] * axes_step[i] + axes_min[i];

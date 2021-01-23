@@ -28,7 +28,7 @@ PiecewiseLinearInterpolator_static<index_t, n_dim, n_ops>::PiecewiseLinearInterp
 
 template <typename index_t, int n_dim, int n_ops>
 void PiecewiseLinearInterpolator_static<index_t, n_dim, n_ops>::get_point_from_index(index_t index,
-                                                                            std::array<int, n_dim> &vertex)
+                                                                                     std::array<int, n_dim> &vertex)
 {
     for (int dim = 0; dim < n_dim; dim++)
     {

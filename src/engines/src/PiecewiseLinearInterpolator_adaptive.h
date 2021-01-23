@@ -23,7 +23,7 @@ public:
 
 private:
     std::unordered_map<index_t, std::array<double, n_ops>> point_data; ///< adaptive storage
-    operator_set_evaluator_iface *base_points_generator;           ///< real function
+    operator_set_evaluator_iface *base_points_generator;               ///< real function
     /**
      * The function checks whether the values at the given vertex are computed before,
      *      if yes, the values are directly returned;
