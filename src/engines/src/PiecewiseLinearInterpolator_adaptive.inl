@@ -1,10 +1,10 @@
 #include "PiecewiseLinearInterpolator_adaptive.h"
 
-template <int n_dim, int n_ops>
-PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::PiecewiseLinearInterpolator_adaptive(
+template <typename index_t, int n_dim, int n_ops>
+PiecewiseLinearInterpolator_adaptive<index_t, n_dim, n_ops>::PiecewiseLinearInterpolator_adaptive(
     operator_set_evaluator_iface *base_points_generator, const std::vector<int> &axesPoints,
     const std::vector<double> &axesMin, const std::vector<double> &axesMax)
-    : PiecewiseLinearInterpolatorBase<n_dim, n_ops>(axesPoints, axesMin, axesMax),
+    : PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>(axesPoints, axesMin, axesMax),
       base_points_generator(base_points_generator)
 {
     point.resize(n_dim);
@@ -12,10 +12,10 @@ PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::PiecewiseLinearInterpolator_
     n_points_used = 0;
 }
 
-template <int n_dim, int n_ops>
-void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values)
+template <typename index_t, int n_dim, int n_ops>
+void PiecewiseLinearInterpolator_adaptive<index_t, n_dim, n_ops>::get_values(const std::array<int, n_dim> &vertex, std::array<double, n_ops> &values)
 {
-    int index = this->get_index_from_point(vertex);
+    index_t index = this->get_index_from_point(vertex);
     auto search = point_data.find(index);
     if (search == point_data.end()) ///< std::unordered_map<...>::contains is supported since C++20
     {
@@ -39,8 +39,8 @@ void PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_values(const std::a
     }
 }
 
-template <int n_dim, int n_ops>
-uint64_t PiecewiseLinearInterpolator_adaptive<n_dim, n_ops>::get_n_points_used()
+template <typename index_t, int n_dim, int n_ops>
+uint64_t PiecewiseLinearInterpolator_adaptive<index_t, n_dim, n_ops>::get_n_points_used()
 {
     return n_points_used;
 };

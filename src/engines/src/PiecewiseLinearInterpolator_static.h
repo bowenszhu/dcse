@@ -11,8 +11,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim, int n_ops>
-class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<n_dim, n_ops>
+template <typename index_t, int n_dim, int n_ops>
+class PiecewiseLinearInterpolator_static : public PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>
 {
 public:
     /**
@@ -42,7 +42,7 @@ private:
      * @param[in] index Index of the supporting point in the storage
      * @param[out] vertex The supporting point's index along each axis
      */
-    void get_point_from_index(int index, std::array<int, n_dim> &vertex);
+    void get_point_from_index(index_t index, std::array<int, n_dim> &vertex);
     /**
      * Get the real function value of the given supporting point.
      *

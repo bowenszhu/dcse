@@ -10,8 +10,8 @@
  *
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim, int n_ops>
-class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorBase<n_dim, n_ops>
+template <typename index_t, int n_dim, int n_ops>
+class PiecewiseLinearInterpolator_adaptive : public PiecewiseLinearInterpolatorBase<index_t, n_dim, n_ops>
 {
 public:
     PiecewiseLinearInterpolator_adaptive(operator_set_evaluator_iface *base_points_generator,
@@ -22,7 +22,7 @@ public:
     uint64_t get_n_points_used() override;
 
 private:
-    std::unordered_map<int, std::array<double, n_ops>> point_data; ///< adaptive storage
+    std::unordered_map<index_t, std::array<double, n_ops>> point_data; ///< adaptive storage
     operator_set_evaluator_iface *base_points_generator;           ///< real function
     /**
      * The function checks whether the values at the given vertex are computed before,

@@ -9,7 +9,7 @@
  * Interpolator base for static/adaptive piecewise linear interpolator.
  * @tparam n_dim The number of dimensions
  */
-template <int n_dim, int n_ops>
+template <typename index_t, int n_dim, int n_ops>
 class PiecewiseLinearInterpolatorBase : public operator_set_gradient_evaluator_iface
 {
 public:
@@ -85,7 +85,7 @@ protected:
     const std::vector<double> axes_min; ///< minimum at each axis
     const std::vector<double> axes_max; ///< maximum of each axis
     /// multiplication factor used for transferring supporting point to point index
-    std::array<int, n_dim> axes_mult;
+    std::array<index_t, n_dim> axes_mult;
     /// the distance between neighbor supporting points for each axis
     std::array<double, n_dim> axes_step;
     std::array<double, n_dim> axes_step_inv;                        ///< inverse of step (to avoid division)
@@ -145,7 +145,7 @@ protected:
      * @param vertex The supporting point's indices along axes
      * @return The index of point among all supporting point
      */
-    int get_index_from_point(const std::array<int, n_dim> &vertex);
+    index_t get_index_from_point(const std::array<int, n_dim> &vertex);
     /**
      * Transfer a index version of supporting point to its real coordinate.
      *
