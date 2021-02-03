@@ -24,9 +24,9 @@ if __name__ == '__main__':
     # plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
 
     # Error testing for report purposes
-    plot_interp_error(2, [8, 16], find_interp_errors_on_random_points, 100000)
-    plot_interp_error(3, [8, 16], find_interp_errors_on_random_points, 100000)
-    plot_interp_error(4, [8, 16], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(6, [8, 16], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(7, [8, 16], find_interp_errors_on_random_points, 100000, False)
+    plot_interp_error(2, [8, 16, 24, 32, 40, 48, 56], find_interp_errors_on_regular_grid, 10000)
+    plot_interp_error(3, [8, 16, 24, 32, 40, 48, 56], find_interp_errors_on_regular_grid, 10000, False)
+    plot_interp_error(4, [8, 16, 24, 32, 40, 48, 56], find_interp_errors_on_regular_grid, 10000, False)
+    plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_regular_grid, 10000, False)
+    plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 1000000, False)
+    plot_interp_error(6, [8, 16, 24, 32], find_interp_errors_on_regular_grid, 10000, False)
