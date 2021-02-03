@@ -7,7 +7,7 @@ from src.error_analysis import plot_interp_error, find_interp_errors_on_regular_
 
 if __name__ == '__main__':
     # plot_2D_interp_error_surface([4, 5])
-    compare_execution_time()
+    # compare_execution_time()
 
     # test on regular grid first - suitable for 2D surface plotting
     # plot_interp_error(2, [2, 4, 8, 16, 32, 64], find_interp_errors_on_regular_grid, 10000)
