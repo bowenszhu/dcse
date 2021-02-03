@@ -126,7 +126,7 @@ def find_interp_errors_on_regular_grid(n_dim, n_axis_supporting_points, n_checki
             fig.update_layout(title="%s absolute interpolation error" % itor_names[-1])
             fig.show()
 
-        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.1e}'
+        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.2e}'
               .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
