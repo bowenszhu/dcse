@@ -2,10 +2,11 @@
 # flake8: noqa
 
 from src.performance_measurement import compare_execution_time
-from src.error_analysis import plot_interp_error, find_interp_errors_on_regular_grid, find_interp_errors_on_random_points
+from src.error_analysis import plot_interp_error, find_interp_errors_on_regular_grid, \
+    find_interp_errors_on_random_points
 
 if __name__ == '__main__':
-    #plot_2D_interp_error_surface([4, 5])
+    # plot_2D_interp_error_surface([4, 5])
     compare_execution_time()
 
     # test on regular grid first - suitable for 2D surface plotting
@@ -22,8 +23,10 @@ if __name__ == '__main__':
     # In order to go above 6 dims and 64 points we should only use long indexing type
     # plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
 
-    # Testing for report purposes
-    plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(7, [2, 4, 8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
-
-
+    # Error testing for report purposes
+    plot_interp_error(2, [8, 16], find_interp_errors_on_random_points, 100000)
+    plot_interp_error(3, [8, 16], find_interp_errors_on_random_points, 100000)
+    plot_interp_error(4, [8, 16], find_interp_errors_on_random_points, 100000, False)
+    plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 100000, False)
+    plot_interp_error(6, [8, 16], find_interp_errors_on_random_points, 100000, False)
+    plot_interp_error(7, [8, 16], find_interp_errors_on_random_points, 100000, False)
