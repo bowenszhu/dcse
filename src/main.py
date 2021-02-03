@@ -22,11 +22,8 @@ if __name__ == '__main__':
     # In order to go above 6 dims and 64 points we should only use long indexing type
     # plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
 
-    plot_interp_error(2, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000)
-    plot_interp_error(3, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000)
-    plot_interp_error(4, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(5, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
-    plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
-    plot_interp_error(7, [2, 4, 8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
+    # Testing for report purposes
+    plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
+    plot_interp_error(7, [2, 4, 8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False)
 
 
