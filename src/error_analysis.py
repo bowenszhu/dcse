@@ -227,7 +227,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
         value_error = np.mean(np.abs(exact_vals - itor_vals)) / (np.max(exact_vals) - np.min(exact_vals))
         value_errors.append(value_error)
 
-        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.1e}'
+        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.2e}'
               .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
