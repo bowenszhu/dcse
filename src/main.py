@@ -24,9 +24,5 @@ if __name__ == '__main__':
     # plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
 
     # Error testing for report purposes
-    plot_interp_error(2, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 10000)
-    plot_interp_error(3, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 1000000)
-    plot_interp_error(4, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 100000000, False)
     plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 10000000000, False)
-    plot_interp_error(6, [8, 16, 24, 32], find_interp_errors_on_random_points, 1000000000000, False)
 
