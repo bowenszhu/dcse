@@ -30,10 +30,10 @@ if __name__ == '__main__':
     # plot_interp_error(5, [4], find_interp_errors_on_regular_grid, 32768, False)
     # plot_interp_error(6, [4], find_interp_errors_on_regular_grid, 262144, False)
 
-    plot_interp_error(2, [16], find_interp_errors_on_random_points, 1024, False)
-    plot_interp_error(3, [16], find_interp_errors_on_random_points, 32768, False)
-    plot_interp_error(4, [16], find_interp_errors_on_random_points, 1048576, False)
-    plot_interp_error(5, [16], find_interp_errors_on_random_points, 33554432, False)
-    plot_interp_error(6, [16], find_interp_errors_on_random_points, 1073741824, False)
+    plot_interp_error(2, [8], find_interp_errors_on_random_points, 256, False)
+    plot_interp_error(3, [8], find_interp_errors_on_random_points, 4096, False)
+    plot_interp_error(4, [8], find_interp_errors_on_random_points, 65536, False)
+    plot_interp_error(5, [8], find_interp_errors_on_random_points, 1048576, False)
+    plot_interp_error(6, [8], find_interp_errors_on_random_points, 16777216, False)
 
 
