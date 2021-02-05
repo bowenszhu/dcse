@@ -197,7 +197,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     midpoint = (axis_min + axis_max) / 2
     # Checking grid made up randomly, making sure everything is 0.01 inside parameter space
     # random points are generated in [0;1] inveral by default - scale it properly
-    checking_pts = np.random.rand(n_dim, n_checking_points)
+    checking_pts = np.random.rand(n_dim, n_checking_points) * work_range + midpoint - work_range / 2
     checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
