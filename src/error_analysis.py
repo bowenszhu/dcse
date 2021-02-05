@@ -174,12 +174,13 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     assert axis_max > axis_min
     print('')
     print('Testing %d-dimensional space with %d supporting points per axis on random %d points:' %
-          (n_dim, n_axis_supporting_points, n_checking_points))
+          (n_dim, n_axis_supporting_points, n_checking_points * n_dim))
 
     # Deduce function and derivatives names from n_dim
     exec('from testing_functions import func%dd' % n_dim)
     exec('from testing_functions import derivs%dd' % n_dim)
     func_name = eval('func%dd' % n_dim)
+    deriv_name = eval('derivs%dd' % n_dim)
 
     def func_helper(*var):
         return func_name(np.array(var))
@@ -196,10 +197,12 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     midpoint = (axis_min + axis_max) / 2
     # Checking grid made up randomly, making sure everything is 0.01 inside parameter space
     # random points are generated in [0;1] inveral by default - scale it properly
-    checking_pts = np.random.rand(n_checking_points * n_dim) * (work_range) + midpoint - work_range / 2
+    checking_pts = np.random.rand(n_dim, n_checking_points)
+    checking_grid = np.array(np.meshgrid(*checking_pts))
 
     # Calculate exact values
-    exact_vals = np.apply_along_axis(func_name, 1, checking_pts.reshape(n_checking_points, n_dim))
+    exact_vals = np.apply_along_axis(func_name, 0, checking_grid)
+    exact_derivs = np.apply_along_axis(deriv_name, 0, checking_grid)
 
     itors = []
 
@@ -212,30 +215,35 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
 
     itor_names = []
     value_errors = []
+    deriv_errors = []
 
     for itor_name in itors:
         # itor_names.append(itor_name.__name__)
 
         itor = itor_name(func_helper, ax_supp_pts, ax_min, ax_max)
         itor_names.append(str(itor))
-        itor_vals, itor_derivs = itor.interpolate_array(checking_pts)
+        itor_vals, itor_derivs = itor.interpolate_array(checking_grid)
         # Interpolator derivatives could be estimated with np.gradient, but it is alwasy something`s off with indexing
         # leaving the code here
         # linear_derivs = np.array(np.gradient(np.moveaxis(itor_vals, 1, 0), \
         # (axis_max - axis_min - 0.02) / (n_checking_points -1)))
         # linear_derivs = np.flip(linear_derivs, tuple(range(1, n_dim)))
-        value_error = np.mean(np.abs(exact_vals - itor_vals)) / (np.max(exact_vals) - np.min(exact_vals))
+        value_error = np.mean(np.abs(exact_vals - itor_vals)) / (np.max(exact_vals) - np.min(exact_vals)) * 100
+        deriv_error = np.mean(np.abs(exact_derivs - itor_derivs)) / (np.max(exact_derivs) - np.min(exact_derivs)) * 100
         value_errors.append(value_error)
+        deriv_errors.append(deriv_error)
 
-        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], rel. error {:>7.2e}'
+        print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], '
+              'rel. func. error {:>7.2e}, rel. deriv. error {:>7.2e}'
               .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
                       itor.get_interpolation_time() / n_checking_points,
-                      value_error))
+                      value_error,
+                      deriv_error))
         del itor
 
-    return itor_names, value_errors
+    return itor_names, value_errors, deriv_errors
 
 
 def plot_interp_error(n_dim, supp_grids, find_error_func, n_checking_points, use_static=True, use_adaptive=True):
@@ -254,20 +262,21 @@ def plot_interp_error(n_dim, supp_grids, find_error_func, n_checking_points, use
     itor_name = []
 
     for i in range(len(supp_grids)):
-        itor_name, val_err = find_error_func(
+        itor_name, val_err, der_err = find_error_func(
             n_dim, supp_grids[i], n_checking_points, -1.0, 1.0, use_static, use_adaptive)
         if i == 0:
             results.append(np.ones((n_grid_sizes, len(itor_name))))
-        results[0][i] = val_err
+        results[0][i] = der_err
 
     if len(supp_grids) > 1:
         plt.figure(1)
-        for i, name in enumerate(itor_name):
-            plt.loglog(supp_grids, results[0][:, i], label=name)
+        plt.loglog(supp_grids, results[0][:, 0], label='Delaunay', marker='o')
+        plt.loglog(supp_grids, results[0][:, 1], label='Piecewise Linear', marker='s')
+        plt.loglog(supp_grids, results[0][:, 2], label='DARTS Multilinear', marker='d')
+
         plt.legend()
-        plt.title("Function error")
-        plt.xlabel("# of supporting points")
-        plt.ylabel("Mean error")
+        plt.xlabel(r"log number of supporting points $n$")
+        plt.ylabel(r"log mean relative error $\delta$")
 
         # plt.figure(2)
         # for i, name in enumerate(itor_name):
