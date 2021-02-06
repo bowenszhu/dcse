@@ -24,13 +24,12 @@ if __name__ == '__main__':
     # plot_interp_error(6, [8, 16, 32, 64], find_interp_errors_on_random_points, 100000, False, False)
 
     # Error testing for report purposes
-    # plot_interp_error(2, [4], find_interp_errors_on_regular_grid, 64, False)
-    # plot_interp_error(3, [4], find_interp_errors_on_regular_grid, 512, False)
-    # plot_interp_error(4, [4], find_interp_errors_on_regular_grid, 4096, False)
-    # plot_interp_error(5, [4], find_interp_errors_on_regular_grid, 32768, False)
-    # plot_interp_error(6, [4], find_interp_errors_on_regular_grid, 262144, False)
+    plot_interp_error(2, [4], find_interp_errors_on_random_points, 8, False)
+    plot_interp_error(3, [4], find_interp_errors_on_random_points, 8, False)
+    plot_interp_error(4, [4], find_interp_errors_on_random_points, 8, False)
+    plot_interp_error(5, [4], find_interp_errors_on_random_points, 8, False)
+    plot_interp_error(6, [4], find_interp_errors_on_random_points, 8, False)
 
-    plot_interp_error(5, [8, 16, 24, 32, 40, 48, 56, 64], find_interp_errors_on_random_points, 16, False)
 
 
 

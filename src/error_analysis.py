@@ -174,7 +174,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
     assert axis_max > axis_min
     print('')
     print('Testing %d-dimensional space with %d supporting points per axis on random %d points:' %
-          (n_dim, n_axis_supporting_points, n_checking_points * n_dim))
+          (n_dim, n_axis_supporting_points, n_checking_points))
 
     # Deduce function and derivatives names from n_dim
     exec('from testing_functions import func%dd' % n_dim)
@@ -234,7 +234,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
         deriv_errors.append(deriv_error)
 
         print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], '
-              'rel. func. error {:>7.2e}, rel. deriv. error {:>7.2e}'
+              'rel. f. err. {:>7.2e}, rel. d. err. {:>7.2e}'
               .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
@@ -277,14 +277,6 @@ def plot_interp_error(n_dim, supp_grids, find_error_func, n_checking_points, use
         plt.legend()
         plt.xlabel(r"log number of supporting points $n$")
         plt.ylabel(r"log mean relative error $\delta$")
-
-        # plt.figure(2)
-        # for i, name in enumerate(itor_name):
-        #     plt.loglog(supp_grids, results[1][:, i], label=name)
-        # plt.legend()
-        # plt.title("Derivative error")
-        # plt.xlabel("# of supporting points")
-        # plt.ylabel("Mean error")
 
         plt.tight_layout()
         plt.show()
