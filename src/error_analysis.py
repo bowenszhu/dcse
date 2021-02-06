@@ -234,7 +234,7 @@ def find_interp_errors_on_random_points(n_dim, n_axis_supporting_points, n_check
         deriv_errors.append(deriv_error)
 
         print('   {:<40}: init {:>7.1e}s, interp {:>7.1e}s [{:>7.1e}s per point], '
-              'rel. f. err. {:>7.2e}, rel. d. err. {:>7.2e}'
+              'rel. f. err. {:>7.3e}, rel. d. err. {:>7.3e}'
               .format(itor_names[-1],
                       itor.get_init_time(),
                       itor.get_interpolation_time(),
